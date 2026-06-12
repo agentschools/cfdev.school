@@ -64,6 +64,19 @@ The signup process should use social login with Cloudflare's new self-managed OA
 
 The OAuth client should ask for a bare minimum of scopes to start. We can add more scopes as the user progresses through the lessons and needs to connect their account to more services. For example, we might start with just an account-reading scope, which allows us to read the student's account information and personalize their learning experience.
 
+## Interview
+
+After enrolling and jumping into their agent, students are presented with some interview questions.
+
+This should be modeled after the OpenCode School agent prompt and interview process.
+
+Like OpenCode School, the agent should automatically detect the operating system the student is using.
+
+The interview should also include a few additional questions:
+
+- Familiarity with Cloudflare
+- Quizzes: Ask students if they want to be quizzed at the end of each lesson. Recommend that they give it a try knowing that they can skip or disable quizzes later on if they’re not helpful or too time-consuming.
+
 ## Lessons
 
 Like OpenCode School, the lessons will cover the basics of getting your machine set up to build apps on Cloudflare with AI superpowers. Once the lessons are complete, students will have a fully functional agent-powered development environment.
