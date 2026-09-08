@@ -4,22 +4,22 @@ This is the human plan for Cloudflare Dev School, a web app that teaches people 
 
 The app will largely be modeled after OpenCode School, the open-source project that teaches people how to build awesome things on their computer with OpenCode.
 
-Like OpenCode School, signup is free.
-
-Students log in with their Cloudflare account (or create one as part of the signup process), using Cloudflare's new support for self-managed OAuth clients.
-
-Once logged in, students will have their Cloudflare account connected to the app, and will be able to follow along with the lessons using their own Cloudflare account.
+Like OpenCode School, signup is free and doesn't require an account.
 
 We'll store the student's enrollment, profile, and progress through the lessons in a database, using a schema similar to the one used by OpenCode School.
 
 ## AI tools
 
-The homepage should make it clear that Cloudflare Dev School works with any AI-powered agent harness. It should include cards with logos for each of these:
+The homepage should make it clear that Cloudflare Dev School works with any AI-powered agent harness, but it should include cards with logos for each of these:
 
-- OpenCode (Cloudflare's pick): The open-source agent harness that lets you connect to any model from any provider. Best with Cloudflare's AI gateway, which lets you connect to multiple providers (OpenAI, Claude, Google, etc.) with unified billing, dynamic routing, observability, caching, and more.
-- Claude Code: The crowd favorite. The vibe-coding app that started it all.
-- OpenAI Codex: The underdog from the incumbent AI provider. Late to the party, but catching up fast.
-- Gemini: Google's offering. Still new and evolving, but has potential to be a strong contender.
+- Claude Code
+- OpenAI Codex
+- OpenCode
+- Pi
+
+See https://developers.cloudflare.com/agent-setup/ for inspiration. That's an official Cloudflare page so we should stay in alignment with its recommendations/design/choice of tools/etc
+
+See also https://developers.cloudflare.com/agent-setup/prompt.md
 
 ##  AI tools research
 
@@ -35,7 +35,7 @@ Let's do some research and build structured data profiles about each of the supp
   - Google: Gemini 3.1 Pro, Gemini 3.1 Flash, etc.
   - OpenCode: OpenAI, Claude, Google, and Workers AI open-source models, all through the Cloudflare AI gateway
 
-Make sure we're fetching the very latest info for each of these tools, and creating a repeatable process for keeping this info up to date, since these tools are evolving rapidly.
+Make sure we're fetching the very latest info for each of these tools, and creating a repeatable process for keeping this info up to date, since these tools are evolving rapidly. We also want to be able to add support or customizations for new harnesses over time and collect this data consistently.
 
 ## Student Journey
 
@@ -50,9 +50,9 @@ Make sure we're fetching the very latest info for each of these tools, and creat
 9. After completing the lessons and receiving their certificate, students have the perfect foundation to start building on Cloudflare. The next step is to dive into exercises.
 10. Exercises are like mini-projects, just like in OpenCode School. Each exercise teaches the student about a different product or feature of Cloudflare, and challenges them to build and deploy something that uses the product or feature.
 
-## API
+## Public API
 
-The Cloudflare Dev School API works the same way as the OpenCode School API. It's a pubic API, documented with OpenAPI, and has endpoints for managing enrollment, lessons, exercises, and progress.
+The Cloudflare Dev School API works the same way as the OpenCode School API. It's a pubic API, documented with a public OpenAPI definition, and has endpoints for managing enrollment, lessons, exercises, and progress.
 
 Like OpenCode School, students' browsers should cache student id enrollment data in local storage, and use the API to fetch updates about their enrollment and progress as needed.
 
@@ -60,13 +60,17 @@ The Cloudflare Dev School llms.txt file should closely follow the format of the 
 
 ## Signup
 
-The signup process should use social login with Cloudflare's new self-managed OAuth clients. This will allow students to sign up and log in using their existing Cloudflare account, without having to create a new account or remember another password.
+OpenCode school has a simple enrollment process that doesn't require signup, email, or anything. We should use that initially, and it should work exactly the same way OpenCode school works.
 
-The OAuth client should ask for a bare minimum of scopes to start. We can add more scopes as the user progresses through the lessons and needs to connect their account to more services. For example, we might start with just an account-reading scope, which allows us to read the student's account information and personalize their learning experience.
+The signup process could eventually use social login with Cloudflare's new self-managed OAuth clients. This would allow students to sign up and log in using their existing Cloudflare account, without having to create a new account or remember another password. 
+
+If implemented, the OAuth client would ask for a bare minimum of scopes to start. We can add more scopes as the user progresses through the lessons and needs to connect their account to more services. For example, we might start with just an account-reading scope, which allows us to read the student's account information and personalize their learning experience.
+
+Auth could be useful, but may be out of scope for the initial implementation. Let's take it into consideration when planning the enrollment flow.
 
 ## Interview
 
-After enrolling and jumping into their agent, students are presented with some interview questions.
+After enrolling, jumping into their agent, and pasting in their first provided prompt, students are presented with some interview questions.
 
 This should be modeled after the OpenCode School agent prompt and interview process.
 
@@ -112,7 +116,7 @@ Working with Cloudflare
 - Personal subdomain: my-workers-subdomains.workers.dev
 - Domains on Cloudflare: my-domain.com, another-domain.com
 
-Students may need to fully quit and restart their agent harness app for these changes to take effect.
+Students may need to fully quit and restart their agent harness for these changes to take effect.
 
 ### Lesson: CLI
 
@@ -136,9 +140,13 @@ There's only one MCP server we need to install: https://github.com/cloudflare/mc
 
 A token-efficient MCP server for the entire Cloudflare API. 2500 endpoints in 1k tokens, powered by Code Mode.
 
+Let's be sure to explain what Code Mode is, and why it's powerful. Let's also explain how it keeps the context window from getting polluted with tool definitions.
+
 ## Design
 
 The site design should draw inspiration from OpenCode School, but with a Cloudflare twist.
+
+If you're getting design inspiration from any Cloudflare properties, make sure they were recently update. Make sure you're using the freshest design.
 
 The color scheme should be based on Cloudflare's brand colors, and the overall aesthetic should be clean and minimalistic.
 
@@ -146,23 +154,34 @@ The site should be responsive and work on desktop and mobile devices.
 
 The site should support dark and light mode, and honor the student's system preferences. If the student changes their system preferences while using the site, the site should update its theme accordingly.
 
+Let's use Kumo and React for our components, unless that clashes with Astro: https://kumo-ui.com/skill/
+
 ## Architecture
 
 - Use this approach to type design and documentation: https://shiptypes.com/
 - Use test-driven development, building the application in small, testable increments.
 - Add a GitHub Actions workflow to run tests and linting on every pull request
+- Add a GitHub Actions workflow to enable preview deployments for pull requests: https://github.com/zeke/preview-deployments-skill
 - Add a GitHub Actions workflow to deploy the app to production on merges to main.
-- Use the latest version of Astro. Model the app structure after OpenCode School's codebase.
+
+## Stack
+
+- Cloudflare for all the things!
+- Astro for the web app. Model the app structure after OpenCode School's codebase.
+- Use Kumo and React for interactive components.
 
 ## Reference material
 
 Before building the app, we'll need to gather reference material to inform the design and content of the lessons. This will include:
 
-OpenCode School:
+OpenCode School: We are the creators and owners of OpenCode School, Pi School, and this nascent Cloudflare Dev School project, so there's no shame in copying that existing work wholesale. That should include app structure, design patterns, content, student enrollment flow, prompt design, etc.
+
 - https://opencode.school
 - https://opencode.school/llms.txt
 - https://opencode.school/api/openapi.json
 - https://github.com/opencodeschool/opencode.school
+
+- https://github.com/zeke/pi-school (another copy of OpenCode school, but for the Pi harness. We also created and maintain this project)
 
 OAuth:
 - https://login-with-cloudflare.ziki.boo
@@ -173,6 +192,18 @@ Skills:
 - https://skills.sh
 - https://agentskills.io
 - https://github.com/cloudflare/skills
+- https://kumo-ui.com/skill/
+- https://github.com/zeke/preview-deployments-skill
 
 MCP:
 - https://github.com/cloudflare/mcp
+- https://blog.cloudflare.com/code-mode/
+- https://blog.cloudflare.com/code-mode-mcp/
+
+## Planning
+
+Let's use the "grill" skill to improve this initial human draft of the plan into a more robust and comprehensive agent-generated version.
+
+https://www.aihero.dev/skills-grill-me
+
+npx skills@latest add mattpocock/skills --skill=grill-me
