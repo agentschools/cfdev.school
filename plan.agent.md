@@ -197,4 +197,4 @@ Type design:
 
 ## Planning process
 
-This plan was produced by grilling `plan.human.md` (https://www.aihero.dev/skills-grill-me). Next steps: install `setup-matt-pocock-skills`, `to-spec`, and `to-tickets` from `mattpocock/skills` at the repo level, configure GitHub Issues as the tracker, then run `/to-spec` to turn this plan into a spec issue, followed by `/to-tickets` to break it into buildable tickets.
+This plan was produced by grilling `plan.human.md` (https://www.aihero.dev/skills-grill-me). Next steps: turn this plan into a spec written up as a GitHub issue, then break that spec into small, independently buildable tickets as GitHub issues, borrowing the approach from `mattpocock/skills`'s `to-spec` and `to-tickets` without installing them as skills. See `AGENTS.md` for the planning approach.
