@@ -22,19 +22,24 @@ jobs:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: read
 
     steps:
       # Last checked 2026-09-09: actions/checkout@v7.0.1, actions/setup-node@v7.0.0
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
 
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - run: npm ci --prefer-offline --no-audit --no-fund
 
       - run: npm run preview:deploy
         env:
@@ -49,19 +54,23 @@ jobs:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
 
     steps:
       # Last checked 2026-09-09: actions/checkout@v7.0.1, actions/setup-node@v7.0.0
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
 
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - run: npm ci --prefer-offline --no-audit --no-fund
 
       - run: npm run preview:destroy
         env:

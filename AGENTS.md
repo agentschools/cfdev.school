@@ -28,8 +28,8 @@ The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` ca
 
 ## CI/CD
 
-- `.github/workflows/ci.yml`: lint + test on every PR and on push to `main`.
-- `.github/workflows/preview.yml`: per-PR preview Worker at `cloudflare-dev-school-pr-<N>.ziki.workers.dev`, torn down on PR close. Uses the **shared production resources** strategy (previews share the production D1 database and SESSION KV namespace) since there's no schema or real data yet. Revisit and switch to per-PR seeded/empty D1 once a ticket introduces real writes (enrollment, interviews, progress).
+- `.github/workflows/ci.yml`: lint and test run as separate parallel jobs on every PR and on push to `main`.
+- `.github/workflows/preview.yml`: per-PR preview Worker at `cloudflare-dev-school-pr-<N>.ziki.workers.dev`, torn down on PR close. Triggered independently of `ci.yml` (no `needs:` between them) so previews don't wait on lint/test. Uses the **shared production resources** strategy (previews share the production D1 database and SESSION KV namespace) since there's no schema or real data yet. Revisit and switch to per-PR seeded/empty D1 once a ticket introduces real writes (enrollment, interviews, progress).
 - `.github/workflows/deploy.yml`: deploys to production on push to `main`.
 - Required repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to `Workers Scripts:Edit` + `D1:Edit`), `CLOUDFLARE_ACCOUNT_ID`.
 
