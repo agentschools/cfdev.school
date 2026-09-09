@@ -202,8 +202,8 @@ MCP:
 
 ## Planning
 
-Let's use the "grill" skill to improve this initial human draft of the plan into a more robust and comprehensive agent-generated version.
+Let's use these skill to improve this initial human draft of the plan into a more robust and comprehensive agent-generated plan:
 
-https://www.aihero.dev/skills-grill-me
-
-npx skills@latest add mattpocock/skills --skill=grill-me
+- https://www.aihero.dev/skills-grill-me
+- https://www.aihero.dev/skills-to-spec
+- https://www.aihero.dev/skills-to-tickets
