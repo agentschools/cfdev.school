@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.6",
-    "astro": "7.2.10"
+    "astro": "7.2.10",
+    "zod": "4.5.4"
   },
   "allowScripts": {
     "esbuild": true
