@@ -13,7 +13,8 @@ describe("homepage", () => {
     );
     expect(html).toContain('id="harnesses"');
     expect(html).toContain('id="enroll"');
-    expect(html).toContain("Enroll — free forever, no credit card");
+    expect(html).toContain("Enroll in Cloudflare Dev School");
+    expect(html).toContain("Free forever. No account required. No personal data collected.");
 
     for (const harness of harnesses) {
       expect(html).toContain(harness.name);

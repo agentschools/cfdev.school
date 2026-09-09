@@ -44,7 +44,8 @@ const outline = [
           All you need to get started is a working AI coding agent on your computer. We'll walk you through setting
           up Cloudflare.
         </p>
-        <a class="cta" href="#enroll">Enroll — free forever, no credit card</a>
+        <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
+        <p class="fine-print">Free forever. No account required. No personal data collected.</p>
       </section>
 
       <section id="harnesses" class="harnesses">
@@ -71,8 +72,8 @@ const outline = [
 
       <section id="enroll" class="enroll">
         <h2>Ready to start?</h2>
-        <a class="cta" href="#enroll">Enroll — free forever, no credit card</a>
-        <p class="fine-print">Free forever. No account required. No credit card.</p>
+        <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
+        <p class="fine-print">Free forever. No account required. No personal data collected.</p>
       </section>
     </main>
   </div>
@@ -188,9 +189,13 @@ const outline = [
   }
 
   .fine-print {
-    margin: 0;
+    margin: 0.75rem 0 0;
     color: var(--muted-fg);
     font-size: 0.85rem;
+  }
+
+  .enroll .fine-print {
+    margin: 0;
   }
 
   @media (min-width: 900px) {
