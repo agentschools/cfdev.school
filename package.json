@@ -1,0 +1,35 @@
+{
+  "name": "cloudflare-dev-school",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "deploy": "astro build && wrangler deploy",
+    "preview:deploy": "node scripts/preview-env.mjs deploy",
+    "preview:destroy": "node scripts/preview-env.mjs destroy"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "14.2.6",
+    "astro": "7.2.10"
+  },
+  "allowScripts": {
+    "esbuild": true
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.9.1",
+    "eslint-plugin-astro": "3.1.0",
+    "typescript-eslint": "8.69.0",
+    "vitest": "4.1.11",
+    "wrangler": "4.128.0"
+  }
+}
