@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-dev-school",
+  "compatibility_date": "2026-08-31",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cloudflare-dev-school",
+      "database_id": "2c5a6216-085a-4896-8d0f-13255adbdefc"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "994f1484fe95462f89b748b3ee7be2ff"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
