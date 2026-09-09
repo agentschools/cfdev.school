@@ -1,0 +1,85 @@
+---
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+
+    /* Cloudflare brand accent, measured from developers.cloudflare.com. Same in both themes. */
+    --accent: oklch(0.687 0.208 38.8);
+    --accent-contrast: oklch(0.99 0.009 78.3);
+
+    /* Light theme, measured from developers.cloudflare.com. */
+    --bg: oklch(0.99 0 0);
+    --fg: oklch(0.21 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Dark theme, measured from developers.cloudflare.com. */
+      --bg: oklch(0.192 0 0);
+      --fg: oklch(0.925 0.016 42.4);
+    }
+  }
+
+  :root {
+    --muted-fg: color-mix(in oklch, var(--fg) 65%, transparent);
+    --border: color-mix(in oklch, var(--fg) 14%, transparent);
+    --card-bg: color-mix(in oklch, var(--fg) 4%, var(--bg));
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+    line-height: 1.5;
+  }
+
+  a {
+    color: inherit;
+  }
+</style>

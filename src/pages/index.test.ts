@@ -1,10 +1,22 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { experimental_AstroContainer as AstroContainer } from "astro/container";
+import { describe, expect, it } from "vitest";
+import { harnesses } from "../data/harnesses";
+import Index from "./index.astro";
 
-describe('homepage placeholder', () => {
-  it('renders the Cloudflare Dev School heading', () => {
-    const source = readFileSync(fileURLToPath(new URL('./index.astro', import.meta.url)), 'utf-8');
-    expect(source).toContain('Cloudflare Dev School');
+describe("homepage", () => {
+  it("renders the prerequisite statement, enroll CTA, and every harness card", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Index);
+
+    expect(html).toContain(
+      "All you need to get started is a working AI coding agent on your computer. We'll walk you through setting up Cloudflare.",
+    );
+    expect(html).toContain('id="harnesses"');
+    expect(html).toContain('id="enroll"');
+    expect(html).toContain("Enroll — free forever, no credit card");
+
+    for (const harness of harnesses) {
+      expect(html).toContain(harness.name);
+    }
   });
 });

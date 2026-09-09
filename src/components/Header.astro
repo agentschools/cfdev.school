@@ -1,0 +1,103 @@
+---
+---
+
+<header class="header">
+  <a class="logo" href="/">
+    <span class="logo-mark" aria-hidden="true"></span>
+    <span class="logo-text">Cloudflare Dev School</span>
+  </a>
+
+  <nav class="nav" aria-label="Primary">
+    <a href="#harnesses">Harnesses</a>
+    <a href="#how-it-works">How it works</a>
+  </nav>
+
+  <div class="menu">
+    <a class="icon-link" href="https://github.com/zeke/cloudflare-dev-school" aria-label="View source on GitHub">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path
+          d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+        ></path>
+      </svg>
+    </a>
+    <a class="enroll-button" href="#enroll">Enroll</a>
+  </div>
+</header>
+
+<style>
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.05rem;
+    white-space: nowrap;
+  }
+
+  .logo-mark {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 9999px;
+    background: var(--accent);
+  }
+
+  .nav {
+    display: none;
+    gap: 1.25rem;
+    flex: 1;
+  }
+
+  .nav a {
+    text-decoration: none;
+    color: var(--muted-fg);
+    font-size: 0.9rem;
+  }
+
+  .nav a:hover {
+    color: var(--fg);
+  }
+
+  .menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
+
+  .icon-link {
+    display: flex;
+    color: var(--muted-fg);
+  }
+
+  .icon-link:hover {
+    color: var(--fg);
+  }
+
+  .enroll-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 768px) {
+    .nav {
+      display: flex;
+    }
+  }
+</style>
