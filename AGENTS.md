@@ -4,6 +4,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 
 - `plan.human.md`: the original human-written plan.
 - `plan.agent.md`: the agent-refined plan, produced by grilling `plan.human.md`. Where the two disagree, `plan.agent.md` wins.
+- v1 assumes a working agent and covers five setup lessons followed by one exercise, "Deploy your first Worker." The deployed Worker is the final result; use `plan.agent.md` for the current scope.
 - The app itself hasn't been scaffolded yet. No stack-specific build/test/lint commands exist yet; add them here once the app is bootstrapped.
 
 ## Issue tracker

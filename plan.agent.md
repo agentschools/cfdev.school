@@ -10,6 +10,12 @@ Cloudflare Dev School is a web app that teaches people how to build on Cloudflar
 - Domain: buy `cloudflaredevschool.com` via the Cloudflare Registrar API if it's available. Until then, ship at a `workers.dev` subdomain.
 - Deployed on Cloudflare Workers, single Worker/app (not a multi-service architecture).
 
+## Prerequisite
+
+State this on the homepage before enrollment: "All you need to get started is a working AI coding agent on your computer. We'll walk you through setting up Cloudflare."
+
+The student's agent must already be installed, authenticated, and able to run commands on their computer.
+
 ## Signup and enrollment
 
 v1 copies OpenCode School's enrollment flow exactly: no account, no email, no password. A student lands on the homepage, clicks enroll, and gets a randomly generated student ID (adjective-noun format, same word lists/format as OpenCode School), revealed with the same confetti + cypher-reveal animation.
@@ -45,15 +51,15 @@ This data goes stale fast. Keeping it fresh is a **manual** process, not an auto
 
 ## Student journey
 
-1. Homepage: overview, supported harness cards, prominent "enroll, free forever, no credit card" CTA.
+1. Homepage: working-agent prerequisite, overview, supported harness cards, prominent "enroll, free forever, no credit card" CTA.
 2. Enroll: no account needed, matches OpenCode School exactly (see Signup above).
 3. Confetti + cypher reveal of the randomly generated student ID.
 4. Student picks a harness (Claude Code, Codex, OpenCode, Pi, or "something else").
 5. Student is given an agent prompt to copy/paste into their chosen harness.
 6. Pasting the prompt kicks off the interview (see Interview below), which the agent conducts, storing answers via the Dev School API.
 7. Lessons.
-8. Certificate of completion: a durable, public, shareable URL with a dynamically generated Open Graph image (renders well when shared to social media or iMessage).
-9. Exercises: mini-projects, one per Cloudflare product/feature, build-and-deploy challenges.
+8. "Deploy your first Worker": create, run locally, deploy, and visit a minimal Worker on the student's own Cloudflare account.
+9. The agent confirms the deployed URL works, records the exercise as complete, and encourages the student to change the response and redeploy.
 
 ## Interview
 
@@ -61,7 +67,6 @@ Modeled on OpenCode School's interview. The agent auto-detects the student's OS.
 
 - Technical background, Cloudflare experience, learning goals (OpenCode School baseline)
 - **Familiarity with Cloudflare**: used only to inform how the agent talks to the student (tone, depth of explanation). Not used to skip lessons or branch database logic in v1.
-- **Name (optional)**: asked once during the interview, explicitly framed as optional. If the student completes lessons/exercises with no name on file, the agent gently offers once more to add it, since the certificate is meant to be resume-shareable. Never mandatory.
 - **Quiz opt-in**: asks if the student wants to be quizzed at the end of each lesson. Recommend trying it, but make clear it's skippable at any time, per-quiz or entirely, via a profile preference.
 
 ## Lessons
@@ -85,7 +90,7 @@ Guide students through adding Cloudflare-flavored guidance to their global instr
 
 ### Lesson: CLI
 
-Install and authenticate Wrangler. Just auth in this lesson; build/deploy usage is covered later via exercises.
+Install and authenticate Wrangler. Just auth in this lesson; build/deploy usage is covered later in "Deploy your first Worker".
 
 ### Lesson: Skills
 
@@ -103,15 +108,20 @@ Generated dynamically from lesson content during the conversation (unless the co
 
 ## Exercises
 
-Mini-projects, one per Cloudflare product/feature, same spirit as OpenCode School. Verification is conversational: the agent uses the student's own local Wrangler auth (already set up in the CLI lesson) to check on the student's behalf when that makes sense, or simply uses judgment from the conversation to determine the exercise is done. No separate verification system, no Cloudflare OAuth requirement for this.
+v1 ships one exercise: "Deploy your first Worker."
 
-## Certificate of completion
+1. Create a minimal Worker that returns a text response.
+2. Run it locally and check the response.
+3. Deploy it to the student's own Cloudflare account using their local Wrangler auth from the CLI lesson.
+4. Visit its public URL.
 
-A durable, public URL per student (not gated by auth) that anyone can visit to confirm the student completed the school. Includes a dynamically generated Open Graph image so links preview nicely on social media and messaging apps. Displays the student's name if they've provided one, otherwise the student ID/handle.
+The agent confirms the deployed URL returns the expected response and records the exercise as complete through the Dev School API. It then encourages the student to change the response and redeploy. This deployed Worker is the final result of the school.
+
+Keep this first exercise focused on the basic development and deployment loop. Frameworks, databases, custom domains, and additional exercises are deferred.
 
 ## Public API
 
-Same shape as OpenCode School's API: public, versioned, documented via OpenAPI, endpoints for enrollment, lessons, exercises, progress. Student browsers cache their enrollment/progress in local storage and hit the API for updates as needed.
+Same shape as OpenCode School's API: public, versioned, documented via OpenAPI, endpoints for enrollment, lessons, exercises, progress. Track completion per lesson and exercise. Student browsers cache their enrollment/progress in local storage and hit the API for updates as needed.
 
 `llms.txt` closely follows OpenCode School's format: instructions for the agent on how the system works, how to discover the API schema, and how to read/write student data.
 
