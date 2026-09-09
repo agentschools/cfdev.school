@@ -43,6 +43,10 @@ The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` ca
 - `.github/workflows/deploy.yml`: deploys to production on push to `main`.
 - Required repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to `Workers Scripts:Edit` + `D1:Edit`), `CLOUDFLARE_ACCOUNT_ID`.
 
+## Testing Astro components
+
+`vitest.config.ts` calls `getViteConfig({}, { configFile: false })`. The `{ configFile: false }` MUST be the second argument (`inlineAstroConfig`), not the first (`userViteConfig`), or it's silently ignored. This skips loading `astro.config.mjs` (and its `@astrojs/cloudflare` adapter) for tests, working around an upstream incompatibility between Vitest 4's module runner and the Cloudflare Vite plugin (https://github.com/withastro/astro/issues/15878, unresolved as of this writing). Component tests render `.astro` files via `astro/container`'s `experimental_AstroContainer` and don't need real Worker bindings; if a test ever does need `env.DB`/`env.SESSION`, mock them rather than re-enabling the adapter here.
+
 ## Known accepted risks
 
 - `npm audit` reports high-severity advisories in `sharp`/`libheif`, transitively pulled in by `wrangler`'s dev tooling (`miniflare`/`@cloudflare/vite-plugin`). No fix is available without downgrading `wrangler` to `4.15.2`. This only affects local dev image processing, not the deployed Worker. Re-check `npm audit` when upgrading `wrangler`.

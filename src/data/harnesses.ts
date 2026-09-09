@@ -36,6 +36,8 @@ const sourceSchema = z.object({
 export const harnessProfileSchema = z.object({
   id: z.enum(["claude-code", "codex", "opencode", "pi", "generic"]),
   name: z.string(),
+  /** One-line, homepage-card-friendly description. Keep the deeper detail in subscriptionBilling.summary. */
+  tagline: z.string(),
   cliCommand: z.string(),
   /** Default global instructions file name/location for this harness. */
   instructionsFile: z.object({
@@ -69,6 +71,7 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "claude-code",
     name: "Claude Code",
+    tagline: "Anthropic's official terminal agent. Included in your Claude Pro or Max plan.",
     cliCommand: "claude",
     instructionsFile: {
       path: "CLAUDE.md (project root) or ~/.claude/CLAUDE.md (global)",
@@ -126,6 +129,7 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "codex",
     name: "OpenAI Codex",
+    tagline: "OpenAI's terminal agent. Works with any ChatGPT plan, including Free.",
     cliCommand: "codex",
     instructionsFile: {
       path: "AGENTS.md (project root) or ~/.codex/AGENTS.md (global)",
@@ -172,6 +176,7 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "opencode",
     name: "OpenCode",
+    tagline: "Open-source, model-agnostic terminal agent with 75+ provider support.",
     cliCommand: "opencode",
     instructionsFile: {
       path: "AGENTS.md, discovered by walking up from cwd to the project root, plus ~/.config/opencode/AGENTS.md (global)",
@@ -217,6 +222,7 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "pi",
     name: "Pi",
+    tagline: "A minimal, extensible terminal coding harness you adapt to your workflow.",
     cliCommand: "pi",
     instructionsFile: {
       path: "AGENTS.md, discovered per pi's context file resolution; see pi's docs for the current search order",
@@ -255,6 +261,7 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "generic",
     name: "Something else",
+    tagline: "Using a different agent? You can still take this course.",
     cliCommand: "",
     instructionsFile: {
       path: "AGENTS.md is the closest thing to a cross-tool standard; check your harness's own docs.",
