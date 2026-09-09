@@ -22,6 +22,16 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - `npm run deploy` — build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
 - `npm run preview:deploy` / `npm run preview:destroy` — used by `.github/workflows/preview.yml` for per-PR previews, not meant to be run by hand
 
+## AI harness research data
+
+`src/data/harnesses.ts` is a manually maintained, Zod-schema-typed data source covering the harnesses this school supports (Claude Code, Codex, OpenCode, Pi, generic fallback): instructions file location, CLI command, skills support/install location/restart behavior, config/MCP file locations, model comparison data, and subscription-vs-API-billing policy for third-party routing. It's consumed by the homepage harness cards and lesson content, not re-derived per lesson.
+
+Each harness profile carries its own `lastVerified` date and a `sources` list. This data goes stale fast (pricing and vendor policy on third-party subscription routing change often), so it's a manual process, not a scheduled job:
+
+- Before shipping or editing a lesson that depends on a harness's data, re-verify its entries against current sources (use web search, don't rely on training data) and bump `lastVerified`.
+- Add new sources when you change a claim; don't delete old ones unless they're wrong, they help explain why a value is what it is.
+- If you can't verify something confidently, leave a note in `summary`/`notes` saying so rather than guessing.
+
 ## Dependency pinning
 
 The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` can fail with `ETARGET` for packages published in the last week. Check `npm view <pkg> time --json` and pin an exact version older than 7 days when this happens. Don't work around it by editing the global npmrc.
