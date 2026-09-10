@@ -24,4 +24,17 @@ describe("homepage", () => {
       }
     }
   });
+
+  it("renders a harness picker option and the agent prompt box for every harness, hidden by default", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Index);
+
+    expect(html).toContain('id="harness-picker"');
+    expect(html).toContain('id="agent-prompt"');
+    expect(html).toContain('id="agent-prompt-copy"');
+
+    for (const harness of harnesses) {
+      expect(html).toContain(`data-harness-id="${harness.id}"`);
+    }
+  });
 });

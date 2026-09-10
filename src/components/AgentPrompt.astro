@@ -1,0 +1,72 @@
+---
+---
+
+<section id="agent-prompt" class="agent-prompt" hidden>
+  <p class="agent-prompt-label">Prompt for your agent</p>
+  <div class="agent-prompt-box">
+    <pre id="agent-prompt-text" class="agent-prompt-text"></pre>
+    <button id="agent-prompt-copy" type="button" class="agent-prompt-copy">Copy</button>
+  </div>
+  <p id="agent-prompt-confirm" class="agent-prompt-confirm" hidden>Copied! Now paste that into your agent...</p>
+</section>
+
+<style>
+  .agent-prompt[hidden] {
+    display: none;
+  }
+
+  .agent-prompt {
+    max-width: 40rem;
+    margin: 0 0 1.75rem;
+  }
+
+  .agent-prompt-label {
+    margin: 0 0 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-fg);
+  }
+
+  .agent-prompt-box {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card-bg);
+  }
+
+  .agent-prompt-text {
+    margin: 0;
+    padding: 1.25rem;
+    padding-right: 5rem;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .agent-prompt-copy {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.4rem;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .agent-prompt-copy:hover {
+    border-color: var(--accent);
+  }
+
+  .agent-prompt-confirm {
+    margin: 0.6rem 0 0;
+    color: var(--muted-fg);
+    font-size: 0.85rem;
+  }
+</style>

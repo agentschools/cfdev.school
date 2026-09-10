@@ -1,0 +1,91 @@
+---
+import { harnesses } from "../data/harnesses";
+---
+
+<section id="harness-picker" class="harness-picker" hidden>
+  <p class="harness-picker-label">Pick your agent</p>
+  <div class="harness-picker-options">
+    {
+      harnesses.map((harness) => (
+        <button type="button" class="harness-option" data-harness-id={harness.id}>
+          {harness.icon && (
+            <>
+              <img class="harness-option-icon icon-light" src={harness.icon.light} alt="" width="18" height="18" />
+              <img class="harness-option-icon icon-dark" src={harness.icon.dark} alt="" width="18" height="18" />
+            </>
+          )}
+          {harness.name}
+        </button>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .harness-picker[hidden] {
+    display: none;
+  }
+
+  .harness-picker {
+    max-width: 40rem;
+    margin: 2rem 0 1.75rem;
+  }
+
+  .harness-picker-label {
+    margin: 0 0 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-fg);
+  }
+
+  .harness-picker-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .harness-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    background: var(--card-bg);
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .harness-option:hover {
+    border-color: var(--accent);
+  }
+
+  .harness-option.selected {
+    border-color: var(--accent);
+    background: color-mix(in oklch, var(--accent) 15%, var(--card-bg));
+  }
+
+  .harness-option-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 0.25rem;
+  }
+
+  .icon-dark {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .icon-light {
+      display: none;
+    }
+
+    .icon-dark {
+      display: block;
+    }
+  }
+</style>

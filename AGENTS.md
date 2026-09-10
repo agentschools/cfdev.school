@@ -49,6 +49,14 @@ Zod-schema-first (see `plan.agent.md`'s "ship types, not docs" section):
 
 `src/lib/student-id.ts` and the cipher-reveal/confetti animation in `src/lib/enroll-client.ts` are adapted from opencodeschool/opencode.school (Apache-2.0), per `plan.agent.md`'s "copy OpenCode School's enrollment flow wholesale." Keep the copyright headers when touching these files. The student ID format (`adjective-noun-1234`) and the two word lists are copied verbatim; don't change them without a reason, lessons and docs may reference the format.
 
+`src/lib/enroll-client.ts` dispatches a `cfDevSchool:enrolled` custom event (`ENROLLED_EVENT`) on `document` whenever the student ID is shown, on fresh enrollment or a cached reload. Other client scripts (e.g. `src/lib/harness-picker-client.ts`) listen for this instead of duplicating enrollment/localStorage logic. If a page adds another `initX()` client module that reacts to enrollment, register its listener before calling `initEnrollment()` in the page's `<script>` block, since a returning visitor's cached reveal dispatches the event synchronously.
+
+## Harness selection and `/llms.txt`
+
+Once enrolled, `HarnessPicker.astro` (backed by `src/lib/harness-picker-client.ts`) lets the student pick a harness from `src/data/harnesses.ts` and shows a copyable prompt (`AgentPrompt.astro`) embedding their student ID and `window.location.origin`, so it works unmodified in production, PR previews, and local dev. The chosen harness is cached in localStorage (`cfDevSchool.harnessId`) alongside the student.
+
+`/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
+
 ## Dependency pinning
 
 The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` can fail with `ETARGET` for packages published in the last week. Check `npm view <pkg> time --json` and pin an exact version older than 7 days when this happens. Don't work around it by editing the global npmrc.
