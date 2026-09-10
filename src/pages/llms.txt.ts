@@ -20,10 +20,24 @@ Download the OpenAPI schema to see the full, current API surface: GET /api/opena
 Currently available:
 
 - POST /api/students: enrolls a new student. No request body. Returns \`{ "id": "...", "createdAt": "..." }\`. Only call this if you don't already have a student ID from the prompt that referred you here.
+- GET /api/students/{id}/interview: fetch a student's interview answers. 404 if they haven't been interviewed yet.
+- PUT /api/students/{id}/interview: submit or update a student's interview answers. Send only the fields you're setting, it's a partial update and safe to call more than once (e.g. once per question, or later just to change \`quizOptIn\`).
+
+## Interview
+
+Right after a student gives you their student ID (from the handoff prompt), conduct a short interview before anything else:
+
+1. Ask about their technical background (\`technicalBackground\`: "beginner", "intermediate", or "advanced").
+2. Ask how familiar they are with Cloudflare (\`cloudflareFamiliarity\`: "new", "some-experience", or "regular-user"). Use this only to adjust your tone and depth of explanation later, never to skip lessons or change what content you show, that isn't supported in v1.
+3. Ask what they want to get out of the course (\`learningGoals\`, free text).
+4. Auto-detect their OS yourself (e.g. inspect \`uname\` or an OS environment variable), don't ask them. Send it as \`os\`: "macos", "linux", "windows", or "other".
+5. Ask if they want to be quizzed at the end of each lesson (\`quizOptIn\`, boolean). Recommend trying it, but make clear they can skip any individual quiz or turn it off entirely at any time, it's just a preference, not a commitment.
+
+Submit each answer via PUT /api/students/{id}/interview as you get it, or batch them into one call at the end, either works. If a returning student already has interview answers (check with GET first), don't re-ask questions they've already answered, just confirm nothing's changed.
 
 ## Status
 
-Cloudflare Dev School is under active development. Lessons, the interview, quizzes, and progress tracking are not available yet. If a student pastes a prompt referring you here, confirm their enrollment (you already have their ID) and let them know the course content is coming soon. Don't invent lesson content or progress-tracking endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Lessons, quizzes, and progress tracking are not available yet. After the interview, let the student know lesson content is coming soon. Don't invent lesson content or progress-tracking endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

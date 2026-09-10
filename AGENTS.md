@@ -19,8 +19,9 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - `npm run build` — `astro build`
 - `npm run test` — `vitest run`
 - `npm run lint` — `eslint .`
-- `npm run deploy` — build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
+- `npm run deploy` — applies D1 migrations, then build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
 - `npm run preview:deploy` / `npm run preview:destroy` — used by `.github/workflows/preview.yml` for per-PR previews, not meant to be run by hand
+- `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `wrangler dev` after touching the interview API
 
 ## AI harness research data
 
@@ -40,7 +41,7 @@ Each harness profile carries its own `lastVerified` date and a `sources` list. T
 
 Zod-schema-first (see `plan.agent.md`'s "ship types, not docs" section):
 
-- `src/schemas/*.ts` are the source of truth for API request/response shapes and D1 table shapes. `src/schemas/student.ts` is the first one.
+- `src/schemas/*.ts` are the source of truth for API request/response shapes and D1 table shapes. `src/schemas/student.ts` and `src/schemas/interview.ts` share a `studentIdSchema` piece, reuse it rather than re-declaring the ID regex.
 - `migrations/*.sql` are hand-written D1 migrations kept in sync with the schemas by hand (there's no schema-to-SQL generator in use). Apply with `wrangler d1 migrations apply cloudflare-dev-school --local` (dev) or `--remote` (production/preview); this also runs automatically as part of `npm run deploy` and `scripts/preview-env.mjs`.
 - `src/lib/openapi.ts` builds the OpenAPI document with `zod-openapi`'s `createDocument`, reusing the same schemas. Served at `/api/openapi.json` via `src/pages/api/openapi.json.ts`.
 - API routes live under `src/pages/api/*.ts` as Astro endpoints (`export const POST/GET: APIRoute = ...`), reading bindings via `import { env } from "cloudflare:workers"` (typed in `src/env.d.ts`), the same pattern OpenCode School uses. Astro's built-in CSRF check rejects same-origin-looking `POST` requests without a matching `Origin` header (e.g. plain `curl -X POST`); this is expected, real browser `fetch()` calls send `Origin` automatically. Add `export const prerender = false;` to every API route, they must run per-request, not at build time.
@@ -54,6 +55,12 @@ Zod-schema-first (see `plan.agent.md`'s "ship types, not docs" section):
 ## Harness selection and `/llms.txt`
 
 Once enrolled, `HarnessPicker.astro` (backed by `src/lib/harness-picker-client.ts`) lets the student pick a harness from `src/data/harnesses.ts` and shows a copyable prompt (`AgentPrompt.astro`) embedding their student ID and `window.location.origin`, so it works unmodified in production, PR previews, and local dev. The chosen harness is cached in localStorage (`cfDevSchool.harnessId`) alongside the student.
+
+## Interview
+
+`src/schemas/interview.ts` / `migrations/0002_create_interview_answers.sql` / `src/pages/api/students/[id]/interview.ts` implement the interview from `plan.agent.md`'s Interview section: technical background, Cloudflare familiarity (tone/depth only, never lesson branching in v1), learning goals, auto-detected OS, and a standalone `quizOptIn` preference. `PUT` does a partial merge (upsert), safe to call once per question or just to change one field later; `GET` 404s until the student has at least one answer on file.
+
+Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent" per plan.agent.md's tickets: it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). Run it against `wrangler dev` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 

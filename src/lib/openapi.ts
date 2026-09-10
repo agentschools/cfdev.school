@@ -1,5 +1,7 @@
+import { z } from "zod";
 import { createDocument } from "zod-openapi";
-import { studentSchema } from "../schemas/student";
+import { interviewAnswersSchema, interviewSchema } from "../schemas/interview";
+import { studentIdSchema, studentSchema } from "../schemas/student";
 
 /**
  * OpenAPI spec for the Cloudflare Dev School public API, derived from the
@@ -26,6 +28,47 @@ export const openApiDocument = createDocument({
             content: {
               "application/json": { schema: studentSchema },
             },
+          },
+        },
+      },
+    },
+    "/api/students/{id}/interview": {
+      get: {
+        summary: "Get a student's interview answers",
+        description:
+          "Returns the student's technical background, Cloudflare familiarity, learning goals, OS, and quiz opt-in preference. Familiarity and background only inform tone and depth of explanation, they never skip lessons or branch logic in v1.",
+        requestParams: { path: z.object({ id: studentIdSchema }) },
+        responses: {
+          "200": {
+            description: "Interview answers.",
+            content: {
+              "application/json": { schema: interviewSchema },
+            },
+          },
+          "404": {
+            description: "The student hasn't been interviewed yet.",
+          },
+        },
+      },
+      put: {
+        summary: "Submit or update a student's interview answers",
+        description:
+          "Partial update: send only the fields you're setting. Safe to call repeatedly, e.g. once per interview question, or later just to change quizOptIn. quizOptIn defaults to true on first creation.",
+        requestParams: { path: z.object({ id: studentIdSchema }) },
+        requestBody: {
+          content: {
+            "application/json": { schema: interviewAnswersSchema },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Interview answers after the update.",
+            content: {
+              "application/json": { schema: interviewSchema },
+            },
+          },
+          "404": {
+            description: "No student exists with that ID.",
           },
         },
       },

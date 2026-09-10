@@ -1,5 +1,3 @@
-/* global fetch, process */
-
 // Preview deployment strategy: SHARED PRODUCTION RESOURCES.
 // Preview Workers use the same D1 database and SESSION KV namespace as
 // production (both are pinned by ID in wrangler.jsonc). There is no app

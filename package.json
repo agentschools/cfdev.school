@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "deploy": "wrangler d1 migrations apply cloudflare-dev-school --remote && astro build && wrangler deploy",
     "preview:deploy": "node scripts/preview-env.mjs deploy",
-    "preview:destroy": "node scripts/preview-env.mjs destroy"
+    "preview:destroy": "node scripts/preview-env.mjs destroy",
+    "verify:interview": "node scripts/fake-agent-interview.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.6",
@@ -30,6 +31,7 @@
     "@eslint/js": "10.0.1",
     "eslint": "10.9.1",
     "eslint-plugin-astro": "3.1.0",
+    "globals": "17.11.0",
     "typescript-eslint": "8.69.0",
     "vitest": "4.1.11",
     "wrangler": "4.128.0",
