@@ -7,7 +7,8 @@
     {
       "binding": "DB",
       "database_name": "cloudflare-dev-school",
-      "database_id": "2c5a6216-085a-4896-8d0f-13255adbdefc"
+      "database_id": "2c5a6216-085a-4896-8d0f-13255adbdefc",
+      "migrations_dir": "./migrations"
     }
   ],
   "kv_namespaces": [

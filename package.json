@@ -13,7 +13,7 @@
     "astro": "astro",
     "test": "vitest run",
     "lint": "eslint .",
-    "deploy": "astro build && wrangler deploy",
+    "deploy": "wrangler d1 migrations apply cloudflare-dev-school --remote && astro build && wrangler deploy",
     "preview:deploy": "node scripts/preview-env.mjs deploy",
     "preview:destroy": "node scripts/preview-env.mjs destroy"
   },
@@ -26,11 +26,13 @@
     "esbuild": true
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "5.20260901.1",
     "@eslint/js": "10.0.1",
     "eslint": "10.9.1",
     "eslint-plugin-astro": "3.1.0",
     "typescript-eslint": "8.69.0",
     "vitest": "4.1.11",
-    "wrangler": "4.128.0"
+    "wrangler": "4.128.0",
+    "zod-openapi": "6.0.1"
   }
 }

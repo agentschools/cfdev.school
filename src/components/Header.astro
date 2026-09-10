@@ -20,7 +20,7 @@
         ></path>
       </svg>
     </a>
-    <a class="enroll-button" href="#enroll">Enroll</a>
+    <button class="enroll-button" type="button" data-enroll-trigger>Enroll</button>
   </div>
 </header>
 
@@ -86,13 +86,16 @@
     display: inline-flex;
     align-items: center;
     padding: 0.5rem 1rem;
+    border: none;
     border-radius: 9999px;
     background: var(--accent);
     color: var(--accent-contrast);
     text-decoration: none;
+    font-family: inherit;
     font-weight: 500;
     font-size: 0.9rem;
     white-space: nowrap;
+    cursor: pointer;
   }
 
   @media (min-width: 768px) {

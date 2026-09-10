@@ -1,6 +1,7 @@
 ---
 import HarnessCard from "../components/HarnessCard.astro";
 import Header from "../components/Header.astro";
+import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { harnesses } from "../data/harnesses";
 
@@ -41,8 +42,9 @@ const outline = [
           email, no credit card. All you need to get started is a working AI coding agent on your computer. We'll
           walk you through setting up Cloudflare.
         </p>
+        <StudentIdCard />
         <div class="cta-block">
-          <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
+          <button class="cta" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
           <p class="fine-print">Free forever. No account required. No personal data collected.</p>
         </div>
       </section>
@@ -72,13 +74,18 @@ const outline = [
       <section id="enroll" class="enroll">
         <h2>Ready to start?</h2>
         <div class="cta-block">
-          <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
+          <button class="cta" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
           <p class="fine-print">Free forever. No account required. No personal data collected.</p>
         </div>
       </section>
     </main>
   </div>
 </Layout>
+
+<script>
+  import { initEnrollment } from "../lib/enroll-client";
+  initEnrollment();
+</script>
 
 <style>
   .page {
@@ -152,12 +159,20 @@ const outline = [
     display: inline-flex;
     align-items: center;
     padding: 0.85rem 1.5rem;
+    border: none;
     border-radius: 9999px;
     background: var(--accent);
     color: var(--accent-contrast);
     text-decoration: none;
+    font-family: inherit;
     font-weight: 600;
     font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .cta:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   h2 {
