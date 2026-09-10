@@ -32,6 +32,10 @@ Each harness profile carries its own `lastVerified` date and a `sources` list. T
 - Add new sources when you change a claim; don't delete old ones unless they're wrong, they help explain why a value is what it is.
 - If you can't verify something confidently, leave a note in `summary`/`notes` saying so rather than guessing.
 
+## Harness icons
+
+`public/icons/agents/<harness>/{light,dark}.svg` are borrowed directly from `developers.cloudflare.com/agent-setup/`'s own icon URLs (`https://developers.cloudflare.com/icons/agents/<slug>/{light,dark}.svg`), which only has icons for Claude Code, Codex, and OpenCode, not Pi or a generic fallback. Referenced from `src/data/harnesses.ts`'s optional `icon` field and swapped by `HarnessCard.astro` via `prefers-color-scheme` (no JS). If Cloudflare adds an icon for a harness that's missing one here, re-fetch it from the same URL pattern rather than sourcing a logo elsewhere.
+
 ## Dependency pinning
 
 The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` can fail with `ETARGET` for packages published in the last week. Check `npm view <pkg> time --json` and pin an exact version older than 7 days when this happens. Don't work around it by editing the global npmrc.

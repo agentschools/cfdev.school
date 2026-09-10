@@ -9,6 +9,14 @@ const { harness } = Astro.props;
 ---
 
 <article class="card">
+  {
+    harness.icon && (
+      <>
+        <img class="icon icon-light" src={harness.icon.light} alt="" width="32" height="32" />
+        <img class="icon icon-dark" src={harness.icon.dark} alt="" width="32" height="32" />
+      </>
+    )
+  }
   <h3>{harness.name}</h3>
   {harness.cliCommand && <code class="cli">{harness.cliCommand}</code>}
   <p>{harness.tagline}</p>
@@ -23,6 +31,26 @@ const { harness } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.35rem;
+  }
+
+  .icon-dark {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .icon-light {
+      display: none;
+    }
+
+    .icon-dark {
+      display: block;
+    }
   }
 
   .card h3 {

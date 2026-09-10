@@ -38,6 +38,13 @@ export const harnessProfileSchema = z.object({
   name: z.string(),
   /** One-line, homepage-card-friendly description. Keep the deeper detail in subscriptionBilling.summary. */
   tagline: z.string(),
+  /** Logo, borrowed from developers.cloudflare.com/agent-setup/. Not every harness has one there. */
+  icon: z
+    .object({
+      light: z.string(),
+      dark: z.string(),
+    })
+    .optional(),
   cliCommand: z.string(),
   /** Default global instructions file name/location for this harness. */
   instructionsFile: z.object({
@@ -72,6 +79,7 @@ export const harnesses: HarnessProfile[] = [
     id: "claude-code",
     name: "Claude Code",
     tagline: "Anthropic's official terminal agent. Included in your Claude Pro or Max plan.",
+    icon: { light: "/icons/agents/claude-code/light.svg", dark: "/icons/agents/claude-code/dark.svg" },
     cliCommand: "claude",
     instructionsFile: {
       path: "CLAUDE.md (project root) or ~/.claude/CLAUDE.md (global)",
@@ -130,6 +138,7 @@ export const harnesses: HarnessProfile[] = [
     id: "codex",
     name: "OpenAI Codex",
     tagline: "OpenAI's terminal agent. Works with any ChatGPT plan, including Free.",
+    icon: { light: "/icons/agents/codex/light.svg", dark: "/icons/agents/codex/dark.svg" },
     cliCommand: "codex",
     instructionsFile: {
       path: "AGENTS.md (project root) or ~/.codex/AGENTS.md (global)",
@@ -177,6 +186,7 @@ export const harnesses: HarnessProfile[] = [
     id: "opencode",
     name: "OpenCode",
     tagline: "Open-source, model-agnostic terminal agent with 75+ provider support.",
+    icon: { light: "/icons/agents/opencode/light.svg", dark: "/icons/agents/opencode/dark.svg" },
     cliCommand: "opencode",
     instructionsFile: {
       path: "AGENTS.md, discovered by walking up from cwd to the project root, plus ~/.config/opencode/AGENTS.md (global)",
