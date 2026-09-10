@@ -18,6 +18,10 @@ describe("homepage", () => {
 
     for (const harness of harnesses) {
       expect(html).toContain(harness.name);
+      if (harness.icon) {
+        expect(html).toContain(harness.icon.light);
+        expect(html).toContain(harness.icon.dark);
+      }
     }
   });
 });

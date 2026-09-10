@@ -38,14 +38,13 @@ const outline = [
         <h1>Cloudflare Dev School</h1>
         <p class="lede">
           Learn to build on Cloudflare using whatever AI coding agent you already have installed. No account, no
-          email, no credit card.
+          email, no credit card. All you need to get started is a working AI coding agent on your computer. We'll
+          walk you through setting up Cloudflare.
         </p>
-        <p class="prerequisite">
-          All you need to get started is a working AI coding agent on your computer. We'll walk you through setting
-          up Cloudflare.
-        </p>
-        <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
-        <p class="fine-print">Free forever. No account required. No personal data collected.</p>
+        <div class="cta-block">
+          <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
+          <p class="fine-print">Free forever. No account required. No personal data collected.</p>
+        </div>
       </section>
 
       <section id="harnesses" class="harnesses">
@@ -72,8 +71,10 @@ const outline = [
 
       <section id="enroll" class="enroll">
         <h2>Ready to start?</h2>
-        <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
-        <p class="fine-print">Free forever. No account required. No personal data collected.</p>
+        <div class="cta-block">
+          <a class="cta" href="#enroll">Enroll in Cloudflare Dev School</a>
+          <p class="fine-print">Free forever. No account required. No personal data collected.</p>
+        </div>
       </section>
     </main>
   </div>
@@ -136,12 +137,15 @@ const outline = [
     font-size: 1.15rem;
     color: var(--muted-fg);
     max-width: 40rem;
-    margin: 0 0 1.25rem;
+    margin: 0 0 1.75rem;
   }
 
-  .prerequisite {
+  .cta-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
     max-width: 40rem;
-    margin: 0 0 1.75rem;
   }
 
   .cta {
@@ -181,21 +185,10 @@ const outline = [
     gap: 0.75rem;
   }
 
-  .enroll {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
   .fine-print {
-    margin: 0.75rem 0 0;
+    margin: 0;
     color: var(--muted-fg);
     font-size: 0.85rem;
-  }
-
-  .enroll .fine-print {
-    margin: 0;
   }
 
   @media (min-width: 900px) {
