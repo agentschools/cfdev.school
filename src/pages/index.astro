@@ -1,5 +1,7 @@
 ---
+import AgentPrompt from "../components/AgentPrompt.astro";
 import HarnessCard from "../components/HarnessCard.astro";
+import HarnessPicker from "../components/HarnessPicker.astro";
 import Header from "../components/Header.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
@@ -47,6 +49,8 @@ const outline = [
           <button class="cta" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
           <p class="fine-print">Free forever. No account required. No personal data collected.</p>
         </div>
+        <HarnessPicker />
+        <AgentPrompt />
       </section>
 
       <section id="harnesses" class="harnesses">
@@ -84,6 +88,11 @@ const outline = [
 
 <script>
   import { initEnrollment } from "../lib/enroll-client";
+  import { initHarnessPicker } from "../lib/harness-picker-client";
+  // Order matters: initHarnessPicker() must attach its ENROLLED_EVENT listener
+  // before initEnrollment() runs, since initEnrollment() dispatches that event
+  // synchronously for a returning visitor with a cached student.
+  initHarnessPicker();
   initEnrollment();
 </script>
 

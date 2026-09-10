@@ -12,7 +12,10 @@ const CHARS = "abcdefghijklmnopqrstuvwxyz";
 const DIGITS = "0123456789";
 const CELEBRATION_COLORS = ["#f6821f", "#faad3f", "#c026d3", "#7c3aed", "#2563eb"];
 
-interface CachedStudent {
+/** Dispatched on `document` whenever the student's ID is shown, on fresh enrollment or a cached reload. */
+export const ENROLLED_EVENT = "cfDevSchool:enrolled";
+
+export interface CachedStudent {
   id: string;
   createdAt: string;
 }
@@ -127,6 +130,7 @@ export function initEnrollment(): void {
     cipherReveal(display as HTMLElement, student.id, fast, () => {
       fireCelebration(celebrationLayer as HTMLElement);
     });
+    document.dispatchEvent(new CustomEvent<CachedStudent>(ENROLLED_EVENT, { detail: student }));
   }
 
   const cached = readCachedStudent();
