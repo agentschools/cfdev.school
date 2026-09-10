@@ -42,6 +42,9 @@ async function deploy() {
   await createDeploymentStatus(deployment.id, "in_progress", "Creating preview.");
 
   try {
+    // Shared production resources strategy (see AGENTS.md): previews use the
+    // same D1 database as production, so apply migrations against it here too.
+    await wrangler(["d1", "migrations", "apply", "cloudflare-dev-school", "--remote"]);
     await run("npx", ["astro", "build"]);
     await wrangler(["deploy", "--name", workerName]);
 
