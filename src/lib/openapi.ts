@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { createDocument } from "zod-openapi";
+import { exerciseSchema, exerciseSlugSchema } from "../schemas/exercise";
 import { interviewAnswersSchema, interviewSchema } from "../schemas/interview";
+import { markProgressSchema, progressSchema } from "../schemas/progress";
 import { studentIdSchema, studentSchema } from "../schemas/student";
 
 /**
@@ -14,7 +16,7 @@ export const openApiDocument = createDocument({
     title: "Cloudflare Dev School API",
     version: "0.1.0",
     description:
-      "Public, versioned API for Cloudflare Dev School: enrollment, lessons, exercises, and progress. No authentication required.",
+      "Public, versioned API for Cloudflare Dev School: enrollment, interview, exercises, and progress. No authentication required.",
   },
   paths: {
     "/api/students": {
@@ -66,6 +68,83 @@ export const openApiDocument = createDocument({
             content: {
               "application/json": { schema: interviewSchema },
             },
+          },
+          "404": {
+            description: "No student exists with that ID.",
+          },
+        },
+      },
+    },
+    "/api/exercises": {
+      get: {
+        summary: "List all exercises",
+        description:
+          "Returns every exercise in the catalog, sorted by order, including student-facing content and agent instructions.",
+        responses: {
+          "200": {
+            description: "Array of exercises.",
+            content: {
+              "application/json": { schema: z.array(exerciseSchema) },
+            },
+          },
+        },
+      },
+    },
+    "/api/exercises/{slug}": {
+      get: {
+        summary: "Get a single exercise",
+        description: "Returns one exercise by slug, including content and agent instructions.",
+        requestParams: { path: z.object({ slug: exerciseSlugSchema }) },
+        responses: {
+          "200": {
+            description: "Exercise found.",
+            content: {
+              "application/json": { schema: exerciseSchema },
+            },
+          },
+          "404": {
+            description: "No exercise exists with that slug.",
+          },
+        },
+      },
+    },
+    "/api/progress/{studentId}": {
+      get: {
+        summary: "Get a student's progress",
+        description:
+          "Returns which exercises the student has completed. Empty completedExercises means nothing is complete yet. Lesson progress is not tracked in this version of the API.",
+        requestParams: { path: z.object({ studentId: studentIdSchema }) },
+        responses: {
+          "200": {
+            description: "Progress for the student.",
+            content: {
+              "application/json": { schema: progressSchema },
+            },
+          },
+          "404": {
+            description: "No student exists with that ID.",
+          },
+        },
+      },
+      put: {
+        summary: "Mark an exercise complete",
+        description:
+          "Idempotent upsert: marks the given exercise complete for the student. Optionally include deployedUrl (the public Worker URL you verified) and model (your current model ID). Unknown exercise slugs are rejected.",
+        requestParams: { path: z.object({ studentId: studentIdSchema }) },
+        requestBody: {
+          content: {
+            "application/json": { schema: markProgressSchema },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Updated progress.",
+            content: {
+              "application/json": { schema: progressSchema },
+            },
+          },
+          "400": {
+            description: "Invalid body (e.g. unknown exercise slug or bad deployedUrl).",
           },
           "404": {
             description: "No student exists with that ID.",
