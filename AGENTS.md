@@ -62,6 +62,16 @@ Once enrolled, `HarnessPicker.astro` (backed by `src/lib/harness-picker-client.t
 
 Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent" per plan.agent.md's tickets: it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). Run it against `wrangler dev` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
 
+## Exercises and progress
+
+v1 ships one exercise, **Deploy your first Worker** (`deploy-first-worker`):
+
+- Catalog: `src/data/exercises.ts` (static), served by `GET /api/exercises` and `GET /api/exercises/{slug}`. Schemas in `src/schemas/exercise.ts`.
+- Completion: `migrations/0003_create_exercise_completions.sql` + `GET|PUT /api/progress/{studentId}` (`src/pages/api/progress/[studentId].ts`, schemas in `src/schemas/progress.ts`). `PUT` body is `{ exerciseSlug, deployedUrl?, model? }` — `deployedUrl` is optional (store when the agent has it; never required). Idempotent upsert on `(student_id, exercise_slug)`.
+- Agent procedure lives in the exercise's `agentInstructions` / `content` and is summarized in `/llms.txt`. The agent must fetch the deployed URL and confirm the expected text **before** calling `PUT` progress.
+
+Verify with `npm run verify:exercise` against `wrangler dev` (or a PR preview via `BASE_URL=...`). Same caveats as `verify:interview`: real enrollment + completion rows in whatever D1 `BASE_URL` points at; delete them afterward. The script does not deploy a Worker — it only checks the HTTP contract.
+
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 
 ## Dependency pinning

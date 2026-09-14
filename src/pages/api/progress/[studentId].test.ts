@@ -1,0 +1,140 @@
+import type { APIContext } from "astro";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const students = new Map<string, { id: string; created_at: string }>([
+  ["curious-hacker-2019", { id: "curious-hacker-2019", created_at: "2026-09-10T12:00:00.000Z" }],
+]);
+const completions = new Map<string, Record<string, unknown>>();
+
+function completionKey(studentId: string, slug: string) {
+  return `${studentId}::${slug}`;
+}
+
+const db = {
+  prepare: (sql: string) => {
+    if (sql.startsWith("SELECT id, created_at FROM students") || sql.startsWith("SELECT id FROM students")) {
+      return {
+        bind: (id: string) => ({
+          first: async () => students.get(id) ?? null,
+        }),
+      };
+    }
+    if (sql.startsWith("SELECT * FROM exercise_completions WHERE student_id = ? ORDER BY")) {
+      return {
+        bind: (studentId: string) => ({
+          all: async () => ({
+            results: [...completions.values()].filter((row) => row.student_id === studentId),
+          }),
+        }),
+      };
+    }
+    if (sql.startsWith("INSERT INTO exercise_completions")) {
+      return {
+        bind: (
+          studentId: string,
+          exerciseSlug: string,
+          completedAt: string,
+          deployedUrl: string | null,
+          model: string | null,
+        ) => ({
+          run: async () => {
+            completions.set(completionKey(studentId, exerciseSlug), {
+              student_id: studentId,
+              exercise_slug: exerciseSlug,
+              completed_at: completedAt,
+              deployed_url: deployedUrl,
+              model,
+            });
+          },
+        }),
+      };
+    }
+    throw new Error(`Unexpected SQL in test: ${sql}`);
+  },
+};
+
+vi.mock("cloudflare:workers", () => ({ env: { DB: db } }));
+
+function context(studentId: string, body?: unknown): APIContext {
+  return {
+    params: { studentId },
+    request: { json: async () => body } as unknown as Request,
+  } as unknown as APIContext;
+}
+
+beforeEach(() => {
+  completions.clear();
+});
+
+describe("GET /api/progress/{studentId}", () => {
+  it("404s for an unknown student", async () => {
+    const { GET } = await import("./[studentId]");
+    const response = await GET(context("no-such-student-0000"));
+    expect(response.status).toBe(404);
+  });
+
+  it("returns empty completedExercises for a new student", async () => {
+    const { GET } = await import("./[studentId]");
+    const response = await GET(context("curious-hacker-2019"));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      studentId: string;
+      completedExercises: unknown[];
+      updatedAt: string;
+    };
+    expect(body.studentId).toBe("curious-hacker-2019");
+    expect(body.completedExercises).toEqual([]);
+    expect(body.updatedAt).toBe("2026-09-10T12:00:00.000Z");
+  });
+});
+
+describe("PUT /api/progress/{studentId}", () => {
+  it("404s for an unknown student", async () => {
+    const { PUT } = await import("./[studentId]");
+    const response = await PUT(
+      context("no-such-student-0000", { exerciseSlug: "deploy-first-worker" }),
+    );
+    expect(response.status).toBe(404);
+  });
+
+  it("400s for an unknown exercise slug", async () => {
+    const { PUT } = await import("./[studentId]");
+    const response = await PUT(context("curious-hacker-2019", { exerciseSlug: "nope" }));
+    expect(response.status).toBe(400);
+  });
+
+  it("marks an exercise complete without deployedUrl", async () => {
+    const { PUT, GET } = await import("./[studentId]");
+    const response = await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      completedExercises: Array<{ slug: string; completedAt: string; deployedUrl?: string }>;
+    };
+    expect(body.completedExercises).toHaveLength(1);
+    expect(body.completedExercises[0]?.slug).toBe("deploy-first-worker");
+    expect(body.completedExercises[0]?.deployedUrl).toBeUndefined();
+    expect(body.completedExercises[0]?.completedAt).toMatch(/^\d{4}-/);
+
+    const fetched = (await (await GET(context("curious-hacker-2019"))).json()) as typeof body;
+    expect(fetched.completedExercises).toEqual(body.completedExercises);
+  });
+
+  it("stores optional deployedUrl and model on upsert", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
+
+    const response = await PUT(
+      context("curious-hacker-2019", {
+        exerciseSlug: "deploy-first-worker",
+        deployedUrl: "https://hello.example.workers.dev",
+        model: "anthropic/claude-sonnet-4-5",
+      }),
+    );
+    const body = (await response.json()) as {
+      completedExercises: Array<{ deployedUrl?: string; model?: string }>;
+    };
+    expect(body.completedExercises).toHaveLength(1);
+    expect(body.completedExercises[0]?.deployedUrl).toBe("https://hello.example.workers.dev");
+    expect(body.completedExercises[0]?.model).toBe("anthropic/claude-sonnet-4-5");
+  });
+});

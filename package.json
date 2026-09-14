@@ -16,7 +16,8 @@
     "deploy": "wrangler d1 migrations apply cloudflare-dev-school --remote && astro build && wrangler deploy",
     "preview:deploy": "node scripts/preview-env.mjs deploy",
     "preview:destroy": "node scripts/preview-env.mjs destroy",
-    "verify:interview": "node scripts/fake-agent-interview.mjs"
+    "verify:interview": "node scripts/fake-agent-interview.mjs",
+    "verify:exercise": "node scripts/fake-agent-exercise.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.6",
