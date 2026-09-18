@@ -11,9 +11,12 @@ describe("GET /api/exercises", () => {
       agentInstructions: string;
       content: string;
     }>;
-    expect(body).toHaveLength(1);
+    expect(body).toHaveLength(2);
     expect(body[0]?.slug).toBe("deploy-first-worker");
     expect(body[0]?.agentInstructions).toBeTruthy();
     expect(body[0]?.content).toBeTruthy();
+    expect(body[1]?.slug).toBe("add-first-binding-kv");
+    expect(body[1]?.agentInstructions).toBeTruthy();
+    expect(body[1]?.content).toBeTruthy();
   });
 });

@@ -4,7 +4,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 
 - `plan.human.md`: the original human-written plan.
 - `plan.agent.md`: the agent-refined plan, produced by grilling `plan.human.md`. Where the two disagree, `plan.agent.md` wins.
-- v1 assumes a working agent and covers five setup lessons followed by one exercise, "Deploy your first Worker." The deployed Worker is the final result; use `plan.agent.md` for the current scope.
+- v1 assumes a working agent and covers five setup lessons followed by two exercises: "Deploy your first Worker," then "Add your first Binding: Workers KV," which extends that same Worker. Use `plan.agent.md` for the current scope.
 - Tickets for turning the plan into working software live as GitHub issues #8–#20 on this repo, in dependency order. See each issue's "Blocked by" for sequencing.
 
 ## Stack
@@ -22,6 +22,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - `npm run deploy` — applies D1 migrations, then build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
 - `npm run preview:deploy` / `npm run preview:destroy` — used by `.github/workflows/preview.yml` for per-PR previews, not meant to be run by hand
 - `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `wrangler dev` after touching the interview API
+- `npm run verify:exercise` / `npm run verify:exercise-kv` — same idea, for the two exercises; run against `wrangler dev` after touching the exercise/progress API
 
 ## AI harness research data
 
@@ -64,13 +65,18 @@ Verify the interview API end to end with `npm run verify:interview` (a "scripted
 
 ## Exercises and progress
 
-v1 ships one exercise, **Deploy your first Worker** (`deploy-first-worker`):
+v1 ships two exercises, in order:
 
-- Catalog: `src/data/exercises.ts` (static), served by `GET /api/exercises` and `GET /api/exercises/{slug}`. Schemas in `src/schemas/exercise.ts`.
-- Completion: `migrations/0003_create_exercise_completions.sql` + `GET|PUT /api/progress/{studentId}` (`src/pages/api/progress/[studentId].ts`, schemas in `src/schemas/progress.ts`). `PUT` body is `{ exerciseSlug, deployedUrl?, model? }` — `deployedUrl` is optional (store when the agent has it; never required). Idempotent upsert on `(student_id, exercise_slug)`.
-- Agent procedure lives in the exercise's `agentInstructions` / `content` and is summarized in `/llms.txt`. The agent must fetch the deployed URL and confirm the expected text **before** calling `PUT` progress.
+1. **Deploy your first Worker** (`deploy-first-worker`): create, run locally, deploy, and visit a minimal text-response Worker.
+2. **Add your first Binding: Workers KV** (`add-first-binding-kv`): extends that same Worker — create a KV namespace, bind it, and read/write a value through it. Soft-prerequisite on exercise 1 (the agent checks `GET /api/progress/{studentId}` first, not enforced server-side).
 
-Verify with `npm run verify:exercise` against `wrangler dev` (or a PR preview via `BASE_URL=...`). Same caveats as `verify:interview`: real enrollment + completion rows in whatever D1 `BASE_URL` points at; delete them afterward. The script does not deploy a Worker — it only checks the HTTP contract.
+Shared infrastructure for both:
+
+- Catalog: `src/data/exercises.ts` (static), served by `GET /api/exercises` and `GET /api/exercises/{slug}`. `exerciseSlugSchema` in `src/schemas/exercise.ts` is a union of both slugs — extend it (and add a catalog entry) the same way for any future exercise.
+- Completion: `migrations/0003_create_exercise_completions.sql` + `GET|PUT /api/progress/{studentId}` (`src/pages/api/progress/[studentId].ts`, schemas in `src/schemas/progress.ts`). `PUT` body is `{ exerciseSlug, deployedUrl?, model? }` — `deployedUrl` is optional (store when the agent has it; never required). Idempotent upsert on `(student_id, exercise_slug)`; a student can have both completions at once.
+- Agent procedure lives in each exercise's `agentInstructions` / `content` and is summarized in `/llms.txt`. For exercise 1 the agent fetches the deployed URL and confirms the expected text before calling `PUT` progress; for exercise 2 the agent does a two-step write-then-separate-read round trip against the deployed URL, to prove the binding actually persists data rather than a single request just echoing something back.
+
+Verify exercise 1 with `npm run verify:exercise`, exercise 2 with `npm run verify:exercise-kv` (a sibling script, not a generalized/parameterized version of the first — keeps each diff small), both against `wrangler dev` (or a PR preview via `BASE_URL=...`). Same caveats as `verify:interview`: real enrollment + completion rows in whatever D1 `BASE_URL` points at; delete them afterward. Neither script deploys a Worker or provisions a real KV namespace — they only check the HTTP contract.
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 

@@ -17,7 +17,8 @@
     "preview:deploy": "node scripts/preview-env.mjs deploy",
     "preview:destroy": "node scripts/preview-env.mjs destroy",
     "verify:interview": "node scripts/fake-agent-interview.mjs",
-    "verify:exercise": "node scripts/fake-agent-exercise.mjs"
+    "verify:exercise": "node scripts/fake-agent-exercise.mjs",
+    "verify:exercise-kv": "node scripts/fake-agent-exercise-kv.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.6",

@@ -2,16 +2,19 @@ import { z } from "zod";
 
 /**
  * Exercises are hands-on projects the agent guides the student through.
- * v1 ships one: "Deploy your first Worker" (see plan.agent.md Exercises).
+ * v1 ships two: "Deploy your first Worker" and "Add your first Binding:
+ * Workers KV" (see plan.agent.md Exercises).
  *
  * Source of truth for GET /api/exercises and GET /api/exercises/{slug}
  * response shapes. Content lives in src/data/exercises.ts.
  */
 
-export const exerciseSlugSchema = z.literal("deploy-first-worker").meta({
-  description: "Stable slug for a course exercise. v1 has only deploy-first-worker.",
-  example: "deploy-first-worker",
-});
+export const exerciseSlugSchema = z
+  .union([z.literal("deploy-first-worker"), z.literal("add-first-binding-kv")])
+  .meta({
+    description: "Stable slug for a course exercise.",
+    example: "deploy-first-worker",
+  });
 
 export const exerciseSchema = z.object({
   order: z.number().int().positive().meta({ description: "Display order, starting at 1." }),

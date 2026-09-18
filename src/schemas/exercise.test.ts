@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { exerciseSchema, exerciseSlugSchema } from "./exercise";
 
 describe("exerciseSlugSchema", () => {
-  it("accepts the v1 deploy-first-worker slug", () => {
+  it("accepts both v1 exercise slugs", () => {
     expect(exerciseSlugSchema.parse("deploy-first-worker")).toBe("deploy-first-worker");
+    expect(exerciseSlugSchema.parse("add-first-binding-kv")).toBe("add-first-binding-kv");
   });
 
   it("rejects an unknown slug", () => {
