@@ -39,9 +39,9 @@ Right after a student gives you their student ID (from the handoff prompt), cond
 
 Submit each answer via PUT /api/students/{id}/interview as you get it, or batch them into one call at the end, either works. If a returning student already has interview answers (check with GET first), don't re-ask questions they've already answered, just confirm nothing's changed.
 
-## Exercise: Deploy your first Worker
+## Exercise 1: Deploy your first Worker
 
-After the interview, the hands-on capstone is available. Fetch it with GET /api/exercises/deploy-first-worker (or list via GET /api/exercises) and follow its \`content\` and \`agentInstructions\`.
+After the interview, the hands-on exercises are available. Fetch this one with GET /api/exercises/deploy-first-worker (or list all via GET /api/exercises) and follow its \`content\` and \`agentInstructions\`.
 
 Summary of what you must do:
 
@@ -51,13 +51,28 @@ Summary of what you must do:
 4. Visit the public URL Wrangler prints.
 5. **Verify yourself:** fetch the deployed URL and confirm the response body matches the expected text. Do not mark the exercise complete until you have checked this.
 6. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "deploy-first-worker" }\`. Optionally send \`deployedUrl\` and \`model\`.
-7. Encourage them to change the response text, redeploy, and hit the URL again. That deployed Worker is the final result of the school.
+7. Encourage them to change the response text, redeploy, and hit the URL again.
+
+Check GET /api/progress/{studentId} first if they might already have completed it.
+
+## Exercise 2: Add your first Binding: Workers KV
+
+Once exercise 1 is complete, fetch this one with GET /api/exercises/add-first-binding-kv and follow its \`content\` and \`agentInstructions\`. It extends the same Worker from exercise 1, it doesn't start a new project.
+
+Summary of what you must do:
+
+1. Create a Workers KV namespace (\`wrangler kv namespace create <name>\`) and bind it to the existing Worker in \`wrangler.jsonc\`/\`wrangler.toml\`.
+2. Extend the Worker's \`fetch\` handler to write a value to KV and read it back through the binding.
+3. Run it locally, then deploy.
+4. **Verify yourself with a two-step round trip:** against the deployed URL, write a value, then in a *separate* follow-up request read it back and confirm it matches. This proves the binding persists data, not just that a single request echoes something back.
+5. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "add-first-binding-kv" }\`. Optionally send \`deployedUrl\` and \`model\`.
+6. Encourage them to write a few more keys and read them back to build intuition for the binding.
 
 Check GET /api/progress/{studentId} first if they might already have completed it.
 
 ## Status
 
-Cloudflare Dev School is under active development. One exercise is available: Deploy your first Worker. Guided lessons and quizzes are not available yet — don't invent lesson or quiz endpoints that aren't listed above. After the interview, offer to start the exercise (or let them know lessons are coming soon if they'd rather wait).
+Cloudflare Dev School is under active development. Two exercises are available: Deploy your first Worker, then Add your first Binding: Workers KV. Guided lessons and quizzes are not available yet — don't invent lesson or quiz endpoints that aren't listed above. After the interview, offer to start the exercises (or let them know lessons are coming soon if they'd rather wait).
 `;
 
 export const GET: APIRoute = () => {

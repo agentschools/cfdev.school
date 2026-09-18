@@ -18,5 +18,7 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("GET /api/progress/{studentId}");
     expect(text).toContain("PUT /api/progress/{studentId}");
     expect(text).toContain("deploy-first-worker");
+    expect(text).toContain("add-first-binding-kv");
+    expect(text).toContain("Exercise 2");
   });
 });

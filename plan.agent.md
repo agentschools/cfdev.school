@@ -60,6 +60,8 @@ This data goes stale fast. Keeping it fresh is a **manual** process, not an auto
 7. Lessons.
 8. "Deploy your first Worker": create, run locally, deploy, and visit a minimal Worker on the student's own Cloudflare account.
 9. The agent confirms the deployed URL works, records the exercise as complete, and encourages the student to change the response and redeploy.
+10. "Add your first Binding: Workers KV": create a KV namespace, bind it to that same Worker, and read and write a value through it.
+11. The agent verifies the binding persists data with a write-then-separate-read round trip, records the exercise as complete, and encourages the student to try a few more keys.
 
 ## Interview
 
@@ -108,16 +110,31 @@ Generated dynamically from lesson content during the conversation (unless the co
 
 ## Exercises
 
-v1 ships one exercise: "Deploy your first Worker."
+v1 ships two exercises, in order.
+
+### 1. Deploy your first Worker
 
 1. Create a minimal Worker that returns a text response.
 2. Run it locally and check the response.
 3. Deploy it to the student's own Cloudflare account using their local Wrangler auth from the CLI lesson.
 4. Visit its public URL.
 
-The agent confirms the deployed URL returns the expected response and records the exercise as complete through the Dev School API. It then encourages the student to change the response and redeploy. This deployed Worker is the final result of the school.
+The agent confirms the deployed URL returns the expected response and records the exercise as complete through the Dev School API. It then encourages the student to change the response and redeploy.
 
-Keep this first exercise focused on the basic development and deployment loop. Frameworks, databases, custom domains, and additional exercises are deferred.
+Keep this exercise focused on the basic development and deployment loop. Frameworks, databases, and custom domains are out of scope.
+
+### 2. Add your first Binding: Workers KV
+
+Extends the same Worker from exercise 1, rather than starting a new project.
+
+1. Create a Workers KV namespace via Wrangler.
+2. Bind it to the existing Worker (a manual `wrangler.jsonc`/`wrangler.toml` edit, not a pre-wired template).
+3. Extend the Worker's `fetch` handler to write a value to KV and read it back through the binding.
+4. Run it locally, then deploy.
+
+The agent verifies the binding actually persists data with a two-step round trip — write, then a *separate* follow-up read confirming the same value — before recording the exercise complete through the Dev School API. It then encourages the student to try a few more keys.
+
+Keep this exercise focused on one KV namespace and the basic put/get loop. Multiple namespaces, list operations, TTL/expiration, other storage bindings (R2, D1, Durable Objects), and further exercises are deferred.
 
 ## Public API
 

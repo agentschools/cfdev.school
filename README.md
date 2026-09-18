@@ -4,6 +4,6 @@ Cloudflare Dev School teaches people how to build on Cloudflare using whatever A
 
 It's modeled closely on [OpenCode School](https://opencode.school), copying its enrollment flow, lesson structure, and public API shape wherever it makes sense.
 
-The first version walks students through five short setup lessons (models, instructions, CLI, skills, tools) and one exercise: deploying their first Worker to their own Cloudflare account.
+The first version walks students through five short setup lessons (models, instructions, CLI, skills, tools) and two exercises: deploying their first Worker to their own Cloudflare account, then adding a Workers KV binding to it.
 
 See [`AGENTS.md`](./AGENTS.md) for the stack, scripts, and conventions, and [`plan.agent.md`](./plan.agent.md) for the current scope and design decisions.
