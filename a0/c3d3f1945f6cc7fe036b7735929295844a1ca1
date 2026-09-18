@@ -1,0 +1,31 @@
+AGENTS.md
+  s_4c9e96a72776a4::t_e837c7bcd41438 7,25,68,70-71,73-79
+package.json
+  s_4c9e96a72776a4::t_43c688c6daa86a 20-21
+plan.agent.md
+  s_4c9e96a72776a4::t_d85a5285ca9257 63-64,113-115,122-135,137
+src/pages/api/exercises.test.ts
+  s_4c9e96a72776a4::t_ff02fb321ac203 14,18-20
+src/pages/index.astro
+  s_4c9e96a72776a4::t_cab7aed6607e2d 74-77
+src/pages/llms.txt.ts
+  s_4c9e96a72776a4::t_c8f366d2eac66c 42,44,54-69,75
+src/schemas/exercise.ts
+  s_4c9e96a72776a4::t_e732ef4d09aa12 5-6,12-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a0c3d3f1945f6cc7fe036b7735929295844a1ca1",
+  "prompts": {},
+  "sessions": {
+    "s_4c9e96a72776a4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f4ab5e94cffeTrp4plzN3gfhhf",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Thomas Desmond <24610108+thomas-desmond@users.noreply.github.com>"
+    }
+  }
+}
