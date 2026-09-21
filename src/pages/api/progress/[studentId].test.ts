@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const students = new Map<string, { id: string; created_at: string }>([
   ["curious-hacker-2019", { id: "curious-hacker-2019", created_at: "2026-09-10T12:00:00.000Z" }],
 ]);
-const completions = new Map<string, Record<string, unknown>>();
+const exerciseCompletions = new Map<string, Record<string, unknown>>();
+const lessonCompletions = new Map<string, Record<string, unknown>>();
 
 function completionKey(studentId: string, slug: string) {
   return `${studentId}::${slug}`;
@@ -23,7 +24,16 @@ const db = {
       return {
         bind: (studentId: string) => ({
           all: async () => ({
-            results: [...completions.values()].filter((row) => row.student_id === studentId),
+            results: [...exerciseCompletions.values()].filter((row) => row.student_id === studentId),
+          }),
+        }),
+      };
+    }
+    if (sql.startsWith("SELECT * FROM lesson_completions WHERE student_id = ? ORDER BY")) {
+      return {
+        bind: (studentId: string) => ({
+          all: async () => ({
+            results: [...lessonCompletions.values()].filter((row) => row.student_id === studentId),
           }),
         }),
       };
@@ -38,11 +48,25 @@ const db = {
           model: string | null,
         ) => ({
           run: async () => {
-            completions.set(completionKey(studentId, exerciseSlug), {
+            exerciseCompletions.set(completionKey(studentId, exerciseSlug), {
               student_id: studentId,
               exercise_slug: exerciseSlug,
               completed_at: completedAt,
               deployed_url: deployedUrl,
+              model,
+            });
+          },
+        }),
+      };
+    }
+    if (sql.startsWith("INSERT INTO lesson_completions")) {
+      return {
+        bind: (studentId: string, lessonSlug: string, completedAt: string, model: string | null) => ({
+          run: async () => {
+            lessonCompletions.set(completionKey(studentId, lessonSlug), {
+              student_id: studentId,
+              lesson_slug: lessonSlug,
+              completed_at: completedAt,
               model,
             });
           },
@@ -63,7 +87,8 @@ function context(studentId: string, body?: unknown): APIContext {
 }
 
 beforeEach(() => {
-  completions.clear();
+  exerciseCompletions.clear();
+  lessonCompletions.clear();
 });
 
 describe("GET /api/progress/{studentId}", () => {
@@ -73,17 +98,19 @@ describe("GET /api/progress/{studentId}", () => {
     expect(response.status).toBe(404);
   });
 
-  it("returns empty completedExercises for a new student", async () => {
+  it("returns empty completedExercises and completedLessons for a new student", async () => {
     const { GET } = await import("./[studentId]");
     const response = await GET(context("curious-hacker-2019"));
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       studentId: string;
       completedExercises: unknown[];
+      completedLessons: unknown[];
       updatedAt: string;
     };
     expect(body.studentId).toBe("curious-hacker-2019");
     expect(body.completedExercises).toEqual([]);
+    expect(body.completedLessons).toEqual([]);
     expect(body.updatedAt).toBe("2026-09-10T12:00:00.000Z");
   });
 });
@@ -91,15 +118,19 @@ describe("GET /api/progress/{studentId}", () => {
 describe("PUT /api/progress/{studentId}", () => {
   it("404s for an unknown student", async () => {
     const { PUT } = await import("./[studentId]");
-    const response = await PUT(
-      context("no-such-student-0000", { exerciseSlug: "deploy-first-worker" }),
-    );
+    const response = await PUT(context("no-such-student-0000", { exerciseSlug: "deploy-first-worker" }));
     expect(response.status).toBe(404);
   });
 
   it("400s for an unknown exercise slug", async () => {
     const { PUT } = await import("./[studentId]");
     const response = await PUT(context("curious-hacker-2019", { exerciseSlug: "nope" }));
+    expect(response.status).toBe(400);
+  });
+
+  it("400s for an unknown lesson slug", async () => {
+    const { PUT } = await import("./[studentId]");
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "nope" }));
     expect(response.status).toBe(400);
   });
 
@@ -136,5 +167,34 @@ describe("PUT /api/progress/{studentId}", () => {
     expect(body.completedExercises).toHaveLength(1);
     expect(body.completedExercises[0]?.deployedUrl).toBe("https://hello.example.workers.dev");
     expect(body.completedExercises[0]?.model).toBe("anthropic/claude-sonnet-4-5");
+  });
+
+  it("marks a lesson complete", async () => {
+    const { PUT, GET } = await import("./[studentId]");
+    const response = await PUT(
+      context("curious-hacker-2019", { lessonSlug: "models", model: "anthropic/claude-sonnet-4-5" }),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      completedLessons: Array<{ slug: string; completedAt: string; model?: string }>;
+    };
+    expect(body.completedLessons).toHaveLength(1);
+    expect(body.completedLessons[0]?.slug).toBe("models");
+    expect(body.completedLessons[0]?.model).toBe("anthropic/claude-sonnet-4-5");
+
+    const fetched = (await (await GET(context("curious-hacker-2019"))).json()) as typeof body;
+    expect(fetched.completedLessons).toEqual(body.completedLessons);
+  });
+
+  it("tracks exercises and lessons independently", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
+    const body = (await response.json()) as {
+      completedExercises: unknown[];
+      completedLessons: unknown[];
+    };
+    expect(body.completedExercises).toHaveLength(1);
+    expect(body.completedLessons).toHaveLength(1);
   });
 });

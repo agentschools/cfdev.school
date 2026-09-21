@@ -1,9 +1,19 @@
 import { z } from "zod";
 import { createDocument } from "zod-openapi";
+import { harnessProfileSchema } from "../data/harnesses";
 import { exerciseSchema, exerciseSlugSchema } from "../schemas/exercise";
 import { interviewAnswersSchema, interviewSchema } from "../schemas/interview";
 import { markProgressSchema, progressSchema } from "../schemas/progress";
 import { studentIdSchema, studentSchema } from "../schemas/student";
+
+const lessonContentSchema = z.object({
+  slug: z.string(),
+  harness: harnessProfileSchema.shape.id,
+  title: z.string(),
+  description: z.string(),
+  quiz: z.boolean(),
+  agentInstructions: z.string(),
+});
 
 /**
  * OpenAPI spec for the Cloudflare Dev School public API, derived from the
@@ -108,11 +118,33 @@ export const openApiDocument = createDocument({
         },
       },
     },
+    "/api/lessons/{slug}": {
+      get: {
+        summary: "Get lesson content for a harness",
+        description:
+          "Returns the agent instructions and description for a lesson, tailored to the given harness. Falls back to the generic variant if the harness has no dedicated content or is omitted.",
+        requestParams: {
+          path: z.object({ slug: z.string() }),
+          query: z.object({ harness: harnessProfileSchema.shape.id.optional() }),
+        },
+        responses: {
+          "200": {
+            description: "Lesson content for the resolved harness.",
+            content: {
+              "application/json": { schema: lessonContentSchema },
+            },
+          },
+          "404": {
+            description: "No lesson exists with that slug.",
+          },
+        },
+      },
+    },
     "/api/progress/{studentId}": {
       get: {
         summary: "Get a student's progress",
         description:
-          "Returns which exercises the student has completed. Empty completedExercises means nothing is complete yet. Lesson progress is not tracked in this version of the API.",
+          "Returns which exercises and lessons the student has completed. Empty completedExercises/completedLessons means nothing is complete yet in that category.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         responses: {
           "200": {
@@ -127,9 +159,9 @@ export const openApiDocument = createDocument({
         },
       },
       put: {
-        summary: "Mark an exercise complete",
+        summary: "Mark an exercise or lesson complete",
         description:
-          "Idempotent upsert: marks the given exercise complete for the student. Optionally include deployedUrl (the public Worker URL you verified) and model (your current model ID). Unknown exercise slugs are rejected.",
+          "Idempotent upsert: marks the given exercise or lesson complete for the student. Send exactly one of exerciseSlug or lessonSlug. Exercises may optionally include deployedUrl (the public Worker URL you verified); both may optionally include model (your current model ID). Unknown slugs are rejected.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         requestBody: {
           content: {
@@ -144,7 +176,7 @@ export const openApiDocument = createDocument({
             },
           },
           "400": {
-            description: "Invalid body (e.g. unknown exercise slug or bad deployedUrl).",
+            description: "Invalid body (e.g. unknown exercise/lesson slug or bad deployedUrl).",
           },
           "404": {
             description: "No student exists with that ID.",

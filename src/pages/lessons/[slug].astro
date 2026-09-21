@@ -1,0 +1,126 @@
+---
+import { getCollection, render } from "astro:content";
+import Header from "../../components/Header.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const entries = await getCollection("lessons", (entry) => entry.data.lessonSlug === slug);
+
+if (entries.length === 0) {
+  Astro.response.status = 404;
+}
+
+const variants = await Promise.all(
+  entries.map(async (entry) => {
+    const { Content } = await render(entry);
+    return {
+      harness: entry.data.harness,
+      title: entry.data.title,
+      description: entry.data.description,
+      Content,
+    };
+  }),
+);
+
+const title = variants[0]?.title ?? "Lesson not found";
+---
+
+<Layout title={`${title} — Cloudflare Dev School`} description={variants[0]?.description ?? "Lesson not found."}>
+  <Header />
+
+  <div class="page">
+    <main class="content">
+      {
+        variants.length === 0 ? (
+          <p>This lesson doesn't exist.</p>
+        ) : (
+          <>
+            <h1>
+              {title}
+              <span id="lesson-complete-badge" class="complete-badge" hidden>
+                ✓ Completed
+              </span>
+            </h1>
+            {variants.map((variant) => (
+              <div class="lesson-variant" data-harness-id={variant.harness} hidden>
+                <p class="lesson-description">{variant.description}</p>
+                <div class="prose">
+                  <variant.Content />
+                </div>
+              </div>
+            ))}
+          </>
+        )
+      }
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { initLessonPage } from "../../lib/lesson-client";
+  initLessonPage();
+</script>
+
+<style>
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2.5rem 0 5rem;
+    max-width: 42rem;
+  }
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 1.5rem;
+  }
+
+  .complete-badge {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: color-mix(in oklch, var(--accent) 20%, transparent);
+    color: var(--accent);
+  }
+
+  .lesson-variant[hidden] {
+    display: none;
+  }
+
+  .lesson-description {
+    color: var(--muted-fg);
+    font-size: 1.1rem;
+    margin: 0 0 1.5rem;
+  }
+
+  .prose {
+    line-height: 1.7;
+  }
+
+  .prose :global(h2) {
+    font-size: 1.35rem;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .prose :global(p) {
+    margin: 0 0 1rem;
+  }
+
+  .prose :global(ul) {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+  }
+
+  .prose :global(a) {
+    color: var(--accent);
+  }
+</style>

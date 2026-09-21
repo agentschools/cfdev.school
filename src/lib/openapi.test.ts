@@ -23,6 +23,12 @@ describe("openApiDocument", () => {
     expect(bySlug?.get?.responses?.["404"]).toBeDefined();
   });
 
+  it("documents GET /api/lessons/{slug}", () => {
+    const operation = openApiDocument.paths?.["/api/lessons/{slug}"]?.get;
+    expect(operation?.responses?.["200"]).toBeDefined();
+    expect(operation?.responses?.["404"]).toBeDefined();
+  });
+
   it("documents GET and PUT /api/progress/{studentId}", () => {
     const path = openApiDocument.paths?.["/api/progress/{studentId}"];
     expect(path?.get?.responses?.["200"]).toBeDefined();

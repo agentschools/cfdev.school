@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completedExerciseSchema, markProgressSchema, progressSchema } from "./progress";
+import { completedExerciseSchema, completedLessonSchema, markProgressSchema, progressSchema } from "./progress";
 
 describe("markProgressSchema", () => {
   it("accepts exerciseSlug alone", () => {
@@ -34,6 +34,27 @@ describe("markProgressSchema", () => {
       }),
     ).toThrow();
   });
+
+  it("accepts lessonSlug alone", () => {
+    expect(markProgressSchema.parse({ lessonSlug: "models" })).toEqual({ lessonSlug: "models" });
+  });
+
+  it("accepts an optional model with lessonSlug", () => {
+    expect(
+      markProgressSchema.parse({ lessonSlug: "models", model: "anthropic/claude-sonnet-4-5" }),
+    ).toMatchObject({
+      lessonSlug: "models",
+      model: "anthropic/claude-sonnet-4-5",
+    });
+  });
+
+  it("rejects an unknown lesson slug", () => {
+    expect(() => markProgressSchema.parse({ lessonSlug: "nope" })).toThrow();
+  });
+
+  it("rejects a body with neither exerciseSlug nor lessonSlug", () => {
+    expect(() => markProgressSchema.parse({ model: "anthropic/claude-sonnet-4-5" })).toThrow();
+  });
 });
 
 describe("completedExerciseSchema", () => {
@@ -47,18 +68,39 @@ describe("completedExerciseSchema", () => {
   });
 });
 
+describe("completedLessonSchema", () => {
+  it("accepts a completion without model", () => {
+    expect(() =>
+      completedLessonSchema.parse({
+        slug: "models",
+        completedAt: "2026-09-14T12:00:00.000Z",
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects an unknown lesson slug", () => {
+    expect(() =>
+      completedLessonSchema.parse({
+        slug: "nope",
+        completedAt: "2026-09-14T12:00:00.000Z",
+      }),
+    ).toThrow();
+  });
+});
+
 describe("progressSchema", () => {
-  it("accepts empty completedExercises", () => {
+  it("accepts empty completedExercises and completedLessons", () => {
     expect(() =>
       progressSchema.parse({
         studentId: "curious-hacker-2019",
         completedExercises: [],
+        completedLessons: [],
         updatedAt: "2026-09-14T12:00:00.000Z",
       }),
     ).not.toThrow();
   });
 
-  it("accepts a progress record with one completion", () => {
+  it("accepts a progress record with one exercise and one lesson completion", () => {
     expect(() =>
       progressSchema.parse({
         studentId: "curious-hacker-2019",
@@ -67,6 +109,12 @@ describe("progressSchema", () => {
             slug: "deploy-first-worker",
             completedAt: "2026-09-14T12:00:00.000Z",
             deployedUrl: "https://hello.example.workers.dev",
+          },
+        ],
+        completedLessons: [
+          {
+            slug: "models",
+            completedAt: "2026-09-14T12:00:00.000Z",
           },
         ],
         updatedAt: "2026-09-14T12:00:00.000Z",
