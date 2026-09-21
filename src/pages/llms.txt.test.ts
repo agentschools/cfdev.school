@@ -13,6 +13,7 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("GET /api/openapi.json");
     expect(text).toContain("GET /api/students/{id}/interview");
     expect(text).toContain("PUT /api/students/{id}/interview");
+    expect(text).toContain("GET /api/lessons/{slug}?harness={harnessId}");
     expect(text).toContain("GET /api/exercises");
     expect(text).toContain("GET /api/exercises/{slug}");
     expect(text).toContain("GET /api/progress/{studentId}");

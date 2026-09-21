@@ -2,9 +2,11 @@ import { env } from "cloudflare:workers";
 import type { APIRoute } from "astro";
 import {
   completedExerciseSchema,
+  completedLessonSchema,
   markProgressSchema,
   progressSchema,
   type CompletedExercise,
+  type CompletedLesson,
   type Progress,
 } from "../../../schemas/progress";
 
@@ -17,7 +19,7 @@ interface StudentRow {
   created_at: string;
 }
 
-interface CompletionRow {
+interface ExerciseCompletionRow {
   student_id: string;
   exercise_slug: string;
   completed_at: string;
@@ -25,7 +27,14 @@ interface CompletionRow {
   model: string | null;
 }
 
-function rowToCompletedExercise(row: CompletionRow): CompletedExercise {
+interface LessonCompletionRow {
+  student_id: string;
+  lesson_slug: string;
+  completed_at: string;
+  model: string | null;
+}
+
+function rowToCompletedExercise(row: ExerciseCompletionRow): CompletedExercise {
   return completedExerciseSchema.parse({
     slug: row.exercise_slug,
     completedAt: row.completed_at,
@@ -34,25 +43,36 @@ function rowToCompletedExercise(row: CompletionRow): CompletedExercise {
   });
 }
 
-async function loadProgress(studentId: string, fallbackUpdatedAt: string): Promise<Progress> {
-  const { results } = await env.DB.prepare(
-    "SELECT * FROM exercise_completions WHERE student_id = ? ORDER BY completed_at ASC",
-  )
-    .bind(studentId)
-    .all<CompletionRow>();
+function rowToCompletedLesson(row: LessonCompletionRow): CompletedLesson {
+  return completedLessonSchema.parse({
+    slug: row.lesson_slug,
+    completedAt: row.completed_at,
+    ...(row.model ? { model: row.model } : {}),
+  });
+}
 
-  const completedExercises = (results ?? []).map(rowToCompletedExercise);
-  const latest =
-    completedExercises.length > 0
-      ? completedExercises.reduce<string>(
-          (max, item) => (item.completedAt > max ? item.completedAt : max),
-          completedExercises[0]!.completedAt,
-        )
-      : fallbackUpdatedAt;
+async function loadProgress(studentId: string, fallbackUpdatedAt: string): Promise<Progress> {
+  const [{ results: exerciseRows }, { results: lessonRows }] = await Promise.all([
+    env.DB.prepare("SELECT * FROM exercise_completions WHERE student_id = ? ORDER BY completed_at ASC")
+      .bind(studentId)
+      .all<ExerciseCompletionRow>(),
+    env.DB.prepare("SELECT * FROM lesson_completions WHERE student_id = ? ORDER BY completed_at ASC")
+      .bind(studentId)
+      .all<LessonCompletionRow>(),
+  ]);
+
+  const completedExercises = (exerciseRows ?? []).map(rowToCompletedExercise);
+  const completedLessons = (lessonRows ?? []).map(rowToCompletedLesson);
+
+  const latest = [...completedExercises, ...completedLessons].reduce<string>(
+    (max, item) => (item.completedAt > max ? item.completedAt : max),
+    fallbackUpdatedAt,
+  );
 
   return progressSchema.parse({
     studentId,
     completedExercises,
+    completedLessons,
     updatedAt: latest,
   });
 }
@@ -98,19 +118,34 @@ export const PUT: APIRoute = async ({ params, request }) => {
   }
   const body = parsed.data;
   const completedAt = new Date().toISOString();
-  const deployedUrl = body.deployedUrl ?? null;
-  const model = body.model ?? null;
 
-  await env.DB.prepare(
-    `INSERT INTO exercise_completions (student_id, exercise_slug, completed_at, deployed_url, model)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(student_id, exercise_slug) DO UPDATE SET
-       completed_at = excluded.completed_at,
-       deployed_url = COALESCE(excluded.deployed_url, exercise_completions.deployed_url),
-       model = COALESCE(excluded.model, exercise_completions.model)`,
-  )
-    .bind(studentId, body.exerciseSlug, completedAt, deployedUrl, model)
-    .run();
+  if ("exerciseSlug" in body) {
+    const deployedUrl = body.deployedUrl ?? null;
+    const model = body.model ?? null;
+
+    await env.DB.prepare(
+      `INSERT INTO exercise_completions (student_id, exercise_slug, completed_at, deployed_url, model)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(student_id, exercise_slug) DO UPDATE SET
+         completed_at = excluded.completed_at,
+         deployed_url = COALESCE(excluded.deployed_url, exercise_completions.deployed_url),
+         model = COALESCE(excluded.model, exercise_completions.model)`,
+    )
+      .bind(studentId, body.exerciseSlug, completedAt, deployedUrl, model)
+      .run();
+  } else {
+    const model = body.model ?? null;
+
+    await env.DB.prepare(
+      `INSERT INTO lesson_completions (student_id, lesson_slug, completed_at, model)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(student_id, lesson_slug) DO UPDATE SET
+         completed_at = excluded.completed_at,
+         model = COALESCE(excluded.model, lesson_completions.model)`,
+    )
+      .bind(studentId, body.lessonSlug, completedAt, model)
+      .run();
+  }
 
   const progress = await loadProgress(studentId, student.created_at);
   return new Response(JSON.stringify(progress), { headers: jsonHeaders });

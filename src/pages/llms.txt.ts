@@ -11,7 +11,7 @@ const body = `# Cloudflare Dev School
 
 Cloudflare Dev School is an interactive course that teaches people how to build on Cloudflare using whatever AI coding agent they already have installed.
 
-Students enroll on the homepage, get a student ID (format: adjective-noun-1234, e.g. "curious-hacker-2019"), then pick their agent harness and get a prompt to paste into it. If you're reading this file because a student pasted that prompt, their student ID was included in it, use it, don't ask them to enroll again.
+Students enroll on the homepage, get a student ID (format: adjective-noun-1234, e.g. "curious-hacker-2019"), then pick their agent harness and get a prompt to paste into it. If you're reading this file because a student pasted that prompt, their student ID was included in it, use it, don't ask them to enroll again. The prompt also told you which harness the student picked, that's your harness id for the lesson endpoints below: \`claude-code\`, \`codex\`, \`opencode\`, \`pi\`, or \`generic\` if none of those match what you are.
 
 ## API
 
@@ -22,10 +22,11 @@ Currently available:
 - POST /api/students: enrolls a new student. No request body. Returns \`{ "id": "...", "createdAt": "..." }\`. Only call this if you don't already have a student ID from the prompt that referred you here.
 - GET /api/students/{id}/interview: fetch a student's interview answers. 404 if they haven't been interviewed yet.
 - PUT /api/students/{id}/interview: submit or update a student's interview answers. Send only the fields you're setting, it's a partial update and safe to call more than once (e.g. once per question, or later just to change \`quizOptIn\`).
+- GET /api/lessons/{slug}?harness={harnessId}: fetch a lesson's content and \`agentInstructions\` for your harness. Falls back to the \`generic\` variant if your harness has no dedicated content.
 - GET /api/exercises: list all exercises (content + agentInstructions).
 - GET /api/exercises/{slug}: fetch a single exercise by slug.
-- GET /api/progress/{studentId}: fetch which exercises the student has completed.
-- PUT /api/progress/{studentId}: mark an exercise complete. Body: \`{ "exerciseSlug": "deploy-first-worker" }\`. Optionally include \`deployedUrl\` (the public URL you verified) and \`model\` (your current model ID). Idempotent.
+- GET /api/progress/{studentId}: fetch which exercises and lessons the student has completed.
+- PUT /api/progress/{studentId}: mark an exercise or lesson complete. Send exactly one of \`{ "exerciseSlug": "deploy-first-worker" }\` or \`{ "lessonSlug": "models" }\`. Exercises may also include \`deployedUrl\` (the public URL you verified); either may include \`model\` (your current model ID, e.g. \`anthropic/claude-sonnet-4-5\`). Idempotent upsert.
 
 ## Interview
 
@@ -39,9 +40,17 @@ Right after a student gives you their student ID (from the handoff prompt), cond
 
 Submit each answer via PUT /api/students/{id}/interview as you get it, or batch them into one call at the end, either works. If a returning student already has interview answers (check with GET first), don't re-ask questions they've already answered, just confirm nothing's changed.
 
+## Lessons
+
+After the interview, check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order, starting with "models" (currently the only lesson available, more are coming).
+
+For each lesson: fetch GET /api/lessons/{slug}?harness={yourHarnessId}, follow its \`agentInstructions\` to teach the material conversationally, then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete with PUT /api/progress/{studentId} using \`{ "lessonSlug": "..." }\` before moving on. Always include \`model\` in that request.
+
+Don't invent lesson content that isn't in \`agentInstructions\`, and don't invent lesson slugs or endpoints that aren't listed above.
+
 ## Exercise 1: Deploy your first Worker
 
-After the interview, the hands-on exercises are available. Fetch this one with GET /api/exercises/deploy-first-worker (or list all via GET /api/exercises) and follow its \`content\` and \`agentInstructions\`.
+Once all available lessons are complete, the hands-on exercises are available. Fetch this one with GET /api/exercises/deploy-first-worker (or list all via GET /api/exercises) and follow its \`content\` and \`agentInstructions\`.
 
 Summary of what you must do:
 
@@ -72,7 +81,7 @@ Check GET /api/progress/{studentId} first if they might already have completed i
 
 ## Status
 
-Cloudflare Dev School is under active development. Two exercises are available: Deploy your first Worker, then Add your first Binding: Workers KV. Guided lessons and quizzes are not available yet — don't invent lesson or quiz endpoints that aren't listed above. After the interview, offer to start the exercises (or let them know lessons are coming soon if they'd rather wait).
+Cloudflare Dev School is under active development. One lesson ("models") and two exercises (Deploy your first Worker, then Add your first Binding: Workers KV) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {
