@@ -93,7 +93,7 @@ function fireCelebration(layer: HTMLElement): void {
   }
 }
 
-function readCachedStudent(): CachedStudent | null {
+export function readCachedStudent(): CachedStudent | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
@@ -121,15 +121,28 @@ export function initEnrollment(): void {
   const display = document.getElementById("student-id-display");
   const celebrationLayer = document.getElementById("celebration-layer");
   const triggers = document.querySelectorAll<HTMLButtonElement>("[data-enroll-trigger]");
-  if (!card || !display || !celebrationLayer || triggers.length === 0) return;
+  if (triggers.length === 0) return;
 
   let isSubmitting = false;
 
-  function showEnrolled(student: CachedStudent, fast: boolean): void {
-    card!.hidden = false;
-    cipherReveal(display as HTMLElement, student.id, fast, () => {
-      fireCelebration(celebrationLayer as HTMLElement);
+  // The ID card only exists on the homepage. Trigger buttons (e.g. the header's)
+  // can appear on any page, so their enrolled state must not depend on the card.
+  function markTriggersEnrolled(): void {
+    triggers.forEach((trigger) => {
+      trigger.textContent = "\u2713 Enrolled";
+      trigger.disabled = true;
+      trigger.classList.add("is-enrolled");
     });
+  }
+
+  function showEnrolled(student: CachedStudent, fast: boolean): void {
+    markTriggersEnrolled();
+    if (card && display && celebrationLayer) {
+      card.hidden = false;
+      cipherReveal(display, student.id, fast, () => {
+        fireCelebration(celebrationLayer);
+      });
+    }
     document.dispatchEvent(new CustomEvent<CachedStudent>(ENROLLED_EVENT, { detail: student }));
   }
 
@@ -140,7 +153,7 @@ export function initEnrollment(): void {
     trigger.addEventListener("click", async () => {
       const existing = readCachedStudent();
       if (existing) {
-        card!.scrollIntoView({ behavior: "smooth", block: "center" });
+        card?.scrollIntoView({ behavior: "smooth", block: "center" });
         showEnrolled(existing, true);
         return;
       }
@@ -152,13 +165,13 @@ export function initEnrollment(): void {
       try {
         const student = await enroll();
         writeCachedStudent(student);
-        card!.scrollIntoView({ behavior: "smooth", block: "center" });
+        card?.scrollIntoView({ behavior: "smooth", block: "center" });
         showEnrolled(student, false);
       } catch (error) {
         console.error("Enrollment failed", error);
+        trigger.disabled = false;
       } finally {
         isSubmitting = false;
-        trigger.disabled = false;
       }
     });
   });

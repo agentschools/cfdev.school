@@ -2,40 +2,16 @@
 import AgentPrompt from "../components/AgentPrompt.astro";
 import HarnessCard from "../components/HarnessCard.astro";
 import HarnessPicker from "../components/HarnessPicker.astro";
-import Header from "../components/Header.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { harnesses } from "../data/harnesses";
-
-const outline = [
-  { href: "#overview", label: "Overview" },
-  { href: "#harnesses", label: "Supported harnesses" },
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#enroll", label: "Enroll" },
-];
 ---
 
 <Layout
   title="Cloudflare Dev School"
   description="Learn to build on Cloudflare using whatever AI coding agent you already have installed. Free forever, no account required."
 >
-  <Header />
-
   <div class="page">
-    <aside class="sidebar" aria-label="On this page">
-      <nav>
-        <ul>
-          {
-            outline.map((item) => (
-              <li>
-                <a href={item.href}>{item.label}</a>
-              </li>
-            ))
-          }
-        </ul>
-      </nav>
-    </aside>
-
     <main class="content">
       <section id="overview" class="hero">
         <h1>Cloudflare Dev School</h1>
@@ -94,50 +70,21 @@ const outline = [
 </Layout>
 
 <script>
-  import { initEnrollment } from "../lib/enroll-client";
   import { initHarnessPicker } from "../lib/harness-picker-client";
-  // Order matters: initHarnessPicker() must attach its ENROLLED_EVENT listener
-  // before initEnrollment() runs, since initEnrollment() dispatches that event
-  // synchronously for a returning visitor with a cached student.
+  // initEnrollment() runs globally from Layout.astro. Astro hoists that script
+  // ahead of this one in the rendered HTML (page-level scripts don't reliably
+  // run after layout-level ones), so initHarnessPicker() can't rely on
+  // attaching its ENROLLED_EVENT listener before initEnrollment() dispatches
+  // it for a returning visitor — it also checks for an already-cached student
+  // directly as a fallback. See harness-picker-client.ts.
   initHarnessPicker();
-  initEnrollment();
 </script>
 
 <style>
   .page {
-    display: flex;
-    max-width: 1100px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 0 1.5rem;
-    gap: 2.5rem;
-  }
-
-  .sidebar {
-    display: none;
-    flex-shrink: 0;
-    width: 200px;
-    padding-top: 2.5rem;
-  }
-
-  .sidebar ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    position: sticky;
-    top: 2rem;
-  }
-
-  .sidebar a {
-    text-decoration: none;
-    color: var(--muted-fg);
-    font-size: 0.9rem;
-  }
-
-  .sidebar a:hover {
-    color: var(--fg);
   }
 
   .content {
@@ -220,11 +167,5 @@ const outline = [
     margin: 0;
     color: var(--muted-fg);
     font-size: 0.85rem;
-  }
-
-  @media (min-width: 900px) {
-    .sidebar {
-      display: block;
-    }
   }
 </style>

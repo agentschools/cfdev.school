@@ -1,6 +1,5 @@
 ---
 import { getCollection, render } from "astro:content";
-import Header from "../../components/Header.astro";
 import Layout from "../../layouts/Layout.astro";
 
 export const prerender = false;
@@ -28,8 +27,6 @@ const title = variants[0]?.title ?? "Lesson not found";
 ---
 
 <Layout title={`${title} — Cloudflare Dev School`} description={variants[0]?.description ?? "Lesson not found."}>
-  <Header />
-
   <div class="page">
     <main class="content">
       {

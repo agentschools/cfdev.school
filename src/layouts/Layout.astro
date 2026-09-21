@@ -1,4 +1,7 @@
 ---
+import CurriculumSidebar from "../components/CurriculumSidebar.astro";
+import Header from "../components/Header.astro";
+
 interface Props {
   title: string;
   description: string;
@@ -25,7 +28,25 @@ const { title, description } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <slot />
+    <div class="site-shell">
+      <CurriculumSidebar />
+      <div class="site-main">
+        <Header />
+        <slot />
+      </div>
+    </div>
+    <script>
+      import { initEnrollment } from "../lib/enroll-client";
+      // Runs on every page so [data-enroll-trigger] elements anywhere (e.g. the
+      // header's button) reflect enrolled state. Despite this tag being placed
+      // after <slot /> in the source, Astro hoists it ahead of page-level
+      // scripts in the rendered HTML, so it actually runs BEFORE e.g. the
+      // homepage's initHarnessPicker(). Anything that needs to react to an
+      // already-cached student can't rely on script order or solely on the
+      // ENROLLED_EVENT this dispatches — check readCachedStudent() directly too
+      // (see harness-picker-client.ts for an example).
+      initEnrollment();
+    </script>
   </body>
 </html>
 
@@ -54,6 +75,11 @@ const { title, description } = Astro.props;
     --muted-fg: color-mix(in oklch, var(--fg) 65%, transparent);
     --border: color-mix(in oklch, var(--fg) 14%, transparent);
     --card-bg: color-mix(in oklch, var(--fg) 4%, var(--bg));
+    /* Heading font: the OS-native system font stack at a heavy weight with tight
+       tracking, the same look as https://freeretro.ziki.workers.dev/'s "Free
+       Retro" wordmark (which is plain system-ui at font-weight 900, not a
+       custom webfont). Body copy stays on Inter for readability. */
+    --heading-font: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
   }
 
   * {
@@ -81,5 +107,31 @@ const { title, description } = Astro.props;
 
   a {
     color: inherit;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--heading-font);
+    letter-spacing: -0.03em;
+  }
+
+  h1 {
+    font-weight: 900;
+  }
+
+  h2,
+  h3 {
+    font-weight: 800;
+  }
+
+  .site-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .site-main {
+    min-width: 0;
+    flex: 1;
   }
 </style>
