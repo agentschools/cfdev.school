@@ -1,4 +1,4 @@
-import { type CachedStudent, ENROLLED_EVENT } from "./enroll-client";
+import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { getHarness, type HarnessProfile } from "../data/harnesses";
 
 const STORAGE_KEY = "cfDevSchool.harnessId";
@@ -80,11 +80,20 @@ export function initHarnessPicker(): void {
     }
   });
 
-  document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => {
-    currentStudent = event.detail;
+  function onEnrolled(student: CachedStudent): void {
+    currentStudent = student;
     picker!.hidden = false;
 
     const cachedHarnessId = readCachedHarnessId();
     if (cachedHarnessId) selectHarness(cachedHarnessId);
-  }) as EventListener);
+  }
+
+  document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => onEnrolled(event.detail)) as EventListener);
+
+  // initEnrollment() runs globally from Layout.astro, and Astro doesn't
+  // guarantee it executes after this page-level script (in practice it runs
+  // before), so the ENROLLED_EVENT dispatch for an already-cached student can
+  // fire before the listener above is attached. Check directly as a fallback.
+  const existingStudent = readCachedStudent();
+  if (existingStudent) onEnrolled(existingStudent);
 }

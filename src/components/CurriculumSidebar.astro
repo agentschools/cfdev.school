@@ -1,0 +1,152 @@
+---
+import { getCollection } from "astro:content";
+import { LESSON_OUTLINE } from "../data/curriculum";
+import { listExercises } from "../data/exercises";
+
+const existingLessonSlugs = new Set((await getCollection("lessons")).map((entry) => entry.data.lessonSlug));
+const exercises = listExercises();
+---
+
+<nav class="curriculum-sidebar" aria-label="Course curriculum">
+  <a class="brand" href="/">Cloudflare Dev School</a>
+
+  <p class="section-label">Lessons</p>
+  <ol class="item-list">
+    {
+      LESSON_OUTLINE.map((lesson, index) => {
+        const available = existingLessonSlugs.has(lesson.slug);
+        const num = String(index + 1).padStart(2, "0");
+        return (
+          <li data-lesson-slug={lesson.slug}>
+            {available ? (
+              <a href={`/lessons/${lesson.slug}`}>
+                <span>
+                  <span class="index">{num}.</span> {lesson.title}
+                </span>
+                <span class="check" hidden>
+                  ✓
+                </span>
+              </a>
+            ) : (
+              <span class="pending">
+                <span class="index">{num}.</span> {lesson.title}
+              </span>
+            )}
+          </li>
+        );
+      })
+    }
+  </ol>
+
+  <p class="section-label">Exercises</p>
+  <ol class="item-list">
+    {
+      exercises.map((exercise) => (
+        <li data-exercise-slug={exercise.slug}>
+          <span class="pending">
+            {exercise.title}
+            <span class="check" hidden>
+              ✓
+            </span>
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .curriculum-sidebar {
+    display: none;
+    flex-shrink: 0;
+    width: 230px;
+    padding: 1.75rem 1rem;
+    border-right: 1px solid var(--border);
+  }
+
+  .brand {
+    display: block;
+    margin: 0 0.5rem 1.5rem;
+    text-decoration: none;
+    color: var(--fg);
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  .section-label {
+    margin: 1.25rem 0.5rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted-fg);
+  }
+
+  .section-label:first-of-type {
+    margin-top: 0;
+  }
+
+  .item-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .item-list a,
+  .item-list .pending {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.4rem;
+    font-size: 0.88rem;
+    text-decoration: none;
+    color: var(--muted-fg);
+  }
+
+  .item-list a {
+    color: var(--fg);
+  }
+
+  .item-list a:hover {
+    background: var(--card-bg);
+  }
+
+  .item-list .pending {
+    opacity: 0.55;
+  }
+
+  .index {
+    color: var(--muted-fg);
+    margin-right: 0.15rem;
+  }
+
+  .check {
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .check[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .curriculum-sidebar {
+      display: block;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+  }
+</style>
+
+<script>
+  import { initCurriculumSidebar } from "../lib/curriculum-sidebar-client";
+  initCurriculumSidebar();
+</script>
