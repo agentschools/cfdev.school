@@ -83,6 +83,8 @@ export const harnesses: HarnessProfile[] = [
     cliCommand: "claude",
     instructionsFile: {
       path: "CLAUDE.md (project root) or ~/.claude/CLAUDE.md (global)",
+      notes:
+        "As of Claude Code 2.1.277 (2026-09-18), Claude also reads AGENTS.md natively, but only as a fallback: if any CLAUDE.md or CLAUDE.local.md exists in the working directory or a parent, that wins and AGENTS.md is ignored. With no CLAUDE.md on the path, Claude reads AGENTS.md instead, no import or symlink needed. The /config \"Project instructions\" setting can change this (e.g. claude-md-and-agents-md loads both). Not available on Bedrock, Vertex, or Foundry, or in a session with telemetry disabled or on its first run after install/upgrade; use a CLAUDE.md containing @AGENTS.md as a portable fallback for those cases.",
     },
     globalConfigFile: "~/.claude/settings.json",
     mcpConfigPath: "~/.claude.json (user scope) or .mcp.json (project scope)",
@@ -122,7 +124,7 @@ export const harnesses: HarnessProfile[] = [
         apiPricePerMTok: { input: 1, output: 5 },
       },
     ],
-    lastVerified: "2026-09-09",
+    lastVerified: "2026-09-21",
     sources: [
       {
         url: "https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan",
@@ -131,6 +133,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://claude-code-playbook.pages.dev/en/docs/level-1/api-key-setup",
         note: "Auth precedence order and current per-token API pricing table.",
+      },
+      {
+        url: "https://docs.claude.com/en/docs/claude-code/memory",
+        note: "Official docs' AGENTS.md section: fallback precedence rules, the /config Project instructions setting, and the Bedrock/Vertex/Foundry/telemetry-disabled exceptions. Verified live 2026-09-21, the same day as InfoWorld and DevOps.com's coverage of Claude Code 2.1.277.",
       },
     ],
   },
@@ -235,7 +241,9 @@ export const harnesses: HarnessProfile[] = [
     tagline: "A minimal, extensible terminal coding harness you adapt to your workflow.",
     cliCommand: "pi",
     instructionsFile: {
-      path: "AGENTS.md, discovered per pi's context file resolution; see pi's docs for the current search order",
+      path: "AGENTS.md (or CLAUDE.md) at ~/.pi/agent/AGENTS.md (global), plus parent directories and the current directory (project), all concatenated",
+      notes:
+        "A directory-level AGENTS.override.md takes the place of that directory's AGENTS.md/CLAUDE.md; other directories' files still load alongside it.",
     },
     globalConfigFile: "~/.pi/agent/",
     mcpConfigPath: "~/.pi/agent/ (MCP server config, see pi docs for exact file)",
@@ -252,7 +260,7 @@ export const harnesses: HarnessProfile[] = [
         "pi's /login supports ChatGPT Plus/Pro (Codex), Claude Pro/Max, GitHub Copilot, and xAI subscriptions. As of an April 2026 Anthropic enforcement change, Claude Pro/Max login in pi (and other third-party tools) technically works but draws from Anthropic's separate pay-per-token \"extra usage\" pool, not your Claude plan's included limits, so there's no cost benefit over an API key for Claude models. ChatGPT Plus/Pro login has no such restriction: OpenAI's Codex for OSS program officially endorses third-party harnesses using it, and usage counts against the ChatGPT plan as expected.",
     },
     models: [],
-    lastVerified: "2026-09-09",
+    lastVerified: "2026-09-21",
     sources: [
       {
         url: "https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/providers.md",
@@ -265,6 +273,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://code.claude.com/docs/en/legal-and-compliance",
         note: "Anthropic's official policy text prohibiting third-party routing of Free/Pro/Max credentials.",
+      },
+      {
+        url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/README.md",
+        note: "Context Files section: exact global path (~/.pi/agent/AGENTS.md), directory walk-up, concatenation, and AGENTS.override.md behavior. Verified against the locally installed README 2026-09-21.",
       },
     ],
   },
