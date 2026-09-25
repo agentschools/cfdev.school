@@ -33,4 +33,12 @@ describe("exercises catalog", () => {
     expect(exercise?.agentInstructions).toMatch(/separate/i);
     expect(exercise?.agentInstructions).toMatch(/PUT \/api\/progress/i);
   });
+
+  it("both exercises carry light teaching beats, still gated on verification", () => {
+    for (const slug of ["deploy-first-worker", "add-first-binding-kv"]) {
+      const exercise = getExercise(slug);
+      expect(exercise?.agentInstructions).toMatch(/interview answers/i);
+      expect(exercise?.agentInstructions).toMatch(/comprehension check/i);
+    }
+  });
 });

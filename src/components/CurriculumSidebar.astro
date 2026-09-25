@@ -4,6 +4,9 @@ import { LESSON_OUTLINE } from "../data/curriculum";
 import { listExercises } from "../data/exercises";
 
 const existingLessonSlugs = new Set((await getCollection("lessons")).map((entry) => entry.data.lessonSlug));
+const existingExerciseSlugs = new Set(
+  (await getCollection("exercises")).map((entry) => entry.data.exerciseSlug),
+);
 const exercises = listExercises();
 ---
 
@@ -38,19 +41,31 @@ const exercises = listExercises();
     }
   </ol>
 
-  <p class="section-label">Exercises</p>
+  <a class="section-label section-label-link" href="/exercises">Exercises</a>
   <ol class="item-list">
     {
-      exercises.map((exercise) => (
-        <li data-exercise-slug={exercise.slug}>
-          <span class="pending">
-            {exercise.title}
-            <span class="check" hidden>
-              ✓
-            </span>
-          </span>
-        </li>
-      ))
+      exercises.map((exercise) => {
+        const available = existingExerciseSlugs.has(exercise.slug);
+        return (
+          <li data-exercise-slug={exercise.slug}>
+            {available ? (
+              <a href={`/exercises/${exercise.slug}`}>
+                <span>{exercise.title}</span>
+                <span class="check" hidden>
+                  ✓
+                </span>
+              </a>
+            ) : (
+              <span class="pending">
+                {exercise.title}
+                <span class="check" hidden>
+                  ✓
+                </span>
+              </span>
+            )}
+          </li>
+        );
+      })
     }
   </ol>
 </nav>
@@ -84,6 +99,15 @@ const exercises = listExercises();
 
   .section-label:first-of-type {
     margin-top: 0;
+  }
+
+  a.section-label-link {
+    display: block;
+    text-decoration: none;
+  }
+
+  a.section-label-link:hover {
+    color: var(--fg);
   }
 
   .item-list {

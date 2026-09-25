@@ -62,6 +62,8 @@ Summary of what you must do:
 6. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "deploy-first-worker" }\`. Optionally send \`deployedUrl\` and \`model\`.
 7. Encourage them to change the response text, redeploy, and hit the URL again.
 
+Teach lightly: briefly explain each new concept (Worker, fetch handler, deploying, workers.dev URL) with depth adapted to their interview answers, and before marking complete ask them to explain what happens when someone visits their URL. Verification is still the gate.
+
 Check GET /api/progress/{studentId} first if they might already have completed it.
 
 ## Exercise 2: Add your first Binding: Workers KV
@@ -76,6 +78,8 @@ Summary of what you must do:
 4. **Verify yourself with a two-step round trip:** against the deployed URL, write a value, then in a *separate* follow-up request read it back and confirm it matches. This proves the binding persists data, not just that a single request echoes something back.
 5. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "add-first-binding-kv" }\`. Optionally send \`deployedUrl\` and \`model\`.
 6. Encourage them to write a few more keys and read them back to build intuition for the binding.
+
+Teach lightly: briefly explain each new concept (KV namespace, binding, env) with depth adapted to their interview answers, tell them why the two-step round trip proves persistence, and before marking complete ask them to explain what a binding is. Verification is still the gate.
 
 Check GET /api/progress/{studentId} first if they might already have completed it.
 
