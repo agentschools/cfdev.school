@@ -1,18 +1,10 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { getExercise, listExercises } from "../data/exercises";
 import { getHarness, type HarnessProfile } from "../data/harnesses";
+import type { Progress } from "../schemas/progress";
 import { buildPrompt } from "./harness-picker-client";
 
 const HARNESS_STORAGE_KEY = "cfDevSchool.harnessId";
-
-interface CompletedExercise {
-  slug: string;
-  completedAt: string;
-}
-
-interface Progress {
-  completedExercises: CompletedExercise[];
-}
 
 function readCachedHarnessId(): HarnessProfile["id"] | null {
   try {
