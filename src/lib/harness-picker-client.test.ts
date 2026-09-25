@@ -18,4 +18,17 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("https://cloudflare-dev-school.ziki.workers.dev/llms.txt");
     expect(prompt).toContain(harness.name);
   });
+
+  it("names the exercise when given an exercise context", () => {
+    const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
+    const harness = getHarness("opencode");
+    const exercise = { slug: "deploy-first-worker", title: "Deploy your first Worker" };
+
+    const prompt = buildPrompt(student, harness, exercise);
+
+    expect(prompt).toContain("curious-hacker-2019");
+    expect(prompt).toContain(harness.name);
+    expect(prompt).toContain('Let\'s work on the "Deploy your first Worker" exercise (slug: deploy-first-worker).');
+    expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
+  });
 });

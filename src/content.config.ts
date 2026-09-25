@@ -1,6 +1,7 @@
 import { glob } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
 import { harnessProfileSchema } from "./data/harnesses";
+import { exerciseSlugSchema } from "./schemas/exercise";
 
 /**
  * One entry per (lesson, harness) pair, e.g. `models/claude-code.md`. The
@@ -22,4 +23,17 @@ const lessons = defineCollection({
   }),
 });
 
-export const collections = { lessons };
+/**
+ * Short student-facing page prose for each exercise (intro, what you'll build,
+ * prerequisites). Title/description/order and the agent-facing walkthrough live
+ * in src/data/exercises.ts — this collection only holds what the /exercises/{slug}
+ * page renders.
+ */
+const exercises = defineCollection({
+  loader: glob({ pattern: "*.md", base: "src/content/exercises" }),
+  schema: z.object({
+    exerciseSlug: exerciseSlugSchema,
+  }),
+});
+
+export const collections = { lessons, exercises };

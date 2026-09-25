@@ -19,8 +19,28 @@ function writeCachedHarnessId(id: HarnessProfile["id"]): void {
   }
 }
 
-export function buildPrompt(student: CachedStudent, harness: HarnessProfile): string {
+export interface ExercisePromptContext {
+  slug: string;
+  title: string;
+}
+
+export function buildPrompt(
+  student: CachedStudent,
+  harness: HarnessProfile,
+  exercise?: ExercisePromptContext,
+): string {
   const origin = window.location.origin;
+  if (exercise) {
+    return [
+      `I'm enrolled in Cloudflare Dev School as ${student.id}.`,
+      "",
+      `My coding agent is ${harness.name}.`,
+      "",
+      `Let's work on the "${exercise.title}" exercise (slug: ${exercise.slug}).`,
+      "",
+      `Fetch ${origin}/llms.txt for instructions.`,
+    ].join("\n");
+  }
   return [
     `I'm enrolled in Cloudflare Dev School as ${student.id}.`,
     "",
