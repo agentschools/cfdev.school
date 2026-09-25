@@ -14,18 +14,21 @@ const deployFirstWorker: Exercise = exerciseSchema.parse({
     "Create a minimal Worker that returns a text response, run it locally, deploy it to your Cloudflare account, and visit its public URL.",
   agentInstructions: `Guide the student through this exercise end to end. Do not skip verification.
 
-1. Create: help them scaffold a minimal Worker that returns a plain-text response (e.g. "Hello from Cloudflare Dev School"). Prefer the simplest possible project — a single Worker script, no framework, no database, no custom domain.
+Teach lightly as you go. Adapt depth to their interview answers (technicalBackground, cloudflareFamiliarity): beginners get a brief, two-or-three-sentence explanation of each new concept as it comes up; regular Cloudflare users can skip straight to the mechanics. Don't lecture.
+
+1. Create: help them scaffold a minimal Worker that returns a plain-text response (e.g. "Hello from Cloudflare Dev School"). Prefer the simplest possible project — a single Worker script, no framework, no database, no custom domain. Explain what a Worker is (a function that runs on Cloudflare's network, close to whoever visits it) and what the \`fetch\` handler does (it receives a request and returns a response).
 2. Run locally: start the local dev server (typically \`npx wrangler dev\` or \`wrangler dev\`) and confirm the local URL returns the expected text.
-3. Deploy: deploy to the student's own Cloudflare account using their existing Wrangler auth from the CLI lesson (\`npx wrangler deploy\` / \`wrangler deploy\`). If they are not authenticated yet, help them finish Wrangler login first.
+3. Deploy: deploy to the student's own Cloudflare account using their existing Wrangler auth from the CLI lesson (\`npx wrangler deploy\` / \`wrangler deploy\`). If they are not authenticated yet, help them finish Wrangler login first. Explain what deploying did: the same code that ran locally now runs on Cloudflare's network, and the workers.dev URL Wrangler prints is its public address.
 4. Visit: open the public workers.dev (or other) URL Wrangler prints after deploy.
 5. Verify before completing: YOU must fetch the deployed URL (e.g. with curl or fetch) and confirm the response body matches the expected text. Do not trust the student saying it worked — check it yourself.
-6. Mark complete: only after verification succeeds, PUT /api/progress/{studentId} with \`{ "exerciseSlug": "deploy-first-worker" }\`. Optionally include \`deployedUrl\` (the public URL you verified) and \`model\` (your current model ID). Never invent other progress endpoints.
-7. Afterward: encourage the student to change the response text, redeploy, and hit the URL again so they feel the edit → deploy loop. This same Worker is what the next exercise (adding a Workers KV binding) builds on.
+6. Comprehension check: before marking complete, ask the student to explain in their own words what happens when someone visits their URL (a request hits their Worker's fetch handler on Cloudflare's network, which returns the response). Gently correct anything off. The URL verification above is the gate, not their answer.
+7. Mark complete: only after verification succeeds, PUT /api/progress/{studentId} with \`{ "exerciseSlug": "deploy-first-worker" }\`. Optionally include \`deployedUrl\` (the public URL you verified) and \`model\` (your current model ID). Never invent other progress endpoints.
+8. Afterward: encourage the student to change the response text, redeploy, and hit the URL again so they feel the edit → deploy loop. This same Worker is what the next exercise (adding a Workers KV binding) builds on.
 
 Out of scope for this exercise: frameworks (Astro, Next, Hono apps beyond a trivial handler), D1/R2 bindings, custom domains, and additional exercises. If the student asks, say those come later and stay focused on the basic loop.`,
   content: `# Deploy your first Worker
 
-This is the first hands-on exercise of Cloudflare Dev School. You will create a minimal Worker that returns plain text, run it on your machine, deploy it to your Cloudflare account, and open it on the public internet.
+This is the first hands-on exercise of Cloudflare Dev School. A Worker is a function that runs on Cloudflare's network, close to whoever visits it; its \`fetch\` handler receives a request and returns a response. You will create a minimal Worker that returns plain text, run it on your machine, deploy it to your Cloudflare account, and open it on the public internet.
 
 **Out of scope:** frameworks, databases, custom domains, and extra projects. Stay on the basic create → run locally → deploy → visit loop.
 
@@ -88,14 +91,17 @@ const addFirstBindingKv: Exercise = exerciseSchema.parse({
 
 This exercise extends the same Worker from "Deploy your first Worker" (deploy-first-worker) — check GET /api/progress/{studentId} first; if that exercise isn't complete yet, help them finish it before starting this one.
 
-1. Provision: help them create a KV namespace with \`npx wrangler kv namespace create <name>\` (or \`wrangler kv namespace create <name>\`). Wrangler prints an \`id\`.
-2. Bind: add a \`kv_namespaces\` entry to their \`wrangler.jsonc\` (or \`wrangler.toml\`) using that \`id\`, giving the binding a name like \`KV\`. This is a manual edit — don't reach for a template that already has the binding wired up, the point is to see how a binding is declared.
-3. Extend the Worker: update the same Worker's \`fetch\` handler so it reads a \`key\` (and, for writes, a \`value\`) from the request — e.g. query string params — and uses the binding: \`PUT\`-style requests call \`env.KV.put(key, value)\`, \`GET\`-style requests call \`env.KV.get(key)\` and return it (or a 404 if missing).
+Teach lightly as you go. Adapt depth to their interview answers (technicalBackground, cloudflareFamiliarity): beginners get a brief, two-or-three-sentence explanation of each new concept as it comes up; regular Cloudflare users can skip straight to the mechanics. Don't lecture.
+
+1. Provision: help them create a KV namespace with \`npx wrangler kv namespace create <name>\` (or \`wrangler kv namespace create <name>\`). Wrangler prints an \`id\`. Explain what a KV namespace is: a key-value store on Cloudflare's network, independent of any single Worker.
+2. Bind: add a \`kv_namespaces\` entry to their \`wrangler.jsonc\` (or \`wrangler.toml\`) using that \`id\`, giving the binding a name like \`KV\`. This is a manual edit — don't reach for a template that already has the binding wired up, the point is to see how a binding is declared. Explain what a binding is: the named connection between a Worker and a platform resource, which shows up on \`env\` in the Worker's code.
+3. Extend the Worker: update the same Worker's \`fetch\` handler so it reads a \`key\` (and, for writes, a \`value\`) from the request — e.g. query string params — and uses the binding: \`PUT\`-style requests call \`env.KV.put(key, value)\`, \`GET\`-style requests call \`env.KV.get(key)\` and return it (or a 404 if missing). Point out that \`env.KV\` is the binding from step 2 in action.
 4. Run locally: start the local dev server (\`npx wrangler dev\` / \`wrangler dev\`) and confirm a local write followed by a local read returns the same value.
 5. Deploy: deploy to the student's own Cloudflare account (\`npx wrangler deploy\` / \`wrangler deploy\`).
-6. Verify before completing: YOU must make two separate requests against the deployed URL — first write a value, then in a follow-up request read it back — and confirm it matches. A single request proving a value round-trips in memory is not enough; the two-step, separately-issued round trip is what proves the KV binding is actually persisting data rather than the Worker just echoing something back. Do not trust the student saying it worked — check it yourself.
-7. Mark complete: only after verification succeeds, PUT /api/progress/{studentId} with \`{ "exerciseSlug": "add-first-binding-kv" }\`. Optionally include \`deployedUrl\` (the public URL you verified) and \`model\` (your current model ID). Never invent other progress endpoints.
-8. Afterward: encourage the student to write a few different keys, overwrite an existing key, and confirm each with a GET, to build intuition for how the binding behaves.
+6. Verify before completing: YOU must make two separate requests against the deployed URL — first write a value, then in a follow-up request read it back — and confirm it matches. A single request proving a value round-trips in memory is not enough; the two-step, separately-issued round trip is what proves the KV binding is actually persisting data rather than the Worker just echoing something back. Do not trust the student saying it worked — check it yourself. Tell the student why you verify this way: the separate read is what proves persistence.
+7. Comprehension check: before marking complete, ask the student to explain what a binding is in their own words (the named connection between their Worker and the KV namespace, available on \`env\`). Gently correct anything off. The round-trip verification above is the gate, not their answer.
+8. Mark complete: only after verification succeeds, PUT /api/progress/{studentId} with \`{ "exerciseSlug": "add-first-binding-kv" }\`. Optionally include \`deployedUrl\` (the public URL you verified) and \`model\` (your current model ID). Never invent other progress endpoints.
+9. Afterward: encourage the student to write a few different keys, overwrite an existing key, and confirm each with a GET, to build intuition for how the binding behaves.
 
 Out of scope for this exercise: multiple KV namespaces, list operations, TTL/expiration, R2/D1 bindings, Durable Objects, and additional exercises. If the student asks, say those come later and stay focused on this one binding.`,
   content: `# Add your first Binding: Workers KV
