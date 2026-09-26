@@ -21,7 +21,7 @@ import { harnesses } from "../data/harnesses";
           walk you through setting up Cloudflare.
         </p>
         <StudentIdCard />
-        <div class="cta-block">
+        <div class="cta-block" data-enroll-container>
           <button class="cta cta-large" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
           <p class="fine-print">Free forever. No account required. No personal data collected.</p>
         </div>
@@ -96,6 +96,10 @@ import { harnesses } from "../data/harnesses";
     align-items: center;
     gap: 0.75rem;
     max-width: 40rem;
+  }
+
+  .cta-block[hidden] {
+    display: none;
   }
 
   .cta {
