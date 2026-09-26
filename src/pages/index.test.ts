@@ -22,7 +22,6 @@ describe("homepage", () => {
       "All you need to get started is a working AI coding agent on your computer. We'll walk you through setting up Cloudflare.",
     );
     expect(html).toContain('id="harnesses"');
-    expect(html).toContain('id="enroll"');
     expect(html).toContain("Enroll in Cloudflare Dev School");
     expect(html).toContain("Free forever. No account required. No personal data collected.");
 

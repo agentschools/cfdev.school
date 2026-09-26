@@ -10,6 +10,7 @@ import { harnesses } from "../data/harnesses";
 <Layout
   title="Cloudflare Dev School"
   description="Learn to build on Cloudflare using whatever AI coding agent you already have installed. Free forever, no account required."
+  showSidebarBrand={false}
 >
   <div class="page">
     <main class="content">
@@ -22,7 +23,7 @@ import { harnesses } from "../data/harnesses";
         </p>
         <StudentIdCard />
         <div class="cta-block">
-          <button class="cta" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
+          <button class="cta cta-large" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
           <p class="fine-print">Free forever. No account required. No personal data collected.</p>
         </div>
         <HarnessPicker />
@@ -41,30 +42,6 @@ import { harnesses } from "../data/harnesses";
         </div>
       </section>
 
-      <section id="how-it-works" class="how-it-works">
-        <h2>How it works</h2>
-        <ol>
-          <li>Enroll and get a randomly generated student ID. No account needed.</li>
-          <li>Pick your agent harness and copy the prompt we give you.</li>
-          <li>
-            Paste it into your agent. It'll interview you, then walk you through five short lessons: <a
-              href="/lessons/models">models</a
-            >, <a href="/lessons/instructions">instructions</a>, CLI, skills, and tools.
-          </li>
-          <li>
-            Finish with two exercises: deploy your first Worker to your own Cloudflare account, then add a Workers
-            KV binding to it.
-          </li>
-        </ol>
-      </section>
-
-      <section id="enroll" class="enroll">
-        <h2>Ready to start?</h2>
-        <div class="cta-block">
-          <button class="cta" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
-          <p class="fine-print">Free forever. No account required. No personal data collected.</p>
-        </div>
-      </section>
     </main>
   </div>
 </Layout>
@@ -133,6 +110,11 @@ import { harnesses } from "../data/harnesses";
     cursor: pointer;
   }
 
+  .cta-large {
+    padding: 1.15rem 2.25rem;
+    font-size: 1.2rem;
+  }
+
   .cta:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -153,14 +135,6 @@ import { harnesses } from "../data/harnesses";
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
-  }
-
-  .how-it-works ol {
-    max-width: 40rem;
-    padding-left: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
   }
 
   .fine-print {
