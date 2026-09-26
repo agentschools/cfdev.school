@@ -14,7 +14,7 @@ vi.mock("astro:content", () => ({
 }));
 
 describe("homepage", () => {
-  it("renders the prerequisite statement, enroll CTA, and every harness card", async () => {
+  it("renders the prerequisite statement, enroll CTA, and every harness logo", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 

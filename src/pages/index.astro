@@ -1,6 +1,5 @@
 ---
 import AgentPrompt from "../components/AgentPrompt.astro";
-import HarnessCard from "../components/HarnessCard.astro";
 import HarnessPicker from "../components/HarnessPicker.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
@@ -31,23 +30,26 @@ import { harnesses } from "../data/harnesses";
       </section>
 
       <section id="harnesses" class="harnesses">
-        <h2>Supported harnesses</h2>
-        <p class="section-lede">
-          Cloudflare Dev School works with these agent harnesses out of the box, plus a generic path for anything
-          else. See <a href="https://developers.cloudflare.com/agent-setup/">Cloudflare's agent setup docs</a> for the
-          latest official tooling recommendations.
-        </p>
-        <div class="harness-grid">
-          {harnesses.map((harness) => <HarnessCard harness={harness} />)}
+        <div class="harness-row">
+          {
+            harnesses
+              .filter((harness) => harness.id !== "generic" && harness.icon)
+              .map((harness) => (
+                <span class="harness-icon" data-tooltip={harness.name} tabindex="0">
+                  <img class="icon icon-light" src={harness.icon!.light} alt={harness.name} width="36" height="36" />
+                  <img class="icon icon-dark" src={harness.icon!.dark} alt={harness.name} width="36" height="36" />
+                </span>
+              ))
+          }
         </div>
       </section>
-
     </main>
   </div>
 </Layout>
 
 <script>
   import { initHarnessPicker } from "../lib/harness-picker-client";
+  import { initHarnessTooltips } from "../lib/harness-tooltip-client";
   // initEnrollment() runs globally from Layout.astro. Astro hoists that script
   // ahead of this one in the rendered HTML (page-level scripts don't reliably
   // run after layout-level ones), so initHarnessPicker() can't rely on
@@ -55,6 +57,7 @@ import { harnesses } from "../data/harnesses";
   // it for a returning visitor — it also checks for an already-cached student
   // directly as a fallback. See harness-picker-client.ts.
   initHarnessPicker();
+  initHarnessTooltips();
 </script>
 
 <style>
@@ -125,21 +128,67 @@ import { harnesses } from "../data/harnesses";
     margin: 0 0 0.75rem;
   }
 
-  .section-lede {
-    color: var(--muted-fg);
-    max-width: 40rem;
-    margin: 0 0 1.5rem;
+  .harness-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.75rem;
   }
 
-  .harness-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+  .harness-icon {
+    display: flex;
+    cursor: default;
+  }
+
+  .icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.4rem;
+  }
+
+  .icon-dark {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .icon-light {
+      display: none;
+    }
+
+    .icon-dark {
+      display: block;
+    }
   }
 
   .fine-print {
     margin: 0;
     color: var(--muted-fg);
     font-size: 0.85rem;
+  }
+</style>
+
+<style is:global>
+  /* Appended to <body> by harness-tooltip-client.ts, outside this page's
+     scoped styles, so it needs to be global. */
+  .harness-tooltip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.35rem;
+    background: var(--fg);
+    color: var(--bg);
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.1s ease;
+    z-index: 20;
+  }
+
+  .harness-tooltip.is-visible {
+    opacity: 1;
+    visibility: visible;
   }
 </style>
