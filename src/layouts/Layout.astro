@@ -42,10 +42,10 @@ const { title, description, showSidebarBrand = true } = Astro.props;
       // header's button) reflect enrolled state. Despite this tag being placed
       // after <slot /> in the source, Astro hoists it ahead of page-level
       // scripts in the rendered HTML, so it actually runs BEFORE e.g. the
-      // homepage's initHarnessPicker(). Anything that needs to react to an
+      // homepage's initAgentPrompt(). Anything that needs to react to an
       // already-cached student can't rely on script order or solely on the
       // ENROLLED_EVENT this dispatches — check readCachedStudent() directly too
-      // (see harness-picker-client.ts for an example).
+      // (see src/pages/index.astro for an example).
       initEnrollment();
     </script>
   </body>

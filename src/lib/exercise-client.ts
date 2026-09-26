@@ -1,27 +1,7 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { getExercise, listExercises } from "../data/exercises";
-import { getHarness, type HarnessProfile } from "../data/harnesses";
 import type { Progress } from "../schemas/progress";
-import { buildPrompt } from "./harness-picker-client";
-
-const HARNESS_STORAGE_KEY = "cfDevSchool.harnessId";
-
-function readCachedHarnessId(): HarnessProfile["id"] | null {
-  try {
-    return localStorage.getItem(HARNESS_STORAGE_KEY) as HarnessProfile["id"] | null;
-  } catch {
-    return null;
-  }
-}
-
-function resolveHarness(): HarnessProfile {
-  const cached = readCachedHarnessId();
-  try {
-    return getHarness(cached ?? "generic");
-  } catch {
-    return getHarness("generic"); // Stale/invalid cached id.
-  }
-}
+import { buildPrompt } from "./agent-prompt";
 
 function formatCompletedBanner(completedAt: string | undefined): string {
   if (!completedAt) return "You completed this exercise!";
@@ -69,10 +49,7 @@ export function initExercisePage(): void {
   let alreadyComplete = false;
 
   function fillPrompt(student: CachedStudent): void {
-    promptText!.textContent = buildPrompt(student, resolveHarness(), {
-      slug: exercise.slug,
-      title: exercise.title,
-    });
+    promptText!.textContent = buildPrompt(student, { kind: "exercise", title: exercise.title });
     promptSection!.hidden = false;
     copyConfirm!.hidden = true;
   }
@@ -157,7 +134,7 @@ export function initExercisePage(): void {
   // initEnrollment() runs globally from Layout.astro before page scripts in
   // practice, so an already-cached student's ENROLLED_EVENT may fire before
   // this listener attaches — check readCachedStudent() directly as a fallback
-  // (same pattern as harness-picker-client.ts).
+  // (same pattern as src/pages/index.astro's initAgentPrompt()).
   document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => {
     onEnrolled(event.detail);
   }) as EventListener);

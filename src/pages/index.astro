@@ -1,6 +1,5 @@
 ---
 import AgentPrompt from "../components/AgentPrompt.astro";
-import HarnessPicker from "../components/HarnessPicker.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { harnesses } from "../data/harnesses";
@@ -25,7 +24,6 @@ import { harnesses } from "../data/harnesses";
           <button class="cta cta-large" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
           <p class="fine-print">Free forever. No account required. No personal data collected.</p>
         </div>
-        <HarnessPicker />
         <AgentPrompt />
       </section>
 
@@ -48,16 +46,46 @@ import { harnesses } from "../data/harnesses";
 </Layout>
 
 <script>
-  import { initHarnessPicker } from "../lib/harness-picker-client";
+  import { buildPrompt } from "../lib/agent-prompt";
+  import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "../lib/enroll-client";
   import { initHarnessTooltips } from "../lib/harness-tooltip-client";
-  // initEnrollment() runs globally from Layout.astro. Astro hoists that script
-  // ahead of this one in the rendered HTML (page-level scripts don't reliably
-  // run after layout-level ones), so initHarnessPicker() can't rely on
-  // attaching its ENROLLED_EVENT listener before initEnrollment() dispatches
-  // it for a returning visitor — it also checks for an already-cached student
-  // directly as a fallback. See harness-picker-client.ts.
-  initHarnessPicker();
+
   initHarnessTooltips();
+
+  // Same prompt for every student, once enrolled: the agent figures out its
+  // own harness once it fetches /llms.txt, so there's no picker step here.
+  function initAgentPrompt(): void {
+    const promptSection = document.getElementById("agent-prompt");
+    const promptText = document.getElementById("agent-prompt-text");
+    const copyButton = document.getElementById("agent-prompt-copy") as HTMLButtonElement | null;
+    const copyConfirm = document.getElementById("agent-prompt-confirm");
+    if (!promptSection || !promptText || !copyButton || !copyConfirm) return;
+
+    function showPrompt(student: CachedStudent): void {
+      promptText!.textContent = buildPrompt(student);
+      promptSection!.hidden = false;
+      copyConfirm!.hidden = true;
+    }
+
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(promptText!.textContent ?? "");
+        copyConfirm!.hidden = false;
+      } catch (error) {
+        console.error("Copy failed", error);
+      }
+    });
+
+    // initEnrollment() runs globally from Layout.astro, and Astro doesn't
+    // guarantee it executes after this page-level script (in practice it runs
+    // before), so the ENROLLED_EVENT dispatch for an already-cached student can
+    // fire before the listener below is attached. Check directly as a fallback.
+    document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => showPrompt(event.detail)) as EventListener);
+    const existingStudent = readCachedStudent();
+    if (existingStudent) showPrompt(existingStudent);
+  }
+
+  initAgentPrompt();
 </script>
 
 <style>
