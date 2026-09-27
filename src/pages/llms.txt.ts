@@ -11,7 +11,7 @@ const body = `# Cloudflare Dev School
 
 Cloudflare Dev School is an interactive course that teaches people how to build on Cloudflare using whatever AI coding agent they already have installed.
 
-Students enroll on the homepage, get a student ID (format: adjective-noun-1234, e.g. "curious-hacker-2019"), then pick their agent harness and get a prompt to paste into it. If you're reading this file because a student pasted that prompt, their student ID was included in it, use it, don't ask them to enroll again. The prompt also told you which harness the student picked, that's your harness id for the lesson endpoints below: \`claude-code\`, \`codex\`, \`opencode\`, \`pi\`, or \`generic\` if none of those match what you are.
+Students enroll on the homepage, get a student ID (format: adjective-noun-1234, e.g. "curious-hacker-2019"), and get a prompt to paste into their agent, whatever it is. If you're reading this file because a student pasted that prompt, their student ID was included in it, use it, don't ask them to enroll again. The prompt doesn't tell you which harness you are, that's on you: figure out your own harness id from \`claude-code\`, \`codex\`, \`opencode\`, \`pi\`, \`cursor\`, or \`copilot\`, or \`generic\` if none of those match, and use it for the lesson endpoints below.
 
 ## API
 

@@ -3,6 +3,12 @@ import { getCollection } from "astro:content";
 import { LESSON_OUTLINE } from "../data/curriculum";
 import { listExercises } from "../data/exercises";
 
+interface Props {
+  showBrand?: boolean;
+}
+
+const { showBrand = true } = Astro.props;
+
 const existingLessonSlugs = new Set((await getCollection("lessons")).map((entry) => entry.data.lessonSlug));
 const existingExerciseSlugs = new Set(
   (await getCollection("exercises")).map((entry) => entry.data.exerciseSlug),
@@ -11,7 +17,7 @@ const exercises = listExercises();
 ---
 
 <nav class="curriculum-sidebar" aria-label="Course curriculum">
-  <a class="brand" href="/">Cloudflare Dev School</a>
+  {showBrand && <a class="brand" href="/">Cloudflare Dev School</a>}
 
   <p class="section-label">Lessons</p>
   <ol class="item-list">

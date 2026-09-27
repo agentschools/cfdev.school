@@ -14,7 +14,7 @@ vi.mock("astro:content", () => ({
 }));
 
 describe("homepage", () => {
-  it("renders the prerequisite statement, enroll CTA, and every harness card", async () => {
+  it("renders the prerequisite statement, enroll CTA, and every harness logo", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
@@ -22,16 +22,13 @@ describe("homepage", () => {
       "All you need to get started is a working AI coding agent on your computer. We'll walk you through setting up Cloudflare.",
     );
     expect(html).toContain('id="harnesses"');
-    expect(html).toContain('id="enroll"');
     expect(html).toContain("Enroll in Cloudflare Dev School");
     expect(html).toContain("Free forever. No account required. No personal data collected.");
 
-    for (const harness of harnesses) {
-      expect(html).toContain(harness.name);
-      if (harness.icon) {
-        expect(html).toContain(harness.icon.light);
-        expect(html).toContain(harness.icon.dark);
-      }
+    for (const harness of harnesses.filter((h) => h.id !== "generic" && h.icon)) {
+      expect(html).toContain(`data-tooltip="${harness.name}"`);
+      expect(html).toContain(harness.icon!.light);
+      expect(html).toContain(harness.icon!.dark);
     }
   });
 
@@ -53,16 +50,13 @@ describe("homepage", () => {
     expect(html).not.toContain('href="#how-it-works"');
   });
 
-  it("renders a harness picker option and the agent prompt box for every harness, hidden by default", async () => {
+  it("renders the agent prompt box, hidden by default, with no harness picker", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
-    expect(html).toContain('id="harness-picker"');
     expect(html).toContain('id="agent-prompt"');
     expect(html).toContain('id="agent-prompt-copy"');
-
-    for (const harness of harnesses) {
-      expect(html).toContain(`data-harness-id="${harness.id}"`);
-    }
+    expect(html).not.toContain("harness-picker");
+    expect(html).not.toContain("Pick your agent");
   });
 });

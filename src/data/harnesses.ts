@@ -34,7 +34,7 @@ const sourceSchema = z.object({
 });
 
 export const harnessProfileSchema = z.object({
-  id: z.enum(["claude-code", "codex", "opencode", "pi", "generic"]),
+  id: z.enum(["claude-code", "codex", "opencode", "pi", "cursor", "copilot", "generic"]),
   name: z.string(),
   /** One-line, homepage-card-friendly description. Keep the deeper detail in subscriptionBilling.summary. */
   tagline: z.string(),
@@ -239,6 +239,7 @@ export const harnesses: HarnessProfile[] = [
     id: "pi",
     name: "Pi",
     tagline: "A minimal, extensible terminal coding harness you adapt to your workflow.",
+    icon: { light: "/icons/agents/pi/light.svg", dark: "/icons/agents/pi/dark.svg" },
     cliCommand: "pi",
     instructionsFile: {
       path: "AGENTS.md (or CLAUDE.md) at ~/.pi/agent/AGENTS.md (global), plus parent directories and the current directory (project), all concatenated",
@@ -260,7 +261,7 @@ export const harnesses: HarnessProfile[] = [
         "pi's /login supports ChatGPT Plus/Pro (Codex), Claude Pro/Max, GitHub Copilot, and xAI subscriptions. As of an April 2026 Anthropic enforcement change, Claude Pro/Max login in pi (and other third-party tools) technically works but draws from Anthropic's separate pay-per-token \"extra usage\" pool, not your Claude plan's included limits, so there's no cost benefit over an API key for Claude models. ChatGPT Plus/Pro login has no such restriction: OpenAI's Codex for OSS program officially endorses third-party harnesses using it, and usage counts against the ChatGPT plan as expected.",
     },
     models: [],
-    lastVerified: "2026-09-21",
+    lastVerified: "2026-09-26",
     sources: [
       {
         url: "https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/providers.md",
@@ -277,6 +278,147 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/README.md",
         note: "Context Files section: exact global path (~/.pi/agent/AGENTS.md), directory walk-up, concatenation, and AGENTS.override.md behavior. Verified against the locally installed README 2026-09-21.",
+      },
+      {
+        url: "https://pi.dev/logo.svg",
+        note: "Official pi logo, linked from the pi README's badge header. Full-color mark, no separate light/dark variant needed.",
+      },
+    ],
+  },
+  {
+    id: "cursor",
+    name: "Cursor",
+    tagline: "Anysphere's editor-first agent, also usable as a standalone terminal CLI.",
+    icon: { light: "/icons/agents/cursor/light.svg", dark: "/icons/agents/cursor/dark.svg" },
+    cliCommand: "cursor-agent",
+    instructionsFile: {
+      path: "AGENTS.md (project root, plain-markdown alternative to structured .cursor/rules/*.mdc files) plus user-level ~/.cursor/rules/ or account-synced Cursor Settings rules for global instructions",
+      notes:
+        "Cursor reads AGENTS.md and .cursor/rules/*.mdc side by side; nested AGENTS.md files in subdirectories combine with parent ones, with the more specific instructions taking precedence. When rule types conflict: Team Rules > Project Rules > User Rules. CLAUDE.md is also read the same way as AGENTS.md, always applied regardless of any alwaysApply frontmatter, for compatibility with Claude Code projects.",
+    },
+    globalConfigFile: "~/.cursor/cli-config.json",
+    mcpConfigPath: ".cursor/mcp.json (project) or ~/.cursor/mcp.json (global); both are merged, project-level wins on name conflicts",
+    skills: {
+      supported: true,
+      globalInstallPath: "~/.cursor/skills/ (also auto-loads ~/.agents/skills/)",
+      restartBehavior:
+        "Skills are discovered at startup from .cursor/skills/ and .agents/skills/ (plus .claude/skills/ and .codex/skills/ for compatibility); a new session picks up newly installed skills without a full app restart.",
+    },
+    subscriptionBilling: {
+      supportsSubscriptionLogin: true,
+      thirdPartyRoutingHonorsPlanLimits: true,
+      summary:
+        "cursor-agent login signs in with your Cursor account and draws from the same usage pools as the editor: Hobby is free with limited usage, then Pro ($20/mo), Pro+ ($60/mo), and Ultra ($200/mo) each add a Cursor Models pool (Composer, Grok) plus an Other Models pool for third-party frontier models (Claude, GPT, Gemini) at API-equivalent rates. A CURSOR_API_KEY env var switches to standalone per-token billing outside the subscription pools. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
+    },
+    models: [
+      {
+        name: "Composer 2.5",
+        contextWindowTokens: 200000,
+        vision: false,
+        toolUse: true,
+        notes: "Cursor's own agentic coding model, drawn from the Cursor Models pool rather than billed as a third-party model.",
+      },
+    ],
+    lastVerified: "2026-09-26",
+    sources: [
+      {
+        url: "https://cursor.com/docs/cli/reference/parameters",
+        note: "CLI command reference: primary command name, subcommands, --model/--mcp flags.",
+      },
+      {
+        url: "https://cursor.com/install",
+        note: "Install script: creates both `agent` (primary) and `cursor-agent` (legacy alias) symlinks pointing at the same executable.",
+      },
+      {
+        url: "https://cursor.com/docs/rules",
+        note: "AGENTS.md as a plain-markdown alternative to .cursor/rules/*.mdc, nested AGENTS.md precedence, and Team/Project/User rule precedence order.",
+      },
+      {
+        url: "https://cursor.com/docs/mcp",
+        note: "mcp.json field reference and project vs. global config locations/precedence.",
+      },
+      {
+        url: "https://cursor.com/docs/skills",
+        note: "Skill directory search order (.cursor/skills/, .agents/skills/, global equivalents).",
+      },
+      {
+        url: "https://cursor.com/help/account-and-billing/pricing",
+        note: "Current plan names and prices (Hobby, Pro, Pro+, Ultra, Teams).",
+      },
+      {
+        url: "https://cursor.com/docs/models-and-pricing",
+        note: "Cursor Models vs. Other Models usage pools, and which plans include each.",
+      },
+    ],
+  },
+  {
+    id: "copilot",
+    name: "GitHub Copilot CLI",
+    tagline: "GitHub's terminal agent, included with every Copilot plan from Free up.",
+    icon: { light: "/icons/agents/copilot/light.svg", dark: "/icons/agents/copilot/dark.svg" },
+    cliCommand: "copilot",
+    instructionsFile: {
+      path: "AGENTS.md or .github/copilot-instructions.md (project root) plus ~/.copilot/copilot-instructions.md (global, applies to every session regardless of project)",
+      notes:
+        "Path-specific instructions also work via .github/instructions/**/*.instructions.md (project) or ~/.copilot/instructions/*.instructions.md (global personal), loaded alongside the main instructions file. Set COPILOT_HOME to relocate the ~/.copilot directory.",
+    },
+    globalConfigFile: "~/.copilot/settings.json",
+    mcpConfigPath:
+      "~/.copilot/mcp-config.json (user level, ships with the GitHub MCP server preconfigured) plus .mcp.json or .github/mcp.json (project level, walked from cwd up to the repo root); project-level definitions win on name conflicts",
+    skills: {
+      supported: true,
+      globalInstallPath: "~/.copilot/skills/ (also reads ~/.agents/skills/)",
+      restartBehavior:
+        "New skills are picked up with the in-session `/skills reload` command, or automatically in a new session; no full app restart needed.",
+    },
+    subscriptionBilling: {
+      supportsSubscriptionLogin: true,
+      thirdPartyRoutingHonorsPlanLimits: true,
+      summary:
+        "Copilot CLI is a core feature of every GitHub Copilot plan (Free, Pro $10/mo, Pro+ $39/mo, Max $100/mo, Business, Enterprise); each prompt draws from that plan's monthly GitHub AI Credits allowance (base credits plus a variable flex allotment), shared across Copilot Chat, the CLI, and cloud agents. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
+    },
+    models: [
+      {
+        name: "Claude Sonnet 4.5",
+        contextWindowTokens: 200000,
+        vision: true,
+        toolUse: true,
+        notes: "Default Copilot CLI model as of this writing; switch with the /model slash command.",
+      },
+    ],
+    lastVerified: "2026-09-26",
+    sources: [
+      {
+        url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli",
+        note: "Install methods and the `copilot` binary name.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference",
+        note: "~/.copilot directory layout: instructions, mcp-config.json, settings.json, skills/, COPILOT_HOME override.",
+      },
+      {
+        url: "https://docs.github.com/copilot/how-tos/copilot-cli/use-copilot-cli/overview",
+        note: "Supported instruction file types (.github/copilot-instructions.md, AGENTS.md) and MCP server setup.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers",
+        note: "Project-level MCP config locations (.mcp.json, .github/mcp.json) and precedence vs. user-level config.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills",
+        note: "Skill directory locations, project and personal.",
+      },
+      {
+        url: "https://github.com/features/copilot/plans",
+        note: "Current plan names and prices (Free, Pro, Pro+, Max, Business, Enterprise).",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/concepts/billing/usage-based-billing-for-individuals",
+        note: "GitHub AI Credits allowance structure (base credits + flex allotment) per plan.",
+      },
+      {
+        url: "https://cdn.jsdelivr.net/gh/github/copilot-cli@main/README.md",
+        note: "Default model (Claude Sonnet 4.5) and the /model slash command.",
       },
     ],
   },

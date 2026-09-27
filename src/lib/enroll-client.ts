@@ -125,13 +125,15 @@ export function initEnrollment(): void {
 
   let isSubmitting = false;
 
-  // The ID card only exists on the homepage. Trigger buttons (e.g. the header's)
-  // can appear on any page, so their enrolled state must not depend on the card.
+  // The ID card only exists on the homepage. Trigger buttons (e.g. the header's,
+  // or the homepage's own cta-block) can appear on any page, so hiding them must
+  // not depend on the card. Once enrolled, there's nothing left for an "Enroll"
+  // button to do, so the whole trigger (or its cta-block wrapper, marked with
+  // data-enroll-container) just disappears rather than relabeling to "Enrolled".
   function markTriggersEnrolled(): void {
     triggers.forEach((trigger) => {
-      trigger.textContent = "\u2713 Enrolled";
-      trigger.disabled = true;
-      trigger.classList.add("is-enrolled");
+      const container = trigger.closest<HTMLElement>("[data-enroll-container]") ?? trigger;
+      container.hidden = true;
     });
   }
 
@@ -139,6 +141,7 @@ export function initEnrollment(): void {
     markTriggersEnrolled();
     if (card && display && celebrationLayer) {
       card.hidden = false;
+      requestAnimationFrame(() => card.classList.add("is-visible"));
       cipherReveal(display, student.id, fast, () => {
         fireCelebration(celebrationLayer);
       });

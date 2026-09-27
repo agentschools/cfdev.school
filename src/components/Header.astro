@@ -2,11 +2,6 @@
 ---
 
 <header class="header">
-  <a class="logo" href="/">
-    <span class="logo-mark" aria-hidden="true"></span>
-    <span class="logo-text">Cloudflare Dev School</span>
-  </a>
-
   <div class="menu">
     <a class="icon-link" href="https://github.com/zeke/cloudflare-dev-school" aria-label="View source on GitHub">
       <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -26,23 +21,6 @@
     gap: 1.5rem;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 1.05rem;
-    white-space: nowrap;
-  }
-
-  .logo-mark {
-    width: 1.1rem;
-    height: 1.1rem;
-    border-radius: 9999px;
-    background: var(--accent);
   }
 
   .menu {
@@ -77,10 +55,7 @@
     cursor: pointer;
   }
 
-  .enroll-button.is-enrolled {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted-fg);
-    cursor: default;
+  .enroll-button[hidden] {
+    display: none;
   }
 </style>

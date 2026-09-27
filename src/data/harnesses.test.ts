@@ -4,7 +4,7 @@ import { getHarness, harnessProfileSchema, harnesses } from "./harnesses";
 describe("harnesses data", () => {
   it("has one profile per supported harness plus the generic fallback", () => {
     const ids = harnesses.map((h) => h.id).sort();
-    expect(ids).toEqual(["claude-code", "codex", "generic", "opencode", "pi"].sort());
+    expect(ids).toEqual(["claude-code", "codex", "copilot", "cursor", "generic", "opencode", "pi"].sort());
   });
 
   it("conforms to the harness profile schema", () => {

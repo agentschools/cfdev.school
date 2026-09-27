@@ -14,10 +14,18 @@
     position: relative;
     max-width: 22rem;
     margin: 0 0 1.75rem;
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+    transition: opacity 0.4s ease, transform 0.4s ease;
   }
 
   .id-card[hidden] {
     display: none;
+  }
+
+  .id-card.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 
   .celebration-layer {
