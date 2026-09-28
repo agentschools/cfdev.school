@@ -1,0 +1,178 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Disenroll — Cloudflare Dev School"
+  description="Reset your lesson and exercise progress, or disenroll from Cloudflare Dev School."
+>
+  <div class="page">
+    <main class="content">
+      <p class="back">
+        <a href="/">← Home</a>
+      </p>
+
+      <h1>Disenroll</h1>
+
+      <div id="disenroll-enroll-nudge" class="enroll-nudge" hidden>
+        <p class="enroll-nudge-title">You're not enrolled</p>
+        <p class="enroll-nudge-body">There's nothing to reset or disenroll from yet.</p>
+        <a href="/" class="enroll-nudge-cta">Go home</a>
+      </div>
+
+      <div id="disenroll-sections">
+        <section class="card">
+          <h2>Reset progress</h2>
+          <p>Clear all your lesson and exercise completions so you can redo them. Your student ID is kept.</p>
+          <button id="reset-progress-btn" type="button" class="btn btn-primary">Reset my progress</button>
+          <p id="reset-progress-status" class="status" hidden></p>
+        </section>
+
+        <section class="card card-danger">
+          <h2>Disenroll completely</h2>
+          <p>
+            Remove your student ID and progress from this browser. Your data on the server is not affected.
+            You will need to re-enroll to use Cloudflare Dev School again.
+          </p>
+          <button id="disenroll-btn" type="button" class="btn btn-danger">
+            Disenroll from Cloudflare Dev School
+          </button>
+        </section>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { initDisenrollPage } from "../lib/disenroll-client";
+  initDisenrollPage();
+</script>
+
+<style>
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2.5rem 0 5rem;
+    max-width: 42rem;
+  }
+
+  .back {
+    margin: 0 0 1.5rem;
+  }
+
+  .back a {
+    color: var(--muted-fg);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .back a:hover {
+    color: var(--fg);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 1.5rem;
+  }
+
+  .enroll-nudge {
+    margin: 0 0 1.75rem;
+    padding: 1.25rem 1.35rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+  }
+
+  .enroll-nudge-title {
+    margin: 0 0 0.35rem;
+    font-weight: 600;
+  }
+
+  .enroll-nudge-body {
+    margin: 0 0 0.9rem;
+    color: var(--muted-fg);
+    font-size: 0.95rem;
+  }
+
+  .enroll-nudge-cta {
+    display: inline-block;
+    padding: 0.45rem 0.9rem;
+    border-radius: 0.45rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .card {
+    margin: 0 0 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+  }
+
+  .card h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.6rem;
+  }
+
+  .card p {
+    margin: 0 0 1.1rem;
+    color: var(--muted-fg);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .card-danger {
+    /* Not var(--accent): this is a destructive action and needs to read as a
+       distinct warning color, not the brand orange used everywhere else. */
+    border-color: color-mix(in oklch, oklch(0.62 0.22 25) 40%, var(--border));
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.65rem 1.1rem;
+    border-radius: 0.5rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    border: none;
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  .btn-danger {
+    border: 1px solid oklch(0.62 0.22 25);
+    background: transparent;
+    color: oklch(0.62 0.22 25);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: color-mix(in oklch, oklch(0.62 0.22 25) 12%, transparent);
+  }
+
+  .status {
+    margin: 0.9rem 0 0;
+    font-size: 0.9rem;
+    color: var(--accent);
+  }
+</style>

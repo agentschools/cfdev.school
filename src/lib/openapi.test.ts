@@ -37,4 +37,10 @@ describe("openApiDocument", () => {
     expect(path?.put?.responses?.["400"]).toBeDefined();
     expect(path?.put?.requestBody).toBeDefined();
   });
+
+  it("documents DELETE /api/progress/{studentId}", () => {
+    const operation = openApiDocument.paths?.["/api/progress/{studentId}"]?.delete;
+    expect(operation?.responses?.["200"]).toBeDefined();
+    expect(operation?.responses?.["404"]).toBeDefined();
+  });
 });

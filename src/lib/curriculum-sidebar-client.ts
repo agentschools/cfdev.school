@@ -1,3 +1,5 @@
+import { ENROLLED_EVENT } from "./enroll-client";
+
 const STUDENT_STORAGE_KEY = "cfDevSchool.student";
 
 interface CachedStudent {
@@ -19,7 +21,15 @@ interface Progress {
 }
 
 export function initCurriculumSidebar(): void {
+  const accountSection = document.getElementById("account-section");
+  // Listen before checking the cached value: a fresh enrollment click on the
+  // current page dispatches this event later, not on initial load.
+  document.addEventListener(ENROLLED_EVENT, () => {
+    if (accountSection) accountSection.hidden = false;
+  });
+
   const studentId = readCachedStudentId();
+  if (accountSection) accountSection.hidden = !studentId;
   if (!studentId) return;
 
   fetch(`/api/progress/${studentId}`)

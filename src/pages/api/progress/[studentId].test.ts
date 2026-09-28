@@ -73,6 +73,28 @@ const db = {
         }),
       };
     }
+    if (sql.startsWith("DELETE FROM exercise_completions WHERE student_id = ?")) {
+      return {
+        bind: (studentId: string) => ({
+          run: async () => {
+            for (const [key, row] of exerciseCompletions) {
+              if (row.student_id === studentId) exerciseCompletions.delete(key);
+            }
+          },
+        }),
+      };
+    }
+    if (sql.startsWith("DELETE FROM lesson_completions WHERE student_id = ?")) {
+      return {
+        bind: (studentId: string) => ({
+          run: async () => {
+            for (const [key, row] of lessonCompletions) {
+              if (row.student_id === studentId) lessonCompletions.delete(key);
+            }
+          },
+        }),
+      };
+    }
     throw new Error(`Unexpected SQL in test: ${sql}`);
   },
 };
@@ -196,5 +218,40 @@ describe("PUT /api/progress/{studentId}", () => {
     };
     expect(body.completedExercises).toHaveLength(1);
     expect(body.completedLessons).toHaveLength(1);
+  });
+});
+
+describe("DELETE /api/progress/{studentId}", () => {
+  it("404s for an unknown student", async () => {
+    const { DELETE } = await import("./[studentId]");
+    const response = await DELETE(context("no-such-student-0000"));
+    expect(response.status).toBe(404);
+  });
+
+  it("clears completed exercises and lessons but keeps the student", async () => {
+    const { PUT, DELETE, GET } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
+    await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
+
+    const response = await DELETE(context("curious-hacker-2019"));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { completedExercises: unknown[]; completedLessons: unknown[] };
+    expect(body.completedExercises).toEqual([]);
+    expect(body.completedLessons).toEqual([]);
+
+    const fetched = await GET(context("curious-hacker-2019"));
+    expect(fetched.status).toBe(200);
+  });
+
+  it("only clears the targeted student's progress", async () => {
+    students.set("another-student-1234", { id: "another-student-1234", created_at: "2026-09-11T00:00:00.000Z" });
+    const { PUT, DELETE, GET } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
+    await PUT(context("another-student-1234", { exerciseSlug: "deploy-first-worker" }));
+
+    await DELETE(context("curious-hacker-2019"));
+
+    const other = (await (await GET(context("another-student-1234"))).json()) as { completedExercises: unknown[] };
+    expect(other.completedExercises).toHaveLength(1);
   });
 });

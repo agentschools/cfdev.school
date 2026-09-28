@@ -81,6 +81,15 @@ Verify exercise 1 with `npm run verify:exercise`, exercise 2 with `npm run verif
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 
+## Disenroll
+
+`/disenroll` (`src/pages/disenroll.astro`, client logic in `src/lib/disenroll-client.ts`) copies OpenCode School's disenroll page layout: two options, not one.
+
+- **Reset progress**: `DELETE /api/progress/{studentId}` (same file as the other progress routes) deletes the student's rows from `exercise_completions` and `lesson_completions` but keeps the `students` and `interview_answers` rows. This is a real server-side delete, unlike everything else on this page.
+- **Disenroll completely**: purely client-side, clears the `cfDevSchool.student` localStorage key and redirects home. It never calls the server; per this app's no-accounts model there's no student data to delete server-side on request, only progress (handled by the option above).
+
+The page shows an enroll nudge instead of the two options for logged-out visitors. The sidebar (`CurriculumSidebar.astro`) only shows the "Account" section (containing the Disenroll link) once enrolled, `curriculum-sidebar-client.ts` toggles it both on load and reactively on the `cfDevSchool:enrolled` event, so it appears immediately after a fresh enrollment click without a reload.
+
 ## Dependency pinning
 
 The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` can fail with `ETARGET` for packages published in the last week. Check `npm view <pkg> time --json` and pin an exact version older than 7 days when this happens. Don't work around it by editing the global npmrc.
