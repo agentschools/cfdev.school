@@ -183,6 +183,23 @@ export const openApiDocument = createDocument({
           },
         },
       },
+      delete: {
+        summary: "Reset a student's progress",
+        description:
+          "Deletes all of the student's exercise and lesson completions. The student row and interview answers are kept, only their progress is cleared. Used by the 'Reset progress' option on /disenroll.",
+        requestParams: { path: z.object({ studentId: studentIdSchema }) },
+        responses: {
+          "200": {
+            description: "Progress after the reset (both arrays empty).",
+            content: {
+              "application/json": { schema: progressSchema },
+            },
+          },
+          "404": {
+            description: "No student exists with that ID.",
+          },
+        },
+      },
     },
   },
 });

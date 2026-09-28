@@ -95,6 +95,35 @@ export const GET: APIRoute = async ({ params }) => {
   return new Response(JSON.stringify(progress), { headers: jsonHeaders });
 };
 
+/**
+ * Resets a student's progress: deletes all exercise/lesson completions, but
+ * keeps the student row and interview answers. Used by the "Reset progress"
+ * option on /disenroll (see AGENTS.md's "Disenroll" section). "Disenroll
+ * completely" is a client-only localStorage clear and doesn't call this.
+ */
+export const DELETE: APIRoute = async ({ params }) => {
+  const studentId = params.studentId ?? "";
+
+  const student = await env.DB.prepare("SELECT id, created_at FROM students WHERE id = ?")
+    .bind(studentId)
+    .first<StudentRow>();
+
+  if (!student) {
+    return new Response(JSON.stringify({ error: "Student not found" }), {
+      status: 404,
+      headers: jsonHeaders,
+    });
+  }
+
+  await Promise.all([
+    env.DB.prepare("DELETE FROM exercise_completions WHERE student_id = ?").bind(studentId).run(),
+    env.DB.prepare("DELETE FROM lesson_completions WHERE student_id = ?").bind(studentId).run(),
+  ]);
+
+  const progress = await loadProgress(studentId, student.created_at);
+  return new Response(JSON.stringify(progress), { headers: jsonHeaders });
+};
+
 export const PUT: APIRoute = async ({ params, request }) => {
   const studentId = params.studentId ?? "";
 
