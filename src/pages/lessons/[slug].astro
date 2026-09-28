@@ -5,32 +5,37 @@ import Layout from "../../layouts/Layout.astro";
 export const prerender = false;
 
 const { slug } = Astro.params;
-const entries = await getCollection("lessons", (entry) => entry.data.lessonSlug === slug);
+const entries = await getCollection(
+  "lessons",
+  (entry) => entry.data.lessonSlug === slug && entry.data.harness === "generic",
+);
 
-if (entries.length === 0) {
+// The harness-specific variants (e.g. claude-code.md) exist only for the
+// /api/lessons/{slug} endpoint, which agents call with their own detected
+// harness. Human visitors to this page always see the generic content:
+// there's no harness picker to tell us which variant they'd want.
+const entry = entries[0];
+
+if (!entry) {
   Astro.response.status = 404;
 }
 
-const variants = await Promise.all(
-  entries.map(async (entry) => {
-    const { Content } = await render(entry);
-    return {
-      harness: entry.data.harness,
+const lesson = entry
+  ? {
       title: entry.data.title,
       description: entry.data.description,
-      Content,
-    };
-  }),
-);
+      Content: (await render(entry)).Content,
+    }
+  : null;
 
-const title = variants[0]?.title ?? "Lesson not found";
+const title = lesson?.title ?? "Lesson not found";
 ---
 
-<Layout title={`${title} — Cloudflare Dev School`} description={variants[0]?.description ?? "Lesson not found."}>
+<Layout title={`${title} — Cloudflare Dev School`} description={lesson?.description ?? "Lesson not found."}>
   <div class="page">
     <main class="content">
       {
-        variants.length === 0 ? (
+        lesson === null ? (
           <p>This lesson doesn't exist.</p>
         ) : (
           <>
@@ -40,14 +45,10 @@ const title = variants[0]?.title ?? "Lesson not found";
                 ✓ Completed
               </span>
             </h1>
-            {variants.map((variant) => (
-              <div class="lesson-variant" data-harness-id={variant.harness} hidden>
-                <p class="lesson-description">{variant.description}</p>
-                <div class="prose">
-                  <variant.Content />
-                </div>
-              </div>
-            ))}
+            <p class="lesson-description">{lesson.description}</p>
+            <div class="prose">
+              <lesson.Content />
+            </div>
           </>
         )
       }
@@ -87,10 +88,6 @@ const title = variants[0]?.title ?? "Lesson not found";
     border-radius: 9999px;
     background: color-mix(in oklch, var(--accent) 20%, transparent);
     color: var(--accent);
-  }
-
-  .lesson-variant[hidden] {
-    display: none;
   }
 
   .lesson-description {
