@@ -163,6 +163,7 @@ import { harnesses } from "../data/harnesses";
   .harness-row {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 1.75rem;
   }
 
@@ -175,6 +176,13 @@ import { harnesses } from "../data/harnesses";
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 0.4rem;
+    filter: grayscale(1);
+    transition: filter 0.2s ease;
+  }
+
+  .harness-icon:hover .icon,
+  .harness-icon:focus-visible .icon {
+    filter: none;
   }
 
   .icon-dark {
