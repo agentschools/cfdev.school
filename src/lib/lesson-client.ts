@@ -1,5 +1,4 @@
 const STUDENT_STORAGE_KEY = "cfDevSchool.student";
-const HARNESS_STORAGE_KEY = "cfDevSchool.harnessId";
 
 interface CachedStudent {
   id: string;
@@ -14,25 +13,7 @@ function readCachedStudentId(): string | null {
   }
 }
 
-function readCachedHarnessId(): string | null {
-  try {
-    return localStorage.getItem(HARNESS_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
 export function initLessonPage(): void {
-  const variants = document.querySelectorAll<HTMLElement>(".lesson-variant");
-  if (variants.length === 0) return;
-
-  const harnessId = readCachedHarnessId();
-  const match =
-    (harnessId && document.querySelector<HTMLElement>(`.lesson-variant[data-harness-id="${harnessId}"]`)) ||
-    document.querySelector<HTMLElement>('.lesson-variant[data-harness-id="generic"]') ||
-    variants[0];
-  match.hidden = false;
-
   const studentId = readCachedStudentId();
   const slug = window.location.pathname.split("/").filter(Boolean).pop();
   if (!studentId || !slug) return;
