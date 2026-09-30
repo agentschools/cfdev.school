@@ -24,6 +24,10 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `wrangler dev` after touching the interview API
 - `npm run verify:exercise` / `npm run verify:exercise-kv` — same idea, for the two exercises; run against `wrangler dev` after touching the exercise/progress API
 
+## cf, not Wrangler, in student-facing content
+
+All lesson, exercise, and `/llms.txt` content tells students' agents to use `cf` (Cloudflare's new CLI, open beta since 2026-09-28, `npm i -g cf`), not Wrangler: `cf init`, `cf dev`, `cf deploy`, `cf auth login`, `cf kv namespaces create`, with bindings declared in `cloudflare.config.ts` via `bindings.*` from `cf/config`. The CLI lesson (`src/content/lessons/cli/generic.md`) adds Cloudflare's official versioned snippet (`## Cloudflare CLI - cf - v20260928`) to the student's global instructions file; if Cloudflare publishes a newer version of that snippet, update it there. `cf` is new and not in model training data, so verify commands against the installed CLI (`cf --help`, `cf cli search "..."`) before writing them into content. This repo itself still builds and deploys with Wrangler (`wrangler.jsonc`, `scripts/preview-env.mjs`); that's separate from what students are taught.
+
 ## AI harness research data
 
 `src/data/harnesses.ts` is a manually maintained, Zod-schema-typed data source covering the harnesses this school supports (Claude Code, Codex, OpenCode, Pi, generic fallback): instructions file location, CLI command, skills support/install location/restart behavior, config/MCP file locations, model comparison data, and subscription-vs-API-billing policy for third-party routing. It's consumed by the homepage harness cards and lesson content, not re-derived per lesson.
