@@ -13,6 +13,10 @@ Cloudflare Dev School is an interactive course that teaches people how to build 
 
 Students enroll on the homepage, get a student ID (format: adjective-noun-1234, e.g. "curious-hacker-2019"), and get a prompt to paste into their agent, whatever it is. If you're reading this file because a student pasted that prompt, their student ID was included in it, use it, don't ask them to enroll again. The prompt doesn't tell you which harness you are, that's on you: figure out your own harness id from \`claude-code\`, \`codex\`, \`opencode\`, \`pi\`, \`cursor\`, or \`copilot\`, or \`generic\` if none of those match, and use it for the lesson endpoints below.
 
+## Cloudflare CLI: use cf, not Wrangler
+
+This course uses \`cf\`, Cloudflare's new CLI (open beta since September 2026), for everything: \`cf init\`, \`cf dev\`, \`cf deploy\`, \`cf auth login\`, \`cf kv ...\`. Wrangler was Cloudflare's CLI for years, so your training data almost certainly knows Wrangler and not \`cf\`. Don't fall back to Wrangler commands (\`wrangler ...\` or \`npx wrangler ...\`) out of habit. \`cf\` commands differ from Wrangler's, so check \`cf --help\` or \`cf cli search "<what you want to do>"\` instead of guessing. The "cli" lesson installs it and adds these instructions to the student's global agent instructions file.
+
 ## API
 
 Download the OpenAPI schema to see the full, current API surface: GET /api/openapi.json (relative to this site's origin).
@@ -42,7 +46,7 @@ Submit each answer via PUT /api/students/{id}/interview as you get it, or batch 
 
 ## Lessons
 
-After the interview, check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order: "models", then "instructions" (more lessons are coming).
+After the interview, check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order: "models", then "instructions", then "cli" (more lessons are coming).
 
 For each lesson: fetch GET /api/lessons/{slug}?harness={yourHarnessId}, follow its \`agentInstructions\` to teach the material conversationally, then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete with PUT /api/progress/{studentId} using \`{ "lessonSlug": "..." }\` before moving on. Always include \`model\` in that request.
 
@@ -54,10 +58,10 @@ Once all available lessons are complete, the hands-on exercises are available. F
 
 Summary of what you must do:
 
-1. Guide the student to create a minimal Worker that returns a plain-text response. No frameworks, databases, or custom domains.
-2. Run it locally (\`wrangler dev\` / \`npx wrangler dev\`) and confirm the expected text.
-3. Deploy with their existing Wrangler auth (\`wrangler deploy\` / \`npx wrangler deploy\`). If they aren't logged in yet, help them authenticate first.
-4. Visit the public URL Wrangler prints.
+1. Guide the student to create a minimal Worker that returns a plain-text response (scaffold with \`cf init <directory>\`). No frameworks, databases, or custom domains.
+2. Run it locally (\`cf dev\`) and confirm the expected text.
+3. Deploy with their existing \`cf\` auth from the CLI lesson (\`cf deploy\`). If they aren't logged in yet (\`cf auth whoami\`), help them run \`cf auth login\` first.
+4. Visit the public URL \`cf deploy\` prints.
 5. **Verify yourself:** fetch the deployed URL and confirm the response body matches the expected text. Do not mark the exercise complete until you have checked this.
 6. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "deploy-first-worker" }\`. Optionally send \`deployedUrl\` and \`model\`.
 7. Encourage them to change the response text, redeploy, and hit the URL again.
@@ -72,7 +76,7 @@ Once exercise 1 is complete, fetch this one with GET /api/exercises/add-first-bi
 
 Summary of what you must do:
 
-1. Create a Workers KV namespace (\`wrangler kv namespace create <name>\`) and bind it to the existing Worker in \`wrangler.jsonc\`/\`wrangler.toml\`.
+1. Create a Workers KV namespace (\`cf kv namespaces create --title <name>\`) and bind it to the existing Worker in \`cloudflare.config.ts\` (\`KV: bindings.kv({ id })\`).
 2. Extend the Worker's \`fetch\` handler to write a value to KV and read it back through the binding.
 3. Run it locally, then deploy.
 4. **Verify yourself with a two-step round trip:** against the deployed URL, write a value, then in a *separate* follow-up request read it back and confirm it matches. This proves the binding persists data, not just that a single request echoes something back.
@@ -85,7 +89,7 @@ Check GET /api/progress/{studentId} first if they might already have completed i
 
 ## Status
 
-Cloudflare Dev School is under active development. Two lessons ("models", "instructions") and two exercises (Deploy your first Worker, then Add your first Binding: Workers KV) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Three lessons ("models", "instructions", "cli") and two exercises (Deploy your first Worker, then Add your first Binding: Workers KV) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

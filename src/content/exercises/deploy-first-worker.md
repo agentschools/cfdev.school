@@ -14,4 +14,4 @@ Your agent can help you with any of these.
 
 - [Node.js](https://nodejs.org) installed.
 - A free [Cloudflare account](https://dash.cloudflare.com/sign-up).
-- Wrangler authenticated against that account (`npx wrangler whoami`).
+- The [`cf` CLI](/lessons/cli) authenticated against that account (`cf auth whoami`).

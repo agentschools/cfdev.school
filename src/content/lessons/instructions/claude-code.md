@@ -18,9 +18,8 @@ agentInstructions: |
      and encourage them to edit it to match their own preferences:
 
      ## Working with Cloudflare
-     - Always use JSONC for Workers configs (wrangler.jsonc), not TOML.
-     - Prefer Wrangler or the Cloudflare API over the dashboard when a
-       task can be done either way.
+     - Prefer the cf CLI or the Cloudflare API over the dashboard
+       when a task can be done either way.
      - Favor Cloudflare Workers over Cloudflare Pages for new static
        sites.
      - Use .env files for secrets and environment variables locally,
@@ -61,8 +60,7 @@ Open (or create) `~/.claude/CLAUDE.md` and add a short section with a few defaul
 ```markdown
 ## Working with Cloudflare
 
-- Always use JSONC for Workers configs (`wrangler.jsonc`), not TOML.
-- Prefer Wrangler or the Cloudflare API over the dashboard when a task can be done either way.
+- Prefer the `cf` CLI or the Cloudflare API over the dashboard when a task can be done either way.
 - Favor Cloudflare Workers over Cloudflare Pages for new static sites.
 - Use `.env` files for secrets and environment variables locally, not `.dev.vars`.
 ```

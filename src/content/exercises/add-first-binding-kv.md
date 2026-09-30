@@ -13,4 +13,4 @@ The same Worker, now with a `KV` binding on `env`. You'll write a value (e.g. vi
 Your agent can help you with these.
 
 - You've completed [Deploy your first Worker](/exercises/deploy-first-worker) and still have that project on disk.
-- Wrangler authenticated against your Cloudflare account (`npx wrangler whoami`).
+- The [`cf` CLI](/lessons/cli) authenticated against your Cloudflare account (`cf auth whoami`).

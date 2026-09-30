@@ -92,7 +92,7 @@ Guide students through adding Cloudflare-flavored guidance to their global instr
 
 ### Lesson: CLI
 
-Install and authenticate Wrangler. Just auth in this lesson; build/deploy usage is covered later in "Deploy your first Worker".
+Install and authenticate `cf`, Cloudflare's new CLI (open beta since September 2026, see https://blog.cloudflare.com/cloudflare-cf-cli-launch/), instead of Wrangler. Explain that Wrangler was the CLI for years, so language models only know Wrangler because of their knowledge cutoffs, and won't discover `cf` without explicit pointers. The lesson updates the student's user-level instructions file with Cloudflare's official "prefer `cf` over Wrangler" snippet. Just auth in this lesson; build/deploy usage is covered later in "Deploy your first Worker".
 
 ### Lesson: Skills
 
@@ -116,7 +116,7 @@ v1 ships two exercises, in order.
 
 1. Create a minimal Worker that returns a text response.
 2. Run it locally and check the response.
-3. Deploy it to the student's own Cloudflare account using their local Wrangler auth from the CLI lesson.
+3. Deploy it to the student's own Cloudflare account using their local `cf` auth from the CLI lesson.
 4. Visit its public URL.
 
 The agent confirms the deployed URL returns the expected response and records the exercise as complete through the Dev School API. It then encourages the student to change the response and redeploy.
@@ -127,8 +127,8 @@ Keep this exercise focused on the basic development and deployment loop. Framewo
 
 Extends the same Worker from exercise 1, rather than starting a new project.
 
-1. Create a Workers KV namespace via Wrangler.
-2. Bind it to the existing Worker (a manual `wrangler.jsonc`/`wrangler.toml` edit, not a pre-wired template).
+1. Create a Workers KV namespace via `cf`.
+2. Bind it to the existing Worker (a manual `cloudflare.config.ts` edit, not a pre-wired template).
 3. Extend the Worker's `fetch` handler to write a value to KV and read it back through the binding.
 4. Run it locally, then deploy.
 
