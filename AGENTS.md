@@ -30,7 +30,7 @@ All lesson, exercise, and `/llms.txt` content tells students' agents to use `cf`
 
 ## AI harness research data
 
-`src/data/harnesses.ts` is a manually maintained, Zod-schema-typed data source covering the harnesses this school supports (Claude Code, Codex, OpenCode, Pi, generic fallback): instructions file location, CLI command, skills support/install location/restart behavior, config/MCP file locations, model comparison data, and subscription-vs-API-billing policy for third-party routing. It's consumed by the homepage harness cards and lesson content, not re-derived per lesson.
+`src/data/harnesses.ts` is a manually maintained, Zod-schema-typed data source covering the harnesses this school supports (Claude Code, Codex, OpenCode, Pi, generic fallback): instructions file location, CLI command, skills support/install location/restart behavior, config/MCP file locations plus how to add a remote MCP server (`mcp` field, used by the Tools lesson), model comparison data, and subscription-vs-API-billing policy for third-party routing. It's consumed by the homepage harness cards and lesson content, not re-derived per lesson.
 
 Each harness profile carries its own `lastVerified` date and a `sources` list. This data goes stale fast (pricing and vendor policy on third-party subscription routing change often), so it's a manual process, not a scheduled job:
 
