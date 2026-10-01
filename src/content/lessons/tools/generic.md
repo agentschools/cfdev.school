@@ -42,12 +42,20 @@ agentInstructions: |
        `"mcp": { "cloudflare-api": { "type": "remote", "url":
        "https://mcp.cloudflare.com/mcp" } }` to opencode.json, then run
        `opencode mcp auth cloudflare-api`.
-     - Pi: Pi has no built-in MCP support. Tell the student that, and
-       offer the community extension: `pi install npm:pi-mcp-adapter`,
-       restart Pi, then add this to ~/.config/mcp/mcp.json and run
-       `/mcp-auth cloudflare-api`. If they'd rather not install an
-       extension, they can skip this lesson's hands-on steps; `cf` (from
-       the CLI lesson) covers much of the same ground.
+     - Pi (0.99 or newer; older versions have no MCP, so check
+       `pi --version` and have the student update first):
+         pi mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp
+         pi mcp login cloudflare-api
+       Or add `{ "mcpServers": { "cloudflare-api": { "url":
+       "https://mcp.cloudflare.com/mcp" } } }` to ~/.pi/agent/mcp.json and
+       run `/reload`. `/mcp` opens a TUI to check the connection. Pi's
+       MCP servers default to `codemode` exposure: Pi has its own Code
+       Mode, so you reach the server's tools by writing JavaScript that
+       calls `searchTools()` / `describeTool()` rather than seeing them
+       as individual tools. Cloudflare's server is already Code Mode, so
+       this nests one inside the other; it works, but tell the student
+       that's why the calls look different from other agents. Don't
+       change exposure or add `?codemode=false` unless they ask.
      - Cursor: add the generic config below to ~/.cursor/mcp.json (use
        just `"url"`, no `"type"`), then connect it from Settings, Tools &
        MCP, and complete the OAuth login in the browser.
@@ -125,7 +133,7 @@ The server lives at `https://mcp.cloudflare.com/mcp` and uses OAuth: your agent 
 | OpenCode           | `opencode mcp add` (type `remote`)                                                       | `opencode mcp auth cloudflare-api` |
 | Cursor             | Add the config below to `~/.cursor/mcp.json`                                             | Connect it in Settings, Tools & MCP |
 | GitHub Copilot CLI | `/mcp add` (type HTTP)                                                                   | Authorize in the browser           |
-| Pi                 | Pi has no built-in MCP. Install the `pi-mcp-adapter` extension first                     | `/mcp-auth cloudflare-api`         |
+| Pi (0.99+)         | `pi mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp`                         | `pi mcp login cloudflare-api`      |
 
 Any other agent that supports remote MCP servers can use this config:
 

@@ -57,7 +57,7 @@ export const harnessProfileSchema = z.object({
   /** How to connect a remote (HTTP) MCP server such as https://mcp.cloudflare.com/mcp. */
   mcp: z
     .object({
-      /** False when the harness ships without MCP support and needs an extension. */
+      /** False when the harness ships without MCP support and needs an extension (none today; Pi gained built-in MCP in 0.99). */
       nativeSupport: z.boolean(),
       /** Command or config edit that adds a remote HTTP server named "cloudflare-api". */
       addRemoteServer: z.string(),
@@ -324,15 +324,15 @@ export const harnesses: HarnessProfile[] = [
         "A directory-level AGENTS.override.md takes the place of that directory's AGENTS.md/CLAUDE.md; other directories' files still load alongside it.",
     },
     globalConfigFile: "~/.pi/agent/",
-    mcpConfigPath: "None built in. With pi-mcp-adapter: ~/.config/mcp/mcp.json (global) or .mcp.json (project), plus ~/.pi/agent/mcp.json",
+    mcpConfigPath: "~/.pi/agent/mcp.json (user) or .pi/mcp.json (project, requires project trust; overrides user entries with the same name). Built in since Pi 0.99.",
     mcp: {
-      nativeSupport: false,
+      nativeSupport: true,
       addRemoteServer:
-        "pi install npm:pi-mcp-adapter, then add { \"mcpServers\": { \"cloudflare-api\": { \"type\": \"http\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.config/mcp/mcp.json (or a project .mcp.json). Pi has no built-in MCP support; the adapter is a third-party extension.",
+        "pi mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp (writes ~/.pi/agent/mcp.json; -l writes the project .pi/mcp.json), or add { \"mcpServers\": { \"cloudflare-api\": { \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.pi/agent/mcp.json. Requires Pi 0.99 or newer (earlier versions have no MCP).",
       oauthLogin:
-        "/mcp-auth cloudflare-api inside Pi (tokens go in the OS keychain).",
+        "pi mcp login cloudflare-api, or sign in from the /mcp TUI inside Pi.",
       restartBehavior:
-        "Restart Pi after installing the adapter. The adapter exposes servers through a single `mcp` proxy tool by default.",
+        "Run /reload after editing mcp.json by hand. Servers default to `codemode` exposure: the model reaches their tools by writing JavaScript in Pi's built-in codemode QuickJS sandbox (searchTools()/describeTool()), not as individual tool definitions. Not hands-on verified with the Cloudflare server specifically.",
     },
     skills: {
       supported: true,
@@ -350,8 +350,12 @@ export const harnesses: HarnessProfile[] = [
     lastVerified: "2026-10-01",
     sources: [
       {
-        url: "https://github.com/nicobailon/pi-mcp-adapter",
-        note: "Pi has no built-in MCP; pi-mcp-adapter install, config file locations, /mcp-auth.",
+        url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/mcp.md",
+        note: "Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload.",
+      },
+      {
+        url: "https://github.com/earendil-works/pi/releases",
+        note: "0.99.0 release notes: MCP over stdio/streamable HTTP with OAuth, codemode built-in extension. Replaces the earlier third-party pi-mcp-adapter route (https://github.com/nicobailon/pi-mcp-adapter), which is no longer needed.",
       },
       {
         url: "https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/providers.md",
