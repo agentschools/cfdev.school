@@ -96,9 +96,7 @@ Install and authenticate `cf`, Cloudflare's new CLI (open beta since September 2
 
 ### Lesson: Skills
 
-Install https://github.com/cloudflare/skills globally, non-interactively, via `npx skills add https://github.com/cloudflare/skills` (verify the exact non-interactive flag before shipping this content).
-
-Research needed: which harnesses require a full quit/restart vs. a simple reload for newly installed global skills to become available, so the lesson can give accurate per-harness guidance.
+Install https://github.com/cloudflare/skills globally and non-interactively for every agent detected on the student's machine: `npx skills add https://github.com/cloudflare/skills -g -y -s '*'` (no `-a`; `-a '*'` writes into dozens of agents' directories), then `npx skills remove wrangler -g -y`, because the `wrangler` skill auto-invokes on the tasks the CLI lesson moved to `cf` (tracked upstream in cloudflare/skills#209). Per-harness reload/restart guidance lives in `src/data/harnesses.ts`. Briefly explain automatic vs. explicit skill invocation and each harness's explicit syntax. Use `npx skills` rather than cloudflare/skills' native plugins: it works the same for every agent and can leave out the `wrangler` skill; the plugins also bundle the MCP server, which belongs to the Tools lesson.
 
 ### Lesson: Tools
 
@@ -218,8 +216,6 @@ Type design:
 
 - Mobile nav treatment for the `developers.cloudflare.com`-inspired sidebar layout.
 - Abuse prevention for anonymous enrollment (rate limiting, ID guessing) — revisit only if it becomes a real problem.
-- Exact non-interactive install flag for the `skills` CLI — verify before writing the Skills lesson.
-- Per-harness restart/reload requirements after global skill install — needs research.
 - Current (not stale) research on OpenAI vs. Anthropic policy on subscription-plan API access for third-party harnesses.
 
 ## Planning process

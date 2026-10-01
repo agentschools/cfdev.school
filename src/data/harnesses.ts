@@ -59,6 +59,8 @@ export const harnessProfileSchema = z.object({
     globalInstallPath: z.string().optional(),
     /** Whether picking up newly installed global skills needs a full quit/restart or just a reload/new session. */
     restartBehavior: z.string(),
+    /** How a user invokes a skill explicitly by name, rather than letting the model pick it from its description. */
+    explicitInvocation: z.string().optional(),
   }),
   subscriptionBilling: z.object({
     /** Does this harness support signing in with a subscription plan (vs. only pay-per-token API keys)? */
@@ -92,7 +94,8 @@ export const harnesses: HarnessProfile[] = [
       supported: true,
       globalInstallPath: "~/.claude/skills/",
       restartBehavior:
-        "New global skills are picked up in new sessions; no full app restart required, but a running session must be restarted to see a skill installed after it started.",
+        "Nothing needed: a file watcher picks up new or changed skills in a running session. If ~/.claude/skills/ didn't exist when the session started, run `/reload-skills`.",
+      explicitInvocation: "/skill-name",
     },
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
@@ -124,7 +127,7 @@ export const harnesses: HarnessProfile[] = [
         apiPricePerMTok: { input: 1, output: 5 },
       },
     ],
-    lastVerified: "2026-09-21",
+    lastVerified: "2026-09-30",
     sources: [
       {
         url: "https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan",
@@ -137,6 +140,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://docs.claude.com/en/docs/claude-code/memory",
         note: "Official docs' AGENTS.md section: fallback precedence rules, the /config Project instructions setting, and the Bedrock/Vertex/Foundry/telemetry-disabled exceptions. Verified live 2026-09-21, the same day as InfoWorld and DevOps.com's coverage of Claude Code 2.1.277.",
+      },
+      {
+        url: "https://code.claude.com/docs/en/skills",
+        note: "Skill locations, live change detection and /reload-skills, /skill-name invocation, disable-model-invocation. Verified 2026-09-30.",
       },
     ],
   },
@@ -153,9 +160,10 @@ export const harnesses: HarnessProfile[] = [
     mcpConfigPath: "~/.codex/config.toml ([mcp_servers.<name>] blocks)",
     skills: {
       supported: true,
-      globalInstallPath: "~/.codex/skills/",
+      globalInstallPath: "~/.agents/skills/ (~/.codex/skills/ is deprecated but still read)",
       restartBehavior:
-        "Skills are discovered per-session; a new codex session picks up newly installed global skills without a full app reinstall.",
+        "Nothing needed: Codex detects newly installed skills automatically. Restart Codex if a skill doesn't show up.",
+      explicitInvocation: "$skill-name",
     },
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
@@ -172,7 +180,7 @@ export const harnesses: HarnessProfile[] = [
         notes: "Default Codex CLI model as of this writing; exact API pricing not verified here, check platform.openai.com/pricing.",
       },
     ],
-    lastVerified: "2026-09-09",
+    lastVerified: "2026-09-30",
     sources: [
       {
         url: "https://developers.openai.com/codex/auth.md",
@@ -185,6 +193,14 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://developers.openai.com/community/codex-for-oss",
         note: "OpenAI's official endorsement of third-party harnesses using ChatGPT subscription auth for Codex models.",
+      },
+      {
+        url: "https://learn.chatgpt.com/docs/build-skills",
+        note: "Redirect target of developers.openai.com/codex/skills: ~/.agents/skills, automatic detection of new skills, $skill-name invocation. Verified 2026-09-30.",
+      },
+      {
+        url: "https://github.com/openai/codex/blob/main/codex-rs/ext/skills/src/host_roots.rs",
+        note: "$CODEX_HOME/skills is a deprecated user skills location kept for backward compatibility; ~/.agents/skills is a user root.",
       },
     ],
   },
@@ -206,7 +222,8 @@ export const harnesses: HarnessProfile[] = [
       globalInstallPath:
         "~/.config/opencode/skills/, plus auto-loaded ~/.claude/skills/ and ~/.agents/skills/",
       restartBehavior:
-        "Skills are loaded on-demand via the native skill tool within a session; a new session picks up newly installed skills without restarting the app.",
+        "Restart OpenCode. Skills are cached per instance with no file watcher (inferred from source, not documented).",
+      explicitInvocation: "/skill-name",
     },
     subscriptionBilling: {
       supportsSubscriptionLogin: false,
@@ -215,7 +232,7 @@ export const harnesses: HarnessProfile[] = [
         "OpenCode's own docs state Anthropic explicitly prohibits driving a Claude Pro/Max subscription from OpenCode; the bundled plugins that did this were removed as of OpenCode 1.3.0. For Claude models, only an Anthropic API key (pay-per-token) or OpenCode's own Zen gateway work. OpenCode does support ChatGPT Plus, GitHub Copilot, and GitLab Duo subscription logins with zero extra setup, since OpenAI/GitHub/GitLab permit third-party routing.",
     },
     models: [],
-    lastVerified: "2026-09-09",
+    lastVerified: "2026-09-30",
     sources: [
       {
         url: "https://opencode.ai/docs/rules/",
@@ -232,6 +249,14 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://www.firecrawl.dev/blog/claude-code-vs-opencode",
         note: "OpenCode's documented prohibition on routing Claude Pro/Max through OpenCode, and supported subscriptions (ChatGPT Plus, Copilot, GitLab Duo).",
+      },
+      {
+        url: "https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/skill/index.ts",
+        note: "Skills cached per instance with no file watcher, hence restart after installing. Inferred from source 2026-09-30.",
+      },
+      {
+        url: "https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/command/index.ts",
+        note: "Each skill is registered as a /skill-name command (not in the docs).",
       },
     ],
   },
@@ -250,9 +275,9 @@ export const harnesses: HarnessProfile[] = [
     mcpConfigPath: "~/.pi/agent/ (MCP server config, see pi docs for exact file)",
     skills: {
       supported: true,
-      globalInstallPath: "~/.pi/agent/skills/",
-      restartBehavior:
-        "Skills are read from disk per session; a new pi session picks up newly installed global skills without restarting.",
+      globalInstallPath: "~/.pi/agent/skills/ (also reads ~/.agents/skills/)",
+      restartBehavior: "Run `/reload` in a running session, or start a new session.",
+      explicitInvocation: "/skill:skill-name",
     },
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
@@ -261,7 +286,7 @@ export const harnesses: HarnessProfile[] = [
         "pi's /login supports ChatGPT Plus/Pro (Codex), Claude Pro/Max, GitHub Copilot, and xAI subscriptions. As of an April 2026 Anthropic enforcement change, Claude Pro/Max login in pi (and other third-party tools) technically works but draws from Anthropic's separate pay-per-token \"extra usage\" pool, not your Claude plan's included limits, so there's no cost benefit over an API key for Claude models. ChatGPT Plus/Pro login has no such restriction: OpenAI's Codex for OSS program officially endorses third-party harnesses using it, and usage counts against the ChatGPT plan as expected.",
     },
     models: [],
-    lastVerified: "2026-09-26",
+    lastVerified: "2026-09-30",
     sources: [
       {
         url: "https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/providers.md",
@@ -283,6 +308,10 @@ export const harnesses: HarnessProfile[] = [
         url: "https://pi.dev/logo.svg",
         note: "Official pi logo, linked from the pi README's badge header. Full-color mark, no separate light/dark variant needed.",
       },
+      {
+        url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md",
+        note: "~/.agents/skills support, /skill:name invocation, /reload after changes. Verified 2026-09-30.",
+      },
     ],
   },
   {
@@ -300,9 +329,10 @@ export const harnesses: HarnessProfile[] = [
     mcpConfigPath: ".cursor/mcp.json (project) or ~/.cursor/mcp.json (global); both are merged, project-level wins on name conflicts",
     skills: {
       supported: true,
-      globalInstallPath: "~/.cursor/skills/ (also auto-loads ~/.agents/skills/)",
+      globalInstallPath: "~/.agents/skills/ or ~/.cursor/skills/ (also reads legacy ~/.claude/skills/ and ~/.codex/skills/)",
       restartBehavior:
-        "Skills are discovered at startup from .cursor/skills/ and .agents/skills/ (plus .claude/skills/ and .codex/skills/ for compatibility); a new session picks up newly installed skills without a full app restart.",
+        "Start a new chat; existing chats keep the skills they started with. If that's not enough, run Developer: Reload Window or restart Cursor. Docs only say skills are discovered when Cursor starts; the new-chat behavior is from the Cursor forum, not docs.",
+      explicitInvocation: "/skill-name",
     },
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
@@ -319,7 +349,7 @@ export const harnesses: HarnessProfile[] = [
         notes: "Cursor's own agentic coding model, drawn from the Cursor Models pool rather than billed as a third-party model.",
       },
     ],
-    lastVerified: "2026-09-26",
+    lastVerified: "2026-09-30",
     sources: [
       {
         url: "https://cursor.com/docs/cli/reference/parameters",
@@ -349,6 +379,14 @@ export const harnesses: HarnessProfile[] = [
         url: "https://cursor.com/docs/models-and-pricing",
         note: "Cursor Models vs. Other Models usage pools, and which plans include each.",
       },
+      {
+        url: "https://cursor.com/docs/context/skills",
+        note: "Global skill directories including legacy paths, /skill-name invocation, discovery when Cursor starts. Verified 2026-09-30.",
+      },
+      {
+        url: "https://forum.cursor.com/t/newly-added-agent-skills-do-not-appear-in-existing-chats-no-in-chat-skill-reload/165124",
+        note: "Forum, not docs: existing chats keep their skill snapshot, start a new chat after installing.",
+      },
     ],
   },
   {
@@ -369,7 +407,8 @@ export const harnesses: HarnessProfile[] = [
       supported: true,
       globalInstallPath: "~/.copilot/skills/ (also reads ~/.agents/skills/)",
       restartBehavior:
-        "New skills are picked up with the in-session `/skills reload` command, or automatically in a new session; no full app restart needed.",
+        "Run `/skills reload` in a running session, or start a new session; no full app restart needed.",
+      explicitInvocation: "/skill-name",
     },
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
@@ -386,7 +425,7 @@ export const harnesses: HarnessProfile[] = [
         notes: "Default Copilot CLI model as of this writing; switch with the /model slash command.",
       },
     ],
-    lastVerified: "2026-09-26",
+    lastVerified: "2026-09-30",
     sources: [
       {
         url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli",
@@ -419,6 +458,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://cdn.jsdelivr.net/gh/github/copilot-cli@main/README.md",
         note: "Default model (Claude Sonnet 4.5) and the /model slash command.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills",
+        note: "Personal skill directories and /skills reload. Verified 2026-09-30.",
       },
     ],
   },

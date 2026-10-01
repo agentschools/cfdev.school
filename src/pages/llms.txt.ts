@@ -46,7 +46,7 @@ Submit each answer via PUT /api/students/{id}/interview as you get it, or batch 
 
 ## Lessons
 
-After the interview, check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order: "models", then "instructions", then "cli" (more lessons are coming).
+After the interview, check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order: "models", then "instructions", then "cli", then "skills" (more lessons are coming).
 
 For each lesson: fetch GET /api/lessons/{slug}?harness={yourHarnessId}, follow its \`agentInstructions\` to teach the material conversationally, then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete with PUT /api/progress/{studentId} using \`{ "lessonSlug": "..." }\` before moving on. Always include \`model\` in that request.
 
@@ -89,7 +89,7 @@ Check GET /api/progress/{studentId} first if they might already have completed i
 
 ## Status
 
-Cloudflare Dev School is under active development. Three lessons ("models", "instructions", "cli") and two exercises (Deploy your first Worker, then Add your first Binding: Workers KV) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Four lessons ("models", "instructions", "cli", "skills") and two exercises (Deploy your first Worker, then Add your first Binding: Workers KV) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

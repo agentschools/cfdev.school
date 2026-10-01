@@ -11,6 +11,7 @@ vi.mock("astro:content", () => ({
     { data: { lessonSlug: "models" } },
     { data: { lessonSlug: "instructions" } },
     { data: { lessonSlug: "cli" } },
+    { data: { lessonSlug: "skills" } },
   ],
 }));
 
@@ -40,8 +41,9 @@ describe("homepage", () => {
     expect(html).toContain('href="/lessons/models"');
     expect(html).toContain('href="/lessons/instructions"');
     expect(html).toContain('href="/lessons/cli"');
-    expect(html).not.toContain('href="/lessons/skills"');
-    expect(html).toContain("Skills");
+    expect(html).toContain('href="/lessons/skills"');
+    expect(html).not.toContain('href="/lessons/tools"');
+    expect(html).toContain("Tools");
   });
 
   it("does not render the old anchor-nav header or in-page outline", async () => {
