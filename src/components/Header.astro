@@ -1,7 +1,13 @@
 ---
+interface Props {
+  /** GitHub link only, floated over the page's top-right corner. No Enroll button, no bottom border. */
+  minimal?: boolean;
+}
+
+const { minimal = false } = Astro.props;
 ---
 
-<header class="header">
+<header class:list={["header", { minimal }]}>
   <div class="menu">
     <a class="icon-link" href="https://github.com/zeke/cloudflare-dev-school" aria-label="View source on GitHub">
       <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -10,7 +16,7 @@
         ></path>
       </svg>
     </a>
-    <button class="enroll-button" type="button" data-enroll-trigger>Enroll</button>
+    {!minimal && <button class="enroll-button" type="button" data-enroll-trigger>Enroll</button>}
   </div>
 </header>
 
@@ -21,6 +27,15 @@
     gap: 1.5rem;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border);
+  }
+
+  .header.minimal {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 5;
+    padding: 1.5rem 1.75rem;
+    border-bottom: none;
   }
 
   .menu {

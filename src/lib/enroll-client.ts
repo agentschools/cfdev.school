@@ -33,11 +33,13 @@ function scramble(target: string): string {
     .join("");
 }
 
-function cipherReveal(display: HTMLElement, target: string, fast: boolean, onDone?: () => void): void {
+/** Returns a cancel function, so a reveal in flight (e.g. over the sample ID) can be replaced by another. */
+function cipherReveal(display: HTMLElement, target: string, fast: boolean, onDone?: () => void): () => void {
   const scrambleMs = fast ? 15 : 30;
   const delayMs = fast ? 150 : 600;
   const resolveMs = fast ? 45 : 140;
   let resolved = 0;
+  let resolveInterval: number | undefined;
   display.textContent = scramble(target);
 
   const scrambleInterval = window.setInterval(() => {
@@ -50,8 +52,8 @@ function cipherReveal(display: HTMLElement, target: string, fast: boolean, onDon
     display.textContent = next;
   }, scrambleMs);
 
-  window.setTimeout(() => {
-    const resolveInterval = window.setInterval(() => {
+  const startTimeout = window.setTimeout(() => {
+    resolveInterval = window.setInterval(() => {
       if (resolved >= target.length) {
         window.clearInterval(scrambleInterval);
         window.clearInterval(resolveInterval);
@@ -63,6 +65,12 @@ function cipherReveal(display: HTMLElement, target: string, fast: boolean, onDon
       resolved++;
     }, resolveMs);
   }, delayMs);
+
+  return () => {
+    window.clearInterval(scrambleInterval);
+    window.clearTimeout(startTimeout);
+    window.clearInterval(resolveInterval);
+  };
 }
 
 function fireCelebration(layer: HTMLElement): void {
@@ -124,6 +132,7 @@ export function initEnrollment(): void {
   if (triggers.length === 0) return;
 
   let isSubmitting = false;
+  let cancelReveal: (() => void) | undefined;
 
   // The ID card only exists on the homepage. Trigger buttons (e.g. the header's,
   // or the homepage's own cta-block) can appear on any page, so hiding them must
@@ -142,7 +151,8 @@ export function initEnrollment(): void {
     if (card && display && celebrationLayer) {
       card.hidden = false;
       requestAnimationFrame(() => card.classList.add("is-visible"));
-      cipherReveal(display, student.id, fast, () => {
+      cancelReveal?.();
+      cancelReveal = cipherReveal(display, student.id, fast, () => {
         fireCelebration(celebrationLayer);
       });
     }
@@ -150,7 +160,13 @@ export function initEnrollment(): void {
   }
 
   const cached = readCachedStudent();
-  if (cached) showEnrolled(cached, true);
+  if (cached) {
+    showEnrolled(cached, true);
+  } else if (card && display && celebrationLayer && display.textContent) {
+    // Logged-out visitors see a sample ID. Play the same reveal over it on load.
+    const layer = celebrationLayer;
+    cancelReveal = cipherReveal(display, display.textContent.trim(), true, () => fireCelebration(layer));
+  }
 
   triggers.forEach((trigger) => {
     trigger.addEventListener("click", async () => {
