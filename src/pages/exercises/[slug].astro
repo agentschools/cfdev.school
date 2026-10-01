@@ -199,7 +199,8 @@ const description = exercise?.description ?? "Exercise not found.";
     padding: 1.25rem;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
-    background: var(--card-bg) !important;
+    background: var(--card-bg);
+    color: var(--fg);
     white-space: pre-wrap;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.85rem;
@@ -208,13 +209,6 @@ const description = exercise?.description ?? "Exercise not found.";
 
   .prose :global(pre code) {
     font-size: inherit;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .prose :global(.astro-code),
-    .prose :global(.astro-code span) {
-      color: var(--shiki-dark) !important;
-    }
   }
 
   .prose :global(code) {

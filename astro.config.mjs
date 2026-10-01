@@ -7,11 +7,7 @@ export default defineConfig({
   output: 'server',
   adapter: cloudflare(),
   markdown: {
-    shikiConfig: {
-      themes: {
-        light: 'github-light',
-        dark: 'github-dark',
-      },
-    },
+    // Monochrome code blocks for now: plain <pre><code>, no Shiki token colors.
+    syntaxHighlight: false,
   },
 });
