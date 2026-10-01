@@ -94,6 +94,16 @@ Verify exercise 1 with `npm run verify:exercise`, exercise 2 with `npm run verif
 
 The page shows an enroll nudge instead of the two options for logged-out visitors. The sidebar (`CurriculumSidebar.astro`) only shows the "Account" section (containing the Disenroll link) once enrolled, `curriculum-sidebar-client.ts` toggles it both on load and reactively on the `cfDevSchool:enrolled` event, so it appears immediately after a fresh enrollment click without a reload.
 
+## Reviewing with Crit
+
+[Crit](https://crit.md/) ([source](https://github.com/tomasz-tomczyk/crit)) is a local review tool the maintainer uses to give precise inline feedback on copy and UI. It runs on the maintainer's machine (it opens a browser), so it only works in a local agent session, not in a cloud one. Local review needs no account; the optional Share feature uses a free crit.md account (GitHub OAuth) that the maintainer signs into themselves.
+
+- Setup (maintainer, once): `brew install crit` (or `go install github.com/tomasz-tomczyk/crit/cmd/crit@latest`), then `claude plugin marketplace add tomasz-tomczyk/crit` for the `/crit` slash command.
+- Review a page as rendered: `npm run dev`, then `crit http://localhost:4321` (Astro's default port; use whatever port `npm run dev` prints). Crit proxies the dev server and overlays comment UI on the live page. For the landing page that's `/`.
+- Review copy as files: `crit src/content/lessons/<path>.md`, or bare `crit` to review changed files.
+- Agent loop: when asked to run `/crit`, launch Crit, wait for the maintainer to click Finish, then address each comment, and say which comments you did not act on and why. Crit shows the maintainer a diff between rounds.
+- Comments can point at rendered text, so map them back to the source: page copy usually lives in `src/pages/*.astro`, components in `src/components/`, lesson text in `src/content/`. Student-facing copy rules above (cf, not Wrangler) still apply.
+
 ## Dependency pinning
 
 The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` can fail with `ETARGET` for packages published in the last week. Check `npm view <pkg> time --json` and pin an exact version older than 7 days when this happens. Don't work around it by editing the global npmrc.
