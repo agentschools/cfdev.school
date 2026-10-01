@@ -54,6 +54,19 @@ export const harnessProfileSchema = z.object({
   /** Global config file location (MCP config, provider settings, etc.). */
   globalConfigFile: z.string().optional(),
   mcpConfigPath: z.string().optional(),
+  /** How to connect a remote (HTTP) MCP server such as https://mcp.cloudflare.com/mcp. */
+  mcp: z
+    .object({
+      /** False when the harness ships without MCP support and needs an extension. */
+      nativeSupport: z.boolean(),
+      /** Command or config edit that adds a remote HTTP server named "cloudflare-api". */
+      addRemoteServer: z.string(),
+      /** How to complete the OAuth login after adding it. */
+      oauthLogin: z.string(),
+      /** Whether adding/authenticating needs a restart or reload before the tools show up. */
+      restartBehavior: z.string(),
+    })
+    .optional(),
   skills: z.object({
     supported: z.boolean(),
     globalInstallPath: z.string().optional(),
@@ -90,6 +103,15 @@ export const harnesses: HarnessProfile[] = [
     },
     globalConfigFile: "~/.claude/settings.json",
     mcpConfigPath: "~/.claude.json (user scope) or .mcp.json (project scope)",
+    mcp: {
+      nativeSupport: true,
+      addRemoteServer:
+        "claude mcp add --transport http --scope user cloudflare-api https://mcp.cloudflare.com/mcp",
+      oauthLogin:
+        "Run `/mcp` inside Claude Code and follow the browser steps (or `claude mcp login cloudflare-api` from the shell). `claude mcp list` shows connection status.",
+      restartBehavior:
+        "Existing sessions may need a restart to see a newly added server; run `/mcp` to check.",
+    },
     skills: {
       supported: true,
       globalInstallPath: "~/.claude/skills/",
@@ -127,8 +149,12 @@ export const harnesses: HarnessProfile[] = [
         apiPricePerMTok: { input: 1, output: 5 },
       },
     ],
-    lastVerified: "2026-09-30",
+    lastVerified: "2026-10-01",
     sources: [
+      {
+        url: "https://code.claude.com/docs/en/mcp",
+        note: "Adding remote HTTP MCP servers, --scope user, /mcp OAuth login, claude mcp list.",
+      },
       {
         url: "https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan",
         note: "Pro/Max plan coverage, API key precedence, opting out of API credits.",
@@ -158,6 +184,15 @@ export const harnesses: HarnessProfile[] = [
     },
     globalConfigFile: "~/.codex/config.toml",
     mcpConfigPath: "~/.codex/config.toml ([mcp_servers.<name>] blocks)",
+    mcp: {
+      nativeSupport: true,
+      addRemoteServer:
+        "codex mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp (writes a [mcp_servers.cloudflare-api] block to ~/.codex/config.toml)",
+      oauthLogin:
+        "codex mcp login cloudflare-api. Codex has gated OAuth login behind an rmcp client feature flag in the past; if login fails, check the current Codex MCP docs for that flag.",
+      restartBehavior:
+        "Restart Codex after adding the server. Not re-verified against Codex's docs in this pass (developers.openai.com was unreachable); verified from search results and Codex source/PR history only.",
+    },
     skills: {
       supported: true,
       globalInstallPath: "~/.agents/skills/ (~/.codex/skills/ is deprecated but still read)",
@@ -182,6 +217,10 @@ export const harnesses: HarnessProfile[] = [
     ],
     lastVerified: "2026-09-30",
     sources: [
+      {
+        url: "https://developers.openai.com/codex/mcp",
+        note: "codex mcp add --url / codex mcp login for streamable HTTP + OAuth. Page was unreachable on 2026-10-01; command shapes taken from search results.",
+      },
       {
         url: "https://developers.openai.com/codex/auth.md",
         note: "ChatGPT login vs. API key auth paths.",
@@ -217,6 +256,15 @@ export const harnesses: HarnessProfile[] = [
     },
     globalConfigFile: "~/.config/opencode/opencode.json",
     mcpConfigPath: "opencode.json (\"mcp\" key), project or global scope",
+    mcp: {
+      nativeSupport: true,
+      addRemoteServer:
+        "opencode mcp add (interactive: Type remote, Name cloudflare-api, URL https://mcp.cloudflare.com/mcp), or add { \"mcp\": { \"cloudflare-api\": { \"type\": \"remote\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to opencode.json",
+      oauthLogin:
+        "opencode mcp auth cloudflare-api (OpenCode also starts the OAuth flow itself on a 401, using dynamic client registration).",
+      restartBehavior:
+        "Restart OpenCode after editing its config.",
+    },
     skills: {
       supported: true,
       globalInstallPath:
@@ -232,8 +280,12 @@ export const harnesses: HarnessProfile[] = [
         "OpenCode's own docs state Anthropic explicitly prohibits driving a Claude Pro/Max subscription from OpenCode; the bundled plugins that did this were removed as of OpenCode 1.3.0. For Claude models, only an Anthropic API key (pay-per-token) or OpenCode's own Zen gateway work. OpenCode does support ChatGPT Plus, GitHub Copilot, and GitLab Duo subscription logins with zero extra setup, since OpenAI/GitHub/GitLab permit third-party routing.",
     },
     models: [],
-    lastVerified: "2026-09-30",
+    lastVerified: "2026-10-01",
     sources: [
+      {
+        url: "https://opencode.ai/docs/mcp-servers",
+        note: "Remote MCP servers (type remote), opencode mcp add/auth, automatic OAuth on 401.",
+      },
       {
         url: "https://opencode.ai/docs/rules/",
         note: "AGENTS.md/CLAUDE.md discovery order, global vs. project files.",
@@ -272,7 +324,16 @@ export const harnesses: HarnessProfile[] = [
         "A directory-level AGENTS.override.md takes the place of that directory's AGENTS.md/CLAUDE.md; other directories' files still load alongside it.",
     },
     globalConfigFile: "~/.pi/agent/",
-    mcpConfigPath: "~/.pi/agent/ (MCP server config, see pi docs for exact file)",
+    mcpConfigPath: "None built in. With pi-mcp-adapter: ~/.config/mcp/mcp.json (global) or .mcp.json (project), plus ~/.pi/agent/mcp.json",
+    mcp: {
+      nativeSupport: false,
+      addRemoteServer:
+        "pi install npm:pi-mcp-adapter, then add { \"mcpServers\": { \"cloudflare-api\": { \"type\": \"http\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.config/mcp/mcp.json (or a project .mcp.json). Pi has no built-in MCP support; the adapter is a third-party extension.",
+      oauthLogin:
+        "/mcp-auth cloudflare-api inside Pi (tokens go in the OS keychain).",
+      restartBehavior:
+        "Restart Pi after installing the adapter. The adapter exposes servers through a single `mcp` proxy tool by default.",
+    },
     skills: {
       supported: true,
       globalInstallPath: "~/.pi/agent/skills/ (also reads ~/.agents/skills/)",
@@ -286,8 +347,12 @@ export const harnesses: HarnessProfile[] = [
         "pi's /login supports ChatGPT Plus/Pro (Codex), Claude Pro/Max, GitHub Copilot, and xAI subscriptions. As of an April 2026 Anthropic enforcement change, Claude Pro/Max login in pi (and other third-party tools) technically works but draws from Anthropic's separate pay-per-token \"extra usage\" pool, not your Claude plan's included limits, so there's no cost benefit over an API key for Claude models. ChatGPT Plus/Pro login has no such restriction: OpenAI's Codex for OSS program officially endorses third-party harnesses using it, and usage counts against the ChatGPT plan as expected.",
     },
     models: [],
-    lastVerified: "2026-09-30",
+    lastVerified: "2026-10-01",
     sources: [
+      {
+        url: "https://github.com/nicobailon/pi-mcp-adapter",
+        note: "Pi has no built-in MCP; pi-mcp-adapter install, config file locations, /mcp-auth.",
+      },
       {
         url: "https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/providers.md",
         note: "Subscription provider list and the Claude Pro/Max extra-usage caveat.",
@@ -327,6 +392,15 @@ export const harnesses: HarnessProfile[] = [
     },
     globalConfigFile: "~/.cursor/cli-config.json",
     mcpConfigPath: ".cursor/mcp.json (project) or ~/.cursor/mcp.json (global); both are merged, project-level wins on name conflicts",
+    mcp: {
+      nativeSupport: true,
+      addRemoteServer:
+        "Add { \"mcpServers\": { \"cloudflare-api\": { \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",
+      oauthLogin:
+        "Cursor prompts for OAuth in the browser the first time the server connects (Settings, Tools & MCP, then Connect).",
+      restartBehavior:
+        "Cursor usually picks up mcp.json changes without a restart; run Developer: Reload Window if the server does not appear. Not hands-on verified.",
+    },
     skills: {
       supported: true,
       globalInstallPath: "~/.agents/skills/ or ~/.cursor/skills/ (also reads legacy ~/.claude/skills/ and ~/.codex/skills/)",
@@ -403,6 +477,15 @@ export const harnesses: HarnessProfile[] = [
     globalConfigFile: "~/.copilot/settings.json",
     mcpConfigPath:
       "~/.copilot/mcp-config.json (user level, ships with the GitHub MCP server preconfigured) plus .mcp.json or .github/mcp.json (project level, walked from cwd up to the repo root); project-level definitions win on name conflicts",
+    mcp: {
+      nativeSupport: true,
+      addRemoteServer:
+        "/mcp add inside Copilot CLI (type HTTP), or add { \"mcpServers\": { \"cloudflare-api\": { \"type\": \"http\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.copilot/mcp-config.json.",
+      oauthLogin:
+        "Copilot CLI prompts for authorization when the server requires OAuth. Not hands-on verified; fall back to an API token header if it does not.",
+      restartBehavior:
+        "Restart Copilot CLI after editing mcp-config.json. Not hands-on verified.",
+    },
     skills: {
       supported: true,
       globalInstallPath: "~/.copilot/skills/ (also reads ~/.agents/skills/)",

@@ -100,7 +100,7 @@ Install https://github.com/cloudflare/skills globally and non-interactively for 
 
 ### Lesson: Tools
 
-Install https://github.com/cloudflare/mcp, the token-efficient MCP server for the whole Cloudflare API (2500 endpoints, ~1k tokens, powered by Code Mode). Explain what Code Mode is and why it keeps the model's context window from getting polluted with tool definitions.
+Install https://github.com/cloudflare/mcp, the token-efficient MCP server for the whole Cloudflare API (2500 endpoints, ~1k tokens, powered by Code Mode). Explain what Code Mode is and why it keeps the model's context window from getting polluted with tool definitions. Connect it as a remote HTTP server (`https://mcp.cloudflare.com/mcp`, named `cloudflare-api`) with OAuth, using each harness's own add command (per-harness commands live in the `mcp` field of `src/data/harnesses.ts`). Pi has no built-in MCP support, so the lesson points Pi users at the community `pi-mcp-adapter` extension and lets them skip the hands-on steps. Verify with one read-only request that shows the `search` then `execute` flow. Also explain when to use `cf` vs. the MCP server.
 
 ## Quizzes
 
