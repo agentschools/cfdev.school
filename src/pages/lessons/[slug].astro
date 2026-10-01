@@ -58,7 +58,9 @@ const title = lesson?.title ?? "Lesson not found";
 
 <script>
   import { initLessonPage } from "../../lib/lesson-client";
+  import { initCodeCopyButtons } from "../../lib/code-copy-client";
   initLessonPage();
+  initCodeCopyButtons();
 </script>
 
 <style>

@@ -85,6 +85,10 @@ Verify exercise 1 with `npm run verify:exercise`, exercise 2 with `npm run verif
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 
+## Code block copy buttons
+
+`src/lib/code-copy-client.ts` (`initCodeCopyButtons`, called from the lesson and exercise page scripts) wraps every `.prose pre` (one-liners included) in `.code-block` and adds an icon-only copy button on the right that flips to a check + "Copied" for 2s. Styles live in the global block in `src/layouts/Layout.astro`.
+
 ## Disenroll
 
 `/disenroll` (`src/pages/disenroll.astro`, client logic in `src/lib/disenroll-client.ts`) copies OpenCode School's disenroll page layout: two options, not one.

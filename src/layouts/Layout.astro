@@ -135,4 +135,45 @@ const { title, description, showSidebarBrand = true } = Astro.props;
     min-width: 0;
     flex: 1;
   }
+
+  .code-block {
+    position: relative;
+    margin: 0 0 1rem;
+  }
+
+  .code-block > pre {
+    margin: 0 !important;
+    padding-right: 3rem !important;
+  }
+
+  .code-copy {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--muted-fg);
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .code-copy:hover,
+  .code-copy:focus-visible {
+    border-color: var(--border);
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  .code-copy.copied {
+    padding-right: 0.6rem;
+    border-color: var(--border);
+    background: var(--bg);
+    color: var(--fg);
+  }
 </style>
