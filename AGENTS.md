@@ -133,6 +133,32 @@ We're borrowing ideas from Matt Pocock's `mattpocock/skills` (https://github.com
 
 Apply these ideas freely when turning `plan.agent.md` into GitHub issues, but there's no separate tracker config or skill install to maintain here, just plain GitHub issues.
 
+## Reviewing with Crit
+
+[Crit](https://github.com/tomasz-tomczyk/crit) lets a human leave inline comments on a running page or a markdown file, then hands them to the agent. It runs locally and needs no account.
+
+Setup (once per machine):
+
+- `brew install crit`
+- `claude plugin marketplace add tomasz-tomczyk/crit` (adds the `/crit` command to Claude Code)
+
+Review the running site (layout, UI, copy as rendered):
+
+1. `npm run dev` (Astro dev server, default `http://localhost:4321`)
+2. `crit live http://localhost:4321` (proxy review; open the URL Crit prints, comment on the page)
+3. Run `/crit` in the agent to read the comments, make the edits, and reply to each one. Repeat until the reviewer is satisfied.
+
+Review prose only: `crit <file>.md` (e.g. a lesson in `src/content/lessons/`, `plan.agent.md`).
+
+Mapping comments back to source:
+
+- Page layout and routes: `src/pages/*.astro` (landing page is `src/pages/index.astro`, exercises under `src/pages/exercises/`)
+- Shared UI: `src/components/*.astro` (e.g. `AgentPrompt.astro`, `CurriculumSidebar.astro`)
+- Lesson and exercise copy: `src/content/lessons/**`, `src/content/exercises/*.md`
+- Harness cards and facts on the homepage: `src/data/harnesses.ts`
+
+Don't commit Crit's review state files. Verify flags with `crit --help`.
+
 ## Keep this file current
 
 This file must be revised whenever the stack, scripts, or conventions change. Don't let it drift from what's actually true about the repo.

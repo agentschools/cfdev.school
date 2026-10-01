@@ -38,7 +38,9 @@ const exercises = listExercises();
               </a>
             ) : (
               <span class="pending">
-                <span class="index">{num}.</span> {lesson.title}
+                <span>
+                  <span class="index">{num}.</span> {lesson.title}
+                </span>
               </span>
             )}
           </li>
@@ -63,7 +65,7 @@ const exercises = listExercises();
               </a>
             ) : (
               <span class="pending">
-                {exercise.title}
+                <span>{exercise.title}</span>
                 <span class="check" hidden>
                   ✓
                 </span>
@@ -110,6 +112,7 @@ const exercises = listExercises();
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--muted-fg);
+    opacity: 0.6;
   }
 
   .section-label:first-of-type {
