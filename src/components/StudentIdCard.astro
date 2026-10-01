@@ -1,31 +1,20 @@
 ---
 ---
 
-<div id="student-id-card" class="id-card" hidden>
+<div id="student-id-card" class="id-card">
   <div id="celebration-layer" class="celebration-layer" aria-hidden="true"></div>
   <div class="id-card-face">
     <p class="id-card-label">Cloudflare Dev School Student ID</p>
-    <p id="student-id-display" class="id-card-id"></p>
+    <!-- Sample ID until the student enrolls; enroll-client.ts cipher-reveals their real one over it. -->
+    <p id="student-id-display" class="id-card-id">smooth-operator-4629</p>
   </div>
 </div>
 
 <style>
   .id-card {
     position: relative;
-    max-width: 22rem;
-    margin: 0 0 1.75rem;
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-  }
-
-  .id-card[hidden] {
-    display: none;
-  }
-
-  .id-card.is-visible {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    width: min(26.25rem, 100%);
+    container-type: inline-size;
   }
 
   .celebration-layer {
@@ -39,31 +28,34 @@
   .id-card-face {
     position: relative;
     z-index: 2;
-    aspect-ratio: 85.6 / 54;
-    border-radius: 1rem;
-    padding: 1.25rem 1.5rem;
+    aspect-ratio: 420 / 265;
+    border-radius: 22px;
+    padding: 1.9rem 2.05rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: linear-gradient(135deg, var(--accent), color-mix(in oklch, var(--accent) 60%, purple));
-    color: var(--accent-contrast);
+    background: linear-gradient(135deg, #ff8f45 0%, #ff5e1f 48%, #b83200 100%);
+    color: #fff;
+    rotate: -4deg;
+    box-shadow:
+      0 24px 48px rgb(0 0 0 / 0.16),
+      0 6px 14px rgb(0 0 0 / 0.08);
   }
 
   .id-card-label {
     margin: 0;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    opacity: 0.85;
+    letter-spacing: 0.12em;
   }
 
   .id-card-id {
     margin: 0;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: min(1.75rem, 6.2cqi);
+    font-weight: 800;
+    white-space: nowrap;
   }
 
   :global(.celebration-particle) {

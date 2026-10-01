@@ -17,22 +17,32 @@ vi.mock("astro:content", () => ({
 }));
 
 describe("homepage", () => {
-  it("renders the prerequisite statement, enroll CTA, and every harness logo", async () => {
+  it("renders the headline, blurb, enroll CTA, and a monochrome logo for every harness", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
-    expect(html).toContain(
-      "All you need to get started is a working AI coding agent on your computer. We'll walk you through setting up Cloudflare.",
-    );
+    expect(html).toContain("You and your agent, ready for Cloudflare.");
+    expect(html).toContain("setting up your favorite agent harness to work well with Cloudflare");
     expect(html).toContain('id="harnesses"');
-    expect(html).toContain("Enroll in Cloudflare Dev School");
-    expect(html).toContain("Free forever. No account required. No personal data collected.");
+    expect(html).toContain("Enroll — it takes 2 seconds");
+    expect(html).toContain("Free forever. No account required.");
 
     for (const harness of harnesses.filter((h) => h.id !== "generic" && h.icon)) {
       expect(html).toContain(`data-tooltip="${harness.name}"`);
-      expect(html).toContain(harness.icon!.light);
-      expect(html).toContain(harness.icon!.dark);
+      expect(html).toContain(`aria-label="${harness.name}"`);
+      expect(html).toContain(harness.icon!.mono);
     }
+  });
+
+  it("shows a sample student ID card and the sidebar brand to logged-out visitors, with no header Enroll button", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Index);
+
+    expect(html).toContain('id="student-id-card"');
+    expect(html).not.toMatch(/id="student-id-card"[^>]*hidden/);
+    expect(html).toContain("smooth-operator-4629");
+    expect(html).toContain(">Dev School</a>");
+    expect(html.match(/data-enroll-trigger/g)).toHaveLength(1);
   });
 
   it("renders the sidebar with available lessons linked and unshipped ones as pending", async () => {

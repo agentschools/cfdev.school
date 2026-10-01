@@ -40,7 +40,9 @@ Each harness profile carries its own `lastVerified` date and a `sources` list. T
 
 ## Harness icons
 
-`public/icons/agents/<harness>/{light,dark}.svg` are borrowed directly from `developers.cloudflare.com/agent-setup/`'s own icon URLs (`https://developers.cloudflare.com/icons/agents/<slug>/{light,dark}.svg`), which only has icons for Claude Code, Codex, and OpenCode, not Pi or a generic fallback. Referenced from `src/data/harnesses.ts`'s optional `icon` field and swapped in `src/pages/index.astro`'s harness logo row via `prefers-color-scheme` (no JS). If Cloudflare adds an icon for a harness that's missing one here, re-fetch it from the same URL pattern rather than sourcing a logo elsewhere.
+`public/icons/agents/<harness>/{light,dark}.svg` are borrowed directly from `developers.cloudflare.com/agent-setup/`'s own icon URLs (`https://developers.cloudflare.com/icons/agents/<slug>/{light,dark}.svg`), which only has icons for Claude Code, Codex, and OpenCode, not Pi or a generic fallback. Referenced from `src/data/harnesses.ts`'s `icon` field. If Cloudflare adds an icon for a harness that's missing one here, re-fetch it from the same URL pattern rather than sourcing a logo elsewhere.
+
+`public/icons/agents/<harness>/mono.svg` is our own derivative: a single-color silhouette (black, alpha only) of each logo, used by the homepage's "Works with" grid. `src/pages/index.astro` tints it with a CSS `mask` over `background-color: var(--fg)`, so it follows light/dark mode. When adding a harness, add a `mono.svg` alongside `light`/`dark`, set `icon.mono` in `harnesses.ts` (the schema requires it), and add a size to `iconSize` in `index.astro` if the default 40px square looks off.
 
 ## API, schemas, and migrations
 
@@ -55,11 +57,13 @@ Zod-schema-first (see `plan.agent.md`'s "ship types, not docs" section):
 
 `src/lib/student-id.ts` and the cipher-reveal/confetti animation in `src/lib/enroll-client.ts` are adapted from opencodeschool/opencode.school (Apache-2.0), per `plan.agent.md`'s "copy OpenCode School's enrollment flow wholesale." Keep the copyright headers when touching these files. The student ID format (`adjective-noun-1234`) and the two word lists are copied verbatim; don't change them without a reason, lessons and docs may reference the format.
 
+The homepage ID card (`src/components/StudentIdCard.astro`) is always visible, showing a sample ID (`smooth-operator-4629`) until the student enrolls; `enroll-client.ts` then cipher-reveals their real ID over it. Don't re-add `hidden` to the card, the logged-out design depends on the sample.
+
 `src/lib/enroll-client.ts` dispatches a `cfDevSchool:enrolled` custom event (`ENROLLED_EVENT`) on `document` whenever the student ID is shown, on fresh enrollment or a cached reload. Other client scripts (e.g. `src/pages/index.astro`'s `initAgentPrompt`) listen for this instead of duplicating enrollment/localStorage logic. If a page adds another `initX()` client module that reacts to enrollment, register its listener before calling `initEnrollment()` in the page's `<script>` block, since a returning visitor's cached reveal dispatches the event synchronously.
 
 ## Harness detection and `/llms.txt`
 
-There is no student-facing harness picker (removed in #37): once enrolled, the homepage fills and reveals a single copyable prompt (`AgentPrompt.astro`, built by the harness-free `buildPrompt()` in `src/lib/agent-prompt.ts`) embedding their student ID and `window.location.origin`, so it works unmodified in production, PR previews, and local dev. The agent figures out its own harness itself once it fetches `/llms.txt`, there's no `cfDevSchool.harnessId` localStorage key anymore. Per-harness content (e.g. `src/content/lessons/models/claude-code.md`) still exists for the `/api/lessons/{slug}` endpoint, which agents call with `?harness=<id>` after detecting themselves; the human-facing `/lessons/{slug}` page always renders the `generic` variant, since there's no picker to tell it which one a visiting human would want.
+There is no student-facing harness picker (removed in #37). The homepage layout (headline, ID card, "Works with" logo grid, sidebar always visible, GitHub link only in the header via `Layout`'s `minimalHeader`) follows the "Homepage — H" design explored in Paper. Once enrolled, the CTA is replaced by a single copyable prompt (`AgentPrompt.astro`, built by the harness-free `buildPrompt()` in `src/lib/agent-prompt.ts`) embedding their student ID and `window.location.origin`, so it works unmodified in production, PR previews, and local dev. The agent figures out its own harness itself once it fetches `/llms.txt`, there's no `cfDevSchool.harnessId` localStorage key anymore. Per-harness content (e.g. `src/content/lessons/models/claude-code.md`) still exists for the `/api/lessons/{slug}` endpoint, which agents call with `?harness=<id>` after detecting themselves; the human-facing `/lessons/{slug}` page always renders the `generic` variant, since there's no picker to tell it which one a visiting human would want.
 
 ## Interview
 

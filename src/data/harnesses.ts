@@ -43,6 +43,8 @@ export const harnessProfileSchema = z.object({
     .object({
       light: z.string(),
       dark: z.string(),
+      /** Single-color silhouette (alpha only), tinted with CSS mask on the homepage's "Works with" grid. Derived from the light logo, not borrowed. */
+      mono: z.string(),
     })
     .optional(),
   cliCommand: z.string(),
@@ -94,7 +96,7 @@ export const harnesses: HarnessProfile[] = [
     id: "claude-code",
     name: "Claude Code",
     tagline: "Anthropic's official terminal agent. Included in your Claude Pro or Max plan.",
-    icon: { light: "/icons/agents/claude-code/light.svg", dark: "/icons/agents/claude-code/dark.svg" },
+    icon: { light: "/icons/agents/claude-code/light.svg", dark: "/icons/agents/claude-code/dark.svg", mono: "/icons/agents/claude-code/mono.svg" },
     cliCommand: "claude",
     instructionsFile: {
       path: "CLAUDE.md (project root) or ~/.claude/CLAUDE.md (global)",
@@ -177,7 +179,7 @@ export const harnesses: HarnessProfile[] = [
     id: "codex",
     name: "OpenAI Codex",
     tagline: "OpenAI's terminal agent. Works with any ChatGPT plan, including Free.",
-    icon: { light: "/icons/agents/codex/light.svg", dark: "/icons/agents/codex/dark.svg" },
+    icon: { light: "/icons/agents/codex/light.svg", dark: "/icons/agents/codex/dark.svg", mono: "/icons/agents/codex/mono.svg" },
     cliCommand: "codex",
     instructionsFile: {
       path: "AGENTS.md (project root) or ~/.codex/AGENTS.md (global)",
@@ -247,7 +249,7 @@ export const harnesses: HarnessProfile[] = [
     id: "opencode",
     name: "OpenCode",
     tagline: "Open-source, model-agnostic terminal agent with 75+ provider support.",
-    icon: { light: "/icons/agents/opencode/light.svg", dark: "/icons/agents/opencode/dark.svg" },
+    icon: { light: "/icons/agents/opencode/light.svg", dark: "/icons/agents/opencode/dark.svg", mono: "/icons/agents/opencode/mono.svg" },
     cliCommand: "opencode",
     instructionsFile: {
       path: "AGENTS.md, discovered by walking up from cwd to the project root, plus ~/.config/opencode/AGENTS.md (global)",
@@ -316,7 +318,7 @@ export const harnesses: HarnessProfile[] = [
     id: "pi",
     name: "Pi",
     tagline: "A minimal, extensible terminal coding harness you adapt to your workflow.",
-    icon: { light: "/icons/agents/pi/light.svg", dark: "/icons/agents/pi/dark.svg" },
+    icon: { light: "/icons/agents/pi/light.svg", dark: "/icons/agents/pi/dark.svg", mono: "/icons/agents/pi/mono.svg" },
     cliCommand: "pi",
     instructionsFile: {
       path: "AGENTS.md (or CLAUDE.md) at ~/.pi/agent/AGENTS.md (global), plus parent directories and the current directory (project), all concatenated",
@@ -387,7 +389,7 @@ export const harnesses: HarnessProfile[] = [
     id: "cursor",
     name: "Cursor",
     tagline: "Anysphere's editor-first agent, also usable as a standalone terminal CLI.",
-    icon: { light: "/icons/agents/cursor/light.svg", dark: "/icons/agents/cursor/dark.svg" },
+    icon: { light: "/icons/agents/cursor/light.svg", dark: "/icons/agents/cursor/dark.svg", mono: "/icons/agents/cursor/mono.svg" },
     cliCommand: "cursor-agent",
     instructionsFile: {
       path: "AGENTS.md (project root, plain-markdown alternative to structured .cursor/rules/*.mdc files) plus user-level ~/.cursor/rules/ or account-synced Cursor Settings rules for global instructions",
@@ -471,7 +473,7 @@ export const harnesses: HarnessProfile[] = [
     id: "copilot",
     name: "GitHub Copilot CLI",
     tagline: "GitHub's terminal agent, included with every Copilot plan from Free up.",
-    icon: { light: "/icons/agents/copilot/light.svg", dark: "/icons/agents/copilot/dark.svg" },
+    icon: { light: "/icons/agents/copilot/light.svg", dark: "/icons/agents/copilot/dark.svg", mono: "/icons/agents/copilot/mono.svg" },
     cliCommand: "copilot",
     instructionsFile: {
       path: "AGENTS.md or .github/copilot-instructions.md (project root) plus ~/.copilot/copilot-instructions.md (global, applies to every session regardless of project)",

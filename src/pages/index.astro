@@ -3,46 +3,63 @@ import AgentPrompt from "../components/AgentPrompt.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { harnesses } from "../data/harnesses";
+
+// Rendered size (px) per mark, tuned by eye so the monochrome silhouettes read
+// at the same visual weight. Falls back to a square for any harness added later.
+const iconSize: Record<string, [number, number]> = {
+  "claude-code": [44, 44],
+  codex: [40, 40],
+  opencode: [46, 46],
+  pi: [36, 36],
+  cursor: [38, 43],
+  copilot: [44, 36],
+};
+const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harness.icon);
 ---
 
 <Layout
   title="Cloudflare Dev School"
   description="Learn to build on Cloudflare using whatever AI coding agent you already have installed. Free forever, no account required."
-  showSidebarBrand={false}
+  minimalHeader
 >
-  <div class="page">
-    <main class="content">
-      <section id="overview" class="hero">
-        <h1>Cloudflare Dev School</h1>
-        <p class="lede">
-          Learn to build on Cloudflare using whatever AI coding agent you already have installed. No account, no
-          email, no credit card. All you need to get started is a working AI coding agent on your computer. We'll
-          walk you through setting up Cloudflare.
-        </p>
-        <StudentIdCard />
-        <div class="cta-block" data-enroll-container>
-          <button class="cta cta-large" type="button" data-enroll-trigger>Enroll in Cloudflare Dev School</button>
-          <p class="fine-print">Free forever. No account required. No personal data collected.</p>
-        </div>
-        <AgentPrompt />
-      </section>
+  <main class="hero" id="overview">
+    <div class="hero-copy">
+      <h1>You and your agent, ready for Cloudflare.</h1>
+      <p class="lede">
+        Learn the fundamentals of AI-powered development while setting up your favorite agent harness to work well
+        with Cloudflare. Then start building for real.
+      </p>
+      <div class="cta-block" data-enroll-container>
+        <button class="cta" type="button" data-enroll-trigger>Enroll — it takes 2 seconds</button>
+        <p class="fine-print">Free forever. No account required.</p>
+      </div>
+      <AgentPrompt />
+    </div>
 
-      <section id="harnesses" class="harnesses">
-        <div class="harness-row">
+    <div class="hero-visual">
+      <StudentIdCard />
+      <section id="harnesses" class="harnesses" aria-label="Works with">
+        <p class="harnesses-label">Works with</p>
+        <div class="harness-grid">
           {
-            harnesses
-              .filter((harness) => harness.id !== "generic" && harness.icon)
-              .map((harness) => (
-                <span class="harness-icon" data-tooltip={harness.name} tabindex="0">
-                  <img class="icon icon-light" src={harness.icon!.light} alt={harness.name} width="36" height="36" />
-                  <img class="icon icon-dark" src={harness.icon!.dark} alt={harness.name} width="36" height="36" />
+            worksWith.map((harness) => {
+              const [width, height] = iconSize[harness.id] ?? [40, 40];
+              return (
+                <span class="harness-cell" data-tooltip={harness.name} tabindex="0">
+                  <span
+                    class="harness-icon"
+                    role="img"
+                    aria-label={harness.name}
+                    style={`width:${width}px;height:${height}px;--icon:url(${harness.icon!.mono})`}
+                  />
                 </span>
-              ))
+              );
+            })
           }
         </div>
       </section>
-    </main>
-  </div>
+    </div>
+  </main>
 </Layout>
 
 <script>
@@ -89,41 +106,36 @@ import { harnesses } from "../data/harnesses";
 </script>
 
 <style>
-  .page {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-  }
-
-  .content {
-    min-width: 0;
-    flex: 1;
-    padding: 2.5rem 0 5rem;
-  }
-
-  section {
-    margin-bottom: 4rem;
-    scroll-margin-top: 1.5rem;
-  }
-
   .hero {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
+    gap: 4rem;
+    padding: 5.5rem 4rem;
+    /* The celebration layer extends past the card; don't let it add a horizontal scrollbar on phones. */
+    overflow-x: clip;
+  }
+
+  .hero-copy {
+    flex: 1;
+    min-width: 0;
   }
 
   .hero h1 {
-    font-size: clamp(2.25rem, 5vw, 3.25rem);
-    margin: 0 0 1rem;
+    max-width: 5.6em;
+    margin: 0 0 2rem;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: clamp(3rem, 5.2vw, 4.625rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.035em;
   }
 
   .lede {
-    font-size: 1.15rem;
-    color: var(--muted-fg);
-    max-width: 40rem;
-    margin: 0 0 1.75rem;
-    text-align: left;
+    max-width: 27.5rem;
+    margin: 0 0 2.5rem;
+    font-size: 1.25rem;
+    line-height: 1.55;
+    color: color-mix(in oklch, var(--fg) 80%, var(--bg));
   }
 
   .cta-block {
@@ -131,7 +143,7 @@ import { harnesses } from "../data/harnesses";
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-    max-width: 40rem;
+    width: fit-content;
   }
 
   .cta-block[hidden] {
@@ -141,21 +153,16 @@ import { harnesses } from "../data/harnesses";
   .cta {
     display: inline-flex;
     align-items: center;
-    padding: 0.85rem 1.5rem;
+    padding: 1.125rem 1.875rem;
     border: none;
     border-radius: 9999px;
-    background: var(--accent);
-    color: var(--accent-contrast);
-    text-decoration: none;
+    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    color: #fff;
     font-family: inherit;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.125rem;
+    line-height: 1.375rem;
     cursor: pointer;
-  }
-
-  .cta-large {
-    padding: 1.15rem 2.25rem;
-    font-size: 1.2rem;
   }
 
   .cta:disabled {
@@ -163,54 +170,93 @@ import { harnesses } from "../data/harnesses";
     cursor: not-allowed;
   }
 
-  h2 {
-    font-size: 1.5rem;
-    margin: 0 0 0.75rem;
-  }
-
-  .harness-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1.75rem;
-  }
-
-  .harness-icon {
-    display: flex;
-    cursor: default;
-  }
-
-  .icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 0.4rem;
-    filter: grayscale(1);
-    transition: filter 0.2s ease;
-  }
-
-  .harness-icon:hover .icon,
-  .harness-icon:focus-visible .icon {
-    filter: none;
-  }
-
-  .icon-dark {
-    display: none;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .icon-light {
-      display: none;
-    }
-
-    .icon-dark {
-      display: block;
-    }
-  }
-
   .fine-print {
     margin: 0;
     color: var(--muted-fg);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .hero-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: flex-start;
+    gap: 5.5rem;
+    width: 26.25rem;
+    max-width: 100%;
+    margin: 0.5rem 4.5rem 0 0;
+  }
+
+  .harnesses {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.375rem;
+  }
+
+  .harnesses-label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: color-mix(in oklch, var(--fg) 35%, var(--bg));
+  }
+
+  .harness-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 7.875rem);
+    row-gap: 1.875rem;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+  }
+
+  .harness-grid:hover {
+    opacity: 0.75;
+  }
+
+  .harness-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.75rem;
+    cursor: default;
+  }
+
+  .harness-icon {
+    display: block;
+    flex-shrink: 0;
+    background-color: var(--fg);
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
+  }
+
+  @media (max-width: 1180px) {
+    .hero {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4rem;
+    }
+
+    .hero-visual {
+      align-self: center;
+      margin: 0;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .hero {
+      padding: 4.5rem 1.5rem 3rem;
+    }
+
+    .harnesses,
+    .harness-grid {
+      width: 100%;
+    }
+
+    .harness-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 </style>
 
