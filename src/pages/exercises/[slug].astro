@@ -78,7 +78,9 @@ const description = exercise?.description ?? "Exercise not found.";
 
 <script>
   import { initExercisePage } from "../../lib/exercise-client";
+  import { initCodeCopyButtons } from "../../lib/code-copy-client";
   initExercisePage();
+  initCodeCopyButtons();
 </script>
 
 <style>
@@ -192,6 +194,23 @@ const description = exercise?.description ?? "Exercise not found.";
 
   .prose :global(a) {
     color: var(--accent);
+  }
+
+  .prose :global(pre) {
+    margin: 0 0 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card-bg);
+    color: var(--fg);
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .prose :global(pre code) {
+    font-size: inherit;
   }
 
   .prose :global(code) {
