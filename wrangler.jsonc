@@ -1,6 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "cloudflare-dev-school",
+  // Custom entry wrapping Astro's handler so it can export the ProgressHub Durable Object.
+  "main": "./src/worker.ts",
   "compatibility_date": "2026-08-31",
   "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
@@ -15,6 +17,20 @@
     {
       "binding": "SESSION",
       "id": "994f1484fe95462f89b748b3ee7be2ff"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PROGRESS_HUB",
+        "class_name": "ProgressHub"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ProgressHub"]
     }
   ],
   "observability": {

@@ -2,6 +2,7 @@ import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-
 import { getExercise, listExercises } from "../data/exercises";
 import type { Progress } from "../schemas/progress";
 import { buildPrompt } from "./agent-prompt";
+import { subscribeToProgress } from "./progress-client";
 
 function formatCompletedBanner(completedAt: string | undefined): string {
   if (!completedAt) return "You completed this exercise!";
@@ -112,14 +113,11 @@ export function initExercisePage(): void {
       void markComplete();
     };
 
-    fetch(`/api/progress/${student.id}`)
-      .then((response) => (response.ok ? response.json() : null))
-      .then((progress: Progress | null) => {
-        if (!progress) return;
-        const completion = progress.completedExercises.find((item) => item.slug === exercise.slug);
-        if (completion) showCompleted(completion.completedAt);
-      })
-      .catch((error) => console.error("Failed to fetch progress for exercise page", error));
+    // Live: flips to the completed state as soon as the agent marks it done.
+    subscribeToProgress(student.id, (progress) => {
+      const completion = progress.completedExercises.find((item) => item.slug === exercise.slug);
+      if (completion && !alreadyComplete) showCompleted(completion.completedAt);
+    });
   }
 
   copyButton.addEventListener("click", async () => {

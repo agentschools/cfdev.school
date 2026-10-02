@@ -1,11 +1,14 @@
 /// <reference types="astro/client" />
 
-interface CloudflareEnv {
-  DB: D1Database;
-  SESSION: KVNamespace;
+// Extends @cloudflare/workers-types' `Cloudflare.Env`, which types both
+// `import { env } from "cloudflare:workers"` and the global `Env` used by
+// src/worker.ts and Durable Objects.
+declare namespace Cloudflare {
+  interface Env {
+    DB: D1Database;
+    SESSION: KVNamespace;
+    PROGRESS_HUB: DurableObjectNamespace<import("./durable-objects/progress-hub").ProgressHub>;
+  }
 }
 
-declare module "cloudflare:workers" {
-  const env: CloudflareEnv;
-  export { env };
-}
+type Env = Cloudflare.Env;

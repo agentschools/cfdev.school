@@ -1,50 +1,36 @@
-import { ENROLLED_EVENT } from "./enroll-client";
+import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
+import { subscribeToProgress } from "./progress-client";
+import type { Progress } from "../schemas/progress";
 
-const STUDENT_STORAGE_KEY = "cfDevSchool.student";
+function renderChecks(progress: Progress): void {
+  const completedLessons = new Set(progress.completedLessons.map((lesson) => lesson.slug as string));
+  const completedExercises = new Set(progress.completedExercises.map((exercise) => exercise.slug as string));
 
-interface CachedStudent {
-  id: string;
-}
-
-function readCachedStudentId(): string | null {
-  try {
-    const raw = localStorage.getItem(STUDENT_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CachedStudent).id : null;
-  } catch {
-    return null;
+  for (const check of document.querySelectorAll<HTMLElement>("[data-lesson-slug] .check")) {
+    const slug = check.closest<HTMLElement>("[data-lesson-slug]")?.dataset.lessonSlug ?? "";
+    check.hidden = !completedLessons.has(slug);
   }
-}
-
-interface Progress {
-  completedLessons: Array<{ slug: string }>;
-  completedExercises: Array<{ slug: string }>;
+  for (const check of document.querySelectorAll<HTMLElement>("[data-exercise-slug] .check")) {
+    const slug = check.closest<HTMLElement>("[data-exercise-slug]")?.dataset.exerciseSlug ?? "";
+    check.hidden = !completedExercises.has(slug);
+  }
 }
 
 export function initCurriculumSidebar(): void {
   const accountSection = document.getElementById("account-section");
+
+  function onEnrolled(student: CachedStudent): void {
+    if (accountSection) accountSection.hidden = false;
+    subscribeToProgress(student.id, renderChecks);
+  }
+
   // Listen before checking the cached value: a fresh enrollment click on the
   // current page dispatches this event later, not on initial load.
-  document.addEventListener(ENROLLED_EVENT, () => {
-    if (accountSection) accountSection.hidden = false;
-  });
+  document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => {
+    onEnrolled(event.detail);
+  }) as EventListener);
 
-  const studentId = readCachedStudentId();
-  if (accountSection) accountSection.hidden = !studentId;
-  if (!studentId) return;
-
-  fetch(`/api/progress/${studentId}`)
-    .then((response) => (response.ok ? response.json() : null))
-    .then((progress: Progress | null) => {
-      if (!progress) return;
-
-      for (const lesson of progress.completedLessons) {
-        const item = document.querySelector(`[data-lesson-slug="${lesson.slug}"] .check`);
-        if (item) (item as HTMLElement).hidden = false;
-      }
-      for (const exercise of progress.completedExercises) {
-        const item = document.querySelector(`[data-exercise-slug="${exercise.slug}"] .check`);
-        if (item) (item as HTMLElement).hidden = false;
-      }
-    })
-    .catch((error) => console.error("Failed to fetch progress for sidebar", error));
+  const student = readCachedStudent();
+  if (accountSection) accountSection.hidden = !student;
+  if (student) onEnrolled(student);
 }
