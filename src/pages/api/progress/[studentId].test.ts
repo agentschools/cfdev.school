@@ -64,15 +64,18 @@ const db = {
         bind: (
           studentId: string,
           lessonSlug: string,
+          harness: string,
           completedAt: string,
           model: string | null,
           summary: string | null,
         ) => ({
           run: async () => {
-            const existing = lessonCompletions.get(completionKey(studentId, lessonSlug));
-            lessonCompletions.set(completionKey(studentId, lessonSlug), {
+            const key = completionKey(studentId, `${lessonSlug}::${harness}`);
+            const existing = lessonCompletions.get(key);
+            lessonCompletions.set(key, {
               student_id: studentId,
               lesson_slug: lessonSlug,
+              harness,
               completed_at: completedAt,
               model: model ?? existing?.model ?? null,
               summary: summary ?? existing?.summary ?? null,
@@ -170,7 +173,7 @@ describe("PUT /api/progress/{studentId}", () => {
 
   it("400s for an unknown lesson slug", async () => {
     const { PUT } = await import("./[studentId]");
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "nope" }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "nope", harness: "claude-code" }));
     expect(response.status).toBe(400);
   });
 
@@ -212,7 +215,11 @@ describe("PUT /api/progress/{studentId}", () => {
   it("marks a lesson complete", async () => {
     const { PUT, GET } = await import("./[studentId]");
     const response = await PUT(
-      context("curious-hacker-2019", { lessonSlug: "models", model: "anthropic/claude-sonnet-4-5" }),
+      context("curious-hacker-2019", {
+        lessonSlug: "models",
+        harness: "claude-code",
+        model: "anthropic/claude-sonnet-4-5",
+      }),
     );
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
@@ -228,23 +235,47 @@ describe("PUT /api/progress/{studentId}", () => {
 
   it("stores a lesson summary and keeps it when a later PUT omits it", async () => {
     const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "interview", summary: "You're new to Cloudflare." }));
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "interview" }));
+    const lesson = { lessonSlug: "interview", harness: "claude-code" };
+    await PUT(context("curious-hacker-2019", { ...lesson, summary: "You're new to Cloudflare." }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "interview", harness: "claude-code" }));
     const body = (await response.json()) as { completedLessons: Array<{ summary?: string }> };
     expect(body.completedLessons[0]?.summary).toBe("You're new to Cloudflare.");
   });
 
   it("replaces a lesson summary when a later PUT sends a new one", async () => {
     const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "interview", summary: "Quizzes on." }));
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "interview", summary: "Quizzes off." }));
+    const lesson = { lessonSlug: "interview", harness: "claude-code" };
+    await PUT(context("curious-hacker-2019", { ...lesson, summary: "Quizzes on." }));
+    const response = await PUT(context("curious-hacker-2019", { ...lesson, summary: "Quizzes off." }));
     const body = (await response.json()) as { completedLessons: Array<{ summary?: string }> };
     expect(body.completedLessons[0]?.summary).toBe("Quizzes off.");
   });
 
+  it("400s for a lesson without a harness", async () => {
+    const { PUT } = await import("./[studentId]");
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
+    expect(response.status).toBe(400);
+  });
+
+  it("keeps one completion per harness for the same lesson", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "codex" }));
+    const body = (await response.json()) as { completedLessons: Array<{ slug: string; harness: string }> };
+    expect(body.completedLessons.map((item) => item.harness).sort()).toEqual(["claude-code", "codex"]);
+  });
+
+  it("upserts when the same harness completes a lesson again", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "pi" }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "pi" }));
+    const body = (await response.json()) as { completedLessons: unknown[] };
+    expect(body.completedLessons).toHaveLength(1);
+  });
+
   it("broadcasts the new progress to the student's ProgressHub", async () => {
     const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
+    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
     expect(broadcasts).toHaveLength(1);
     expect(broadcasts[0]?.hub).toBe("curious-hacker-2019");
     expect(broadcasts[0]?.progress.completedLessons).toHaveLength(1);
@@ -252,14 +283,14 @@ describe("PUT /api/progress/{studentId}", () => {
 
   it("doesn't broadcast when the request is rejected", async () => {
     const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "nope" }));
+    await PUT(context("curious-hacker-2019", { lessonSlug: "nope", harness: "claude-code" }));
     expect(broadcasts).toHaveLength(0);
   });
 
   it("tracks exercises and lessons independently", async () => {
     const { PUT } = await import("./[studentId]");
     await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
     const body = (await response.json()) as {
       completedExercises: unknown[];
       completedLessons: unknown[];
@@ -279,7 +310,7 @@ describe("DELETE /api/progress/{studentId}", () => {
   it("clears completed exercises and lessons but keeps the student", async () => {
     const { PUT, DELETE, GET } = await import("./[studentId]");
     await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
-    await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
+    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
 
     const response = await DELETE(context("curious-hacker-2019"));
     expect(response.status).toBe(200);

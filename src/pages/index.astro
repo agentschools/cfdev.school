@@ -98,7 +98,10 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     function renderProgress(progress: Progress): void {
       progressReceived = true;
       const done = new Set(progress.completedLessons.map((lesson) => lesson.slug));
-      const interview = progress.completedLessons.find((lesson) => lesson.slug === "interview");
+      // Newest Interview completion: there's one per agent the student used.
+      const interview = progress.completedLessons
+        .filter((lesson) => lesson.slug === "interview")
+        .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
       if (interview) {
         summary!.textContent = interview.summary ?? "Your interview answers are saved.";
         const next = LESSON_OUTLINE.find((lesson) => !done.has(lesson.slug));

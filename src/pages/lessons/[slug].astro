@@ -2,6 +2,7 @@
 import { getCollection, render } from "astro:content";
 import AgentPrompt from "../../components/AgentPrompt.astro";
 import Layout from "../../layouts/Layout.astro";
+import { harnesses } from "../../data/harnesses";
 
 export const prerender = false;
 
@@ -40,6 +41,11 @@ const next = nextLesson
   ? { url: `/lessons/${nextLesson.slug}`, label: `Next lesson: ${nextLesson.title} →`, shortLabel: `Next: ${nextLesson.title} →` }
   : { url: "/exercises", label: "Next up: Exercises →", shortLabel: "Next: Exercises →" };
 
+// How the completed banner names each agent ("...using Claude Code").
+const harnessNames = Object.fromEntries(
+  harnesses.map((harness) => [harness.id, harness.id === "generic" ? "an unknown agent" : harness.name]),
+);
+
 const title = lesson?.title ?? "Lesson not found";
 ---
 
@@ -57,7 +63,12 @@ const title = lesson?.title ?? "Lesson not found";
               <p class="lesson-description">{lesson.description}</p>
             </header>
 
-            <div id="lesson-completed-banner" class="completed-banner" hidden>
+            <div
+              id="lesson-completed-banner"
+              class="completed-banner"
+              data-harness-names={JSON.stringify(harnessNames)}
+              hidden
+            >
               <div class="completed-body">
                 <span id="lesson-completed-text">You completed this lesson!</span>
                 <p id="lesson-completed-summary" class="completed-summary" hidden></p>

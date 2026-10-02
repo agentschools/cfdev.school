@@ -70,6 +70,7 @@ async function main() {
   const summary = "You're comfortable with code, new to Cloudflare, on Linux, and opted out of quizzes.";
   const progress = await request("PUT", `/api/progress/${student.id}`, {
     lessonSlug: "interview",
+    harness: "generic",
     model: "fake-agent",
     summary,
   });

@@ -59,10 +59,12 @@ agentInstructions: |
   telling you, e.g. "turn off quizzes" or "I'm more experienced than I
   said". Whenever a student asks to change an answer, in this lesson or
   any later one, PUT just that field, then re-send this lesson's
-  completion (below) with an updated `summary`, and adjust from then on.
+  completion (below, same `harness`) with an updated `summary`, and adjust
+  from then on.
 
   Finally, mark this lesson complete with PUT /api/progress/{studentId}
-  using `{ "lessonSlug": "interview", "summary": "..." }`, where
+  using `{ "lessonSlug": "interview", "harness": "<your harness id>",
+  "summary": "..." }`, where
   `summary` is one sentence addressed to the student covering their saved
   answers, e.g. "You're comfortable with code, new to Cloudflare, on
   macOS, want to build a link shortener, and opted into quizzes." Their

@@ -2,15 +2,29 @@ import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-
 import { buildPrompt } from "./agent-prompt";
 import { subscribeToProgress } from "./progress-client";
 import { setVisible } from "./reveal";
-import type { Progress } from "../schemas/progress";
+import type { CompletedLesson, Progress } from "../schemas/progress";
 
-function formatCompletedBanner(completedAt: string): string {
-  const date = new Date(completedAt).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  return `You completed this lesson on ${date}.`;
+/**
+ * "You completed this lesson on October 1, 2026 using Claude Code and on
+ * November 1, 2026 using OpenAI Codex." One clause per harness (lesson
+ * completions are per agent, see #52), oldest first. `harnessNames` maps
+ * harness IDs to how the sentence should name them.
+ */
+export function formatCompletedBanner(
+  completions: readonly CompletedLesson[],
+  harnessNames: Readonly<Record<string, string>>,
+): string {
+  const clauses = [...completions]
+    .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+    .map((completion) => {
+      const date = new Date(completion.completedAt).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+      return `on ${date} using ${harnessNames[completion.harness] ?? completion.harness}`;
+    });
+  return `You completed this lesson ${new Intl.ListFormat("en-US", { type: "conjunction" }).format(clauses)}.`;
 }
 
 /**
@@ -52,25 +66,36 @@ export function initLessonPage(): void {
     return;
   }
 
+  const harnessNames = JSON.parse(banner.dataset.harnessNames ?? "{}") as Record<string, string>;
+  let student: CachedStudent | null = null;
+
   function renderProgress(progress: Progress): void {
-    const completion = progress.completedLessons.find((lesson) => lesson.slug === slug);
-    if (completion) {
-      bannerText!.textContent = formatCompletedBanner(completion.completedAt);
-      bannerSummary!.textContent = completion.summary ?? "";
-      bannerSummary!.hidden = !completion.summary;
+    const completions = progress.completedLessons.filter((lesson) => lesson.slug === slug);
+    const latest = completions.reduce<CompletedLesson | undefined>(
+      (newest, item) => (!newest || item.completedAt > newest.completedAt ? item : newest),
+      undefined,
+    );
+    if (latest) {
+      bannerText!.textContent = formatCompletedBanner(completions, harnessNames);
+      bannerSummary!.textContent = latest.summary ?? "";
+      bannerSummary!.hidden = !latest.summary;
     }
-    setVisible(banner!, Boolean(completion));
-    setVisible(nextPending!, !completion);
-    setVisible(nextLink!, Boolean(completion));
+    // Once complete, the prompt asks the agent to redo the lesson, e.g. to
+    // set up a second agent the student is trying.
+    promptText!.textContent = buildPrompt(student!, { kind: "lesson", title: title!, redo: Boolean(latest) });
+    setVisible(banner!, Boolean(latest));
+    setVisible(nextPending!, !latest);
+    setVisible(nextLink!, Boolean(latest));
   }
 
-  function onEnrolled(student: CachedStudent): void {
+  function onEnrolled(enrolled: CachedStudent): void {
+    student = enrolled;
     if (enrollNudge) enrollNudge.hidden = true;
-    promptText!.textContent = buildPrompt(student, { kind: "lesson", title: title! });
+    promptText!.textContent = buildPrompt(enrolled, { kind: "lesson", title: title! });
     promptSection!.hidden = false;
     copyConfirm!.hidden = true;
     next!.hidden = false;
-    subscribeToProgress(student.id, renderProgress);
+    subscribeToProgress(enrolled.id, renderProgress);
   }
 
   copyButton.addEventListener("click", async () => {

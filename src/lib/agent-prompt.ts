@@ -4,6 +4,8 @@ export interface AgentPromptContext {
   title: string;
   /** Matches the noun used in the generated prompt's "Let's work on..." line. */
   kind: "lesson" | "exercise";
+  /** The student already completed this (e.g. with another agent) and wants to go through it again. */
+  redo?: boolean;
 }
 
 /**
@@ -14,9 +16,11 @@ export interface AgentPromptContext {
  */
 export function buildPrompt(student: CachedStudent, context?: AgentPromptContext): string {
   const origin = window.location.origin;
-  const workOnLine = context
-    ? `Let's work on the "${context.title}" ${context.kind} together!`
-    : `Let's work on the "Interview" lesson together!`;
+  const workOnLine = !context
+    ? `Let's work on the "Interview" lesson together!`
+    : context.redo
+      ? `Let's redo the "${context.title}" ${context.kind} together, even though I've already completed it.`
+      : `Let's work on the "${context.title}" ${context.kind} together!`;
   return [
     `I'm enrolled in Cloudflare Dev School as ${student.id}`,
     "",

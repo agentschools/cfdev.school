@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { harnessProfileSchema } from "../data/harnesses";
 import { exerciseSlugSchema } from "./exercise";
 import { studentIdSchema } from "./student";
 
@@ -6,8 +7,11 @@ import { studentIdSchema } from "./student";
  * Per-student completion of exercises and lessons (see #14). Source of truth
  * for the `exercise_completions` (migrations/0003_create_exercise_completions.sql)
  * and `lesson_completions` (migrations/0004_create_lesson_completions.sql,
- * plus migrations/0005_add_lesson_completion_summary.sql) D1 tables, and
- * GET/PUT /api/progress/{studentId}.
+ * reshaped by 0005 and 0006) D1 tables, and GET/PUT /api/progress/{studentId}.
+ *
+ * Lesson completions are per harness (#52): a student can complete the same
+ * lesson once per agent, since lessons like Instructions or Skills change
+ * agent-specific files. Exercises aren't agent-specific and stay one per student.
  */
 
 export const lessonSlugSchema = z
@@ -45,8 +49,15 @@ const lessonSummarySchema = z.string().min(1).max(280).meta({
   example: "You're comfortable with code, new to Cloudflare, on macOS, want to build a link shortener, and opted into quizzes.",
 });
 
+const lessonHarnessSchema = harnessProfileSchema.shape.id.meta({
+  description:
+    'Harness (agent) that completed the lesson, the same ID used for GET /api/lessons/{slug}?harness=. Use "generic" if yours isn\'t listed.',
+  example: "claude-code",
+});
+
 export const completedLessonSchema = z.object({
   slug: lessonSlugSchema,
+  harness: lessonHarnessSchema,
   completedAt: z.iso.datetime().meta({
     description: "When this lesson was marked complete, as an ISO 8601 timestamp.",
   }),
@@ -79,11 +90,12 @@ export const markExerciseCompleteSchema = z.object({
   }),
 });
 
-/** Body for PUT /api/progress/{studentId} to mark a lesson complete (idempotent upsert). */
+/** Body for PUT /api/progress/{studentId} to mark a lesson complete (idempotent upsert per lesson + harness). */
 export const markLessonCompleteSchema = z.object({
   lessonSlug: lessonSlugSchema.meta({
     description: "Slug of the lesson to mark complete. Must match a known lesson.",
   }),
+  harness: lessonHarnessSchema,
   model: z.string().min(1).optional().meta({
     description: "Optional model ID the agent is running as.",
   }),
