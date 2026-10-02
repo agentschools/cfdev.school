@@ -37,8 +37,8 @@ const lessonsInOrder = (await getCollection("lessons", (item) => item.data.harne
   .map((item) => ({ slug: item.data.lessonSlug, title: item.data.title }));
 const nextLesson = lessonsInOrder[lessonsInOrder.findIndex((item) => item.slug === slug) + 1];
 const next = nextLesson
-  ? { url: `/lessons/${nextLesson.slug}`, label: `Next lesson: ${nextLesson.title} →` }
-  : { url: "/exercises", label: "Next up: Exercises →" };
+  ? { url: `/lessons/${nextLesson.slug}`, label: `Next lesson: ${nextLesson.title} →`, shortLabel: `Next: ${nextLesson.title} →` }
+  : { url: "/exercises", label: "Next up: Exercises →", shortLabel: "Next: Exercises →" };
 
 const title = lesson?.title ?? "Lesson not found";
 ---
@@ -58,8 +58,11 @@ const title = lesson?.title ?? "Lesson not found";
             </header>
 
             <div id="lesson-completed-banner" class="completed-banner" hidden>
-              <span id="lesson-completed-text">You completed this lesson!</span>
-              <p id="lesson-completed-summary" class="completed-summary" hidden></p>
+              <div class="completed-body">
+                <span id="lesson-completed-text">You completed this lesson!</span>
+                <p id="lesson-completed-summary" class="completed-summary" hidden></p>
+              </div>
+              <a class="completed-next" href={next.url}>{next.shortLabel}</a>
             </div>
 
             <div id="lesson-enroll-nudge" class="enroll-nudge" hidden>
@@ -138,6 +141,35 @@ const title = lesson?.title ?? "Lesson not found";
     color: var(--accent);
     font-size: 0.95rem;
     font-weight: 600;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+  }
+
+  .completed-banner[hidden] {
+    display: none;
+  }
+
+  .completed-body {
+    flex: 1 1 18rem;
+  }
+
+  .completed-next {
+    flex-shrink: 0;
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.45rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .completed-next:hover {
+    filter: brightness(1.05);
   }
 
   .completed-summary {
