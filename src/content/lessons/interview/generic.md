@@ -19,8 +19,12 @@ agentInstructions: |
 
   - If you have a structured question tool (e.g. Claude Code's
     `AskUserQuestion`, OpenCode's `question`, Codex's `request_user_input`
-    in Plan mode), put all the questions in one call. If the tool caps how
-    many questions fit in one call, use as few calls as possible.
+    in Plan mode), put all the questions in one call. The tool shows them
+    to the student one at a time, each with choices plus a type-your-own
+    option, and returns all the answers together, so there's no wait on
+    you between questions. Don't split them across separate turns. If the
+    tool caps how many questions fit in one call, use as few calls as
+    possible.
   - Otherwise, ask them all in one numbered plain-text message, and tell
     the student they can answer in one reply, e.g. "1b, 2a, 3: a todo app,
     4 yes".
