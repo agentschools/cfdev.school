@@ -34,10 +34,13 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
         <p class="fine-print">Free forever. No account required.</p>
       </div>
       <AgentPrompt />
+      <!-- Same treatment as the lesson pages' completed banner. -->
       <section id="interview-complete" class="interview-complete" aria-live="polite" hidden>
-        <p class="interview-complete-label"><span class="interview-complete-check" aria-hidden="true">✓</span> Interview complete</p>
-        <p id="interview-complete-summary" class="interview-complete-summary"></p>
-        <a id="interview-complete-next" class="cta" href="/lessons/models">Next lesson: Models →</a>
+        <div class="interview-complete-body">
+          <p class="interview-complete-label">Interview complete</p>
+          <p id="interview-complete-summary" class="interview-complete-summary"></p>
+        </div>
+        <a id="interview-complete-next" class="interview-complete-next" href="/lessons/models">Next: Models →</a>
       </section>
     </div>
 
@@ -106,7 +109,7 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
         summary!.textContent = interview.summary ?? "Your interview answers are saved.";
         const next = LESSON_OUTLINE.find((lesson) => !done.has(lesson.slug));
         nextLink!.href = next ? `/lessons/${next.slug}` : "/exercises";
-        nextLink!.textContent = next ? `Next lesson: ${next.title} →` : "Next up: Exercises →";
+        nextLink!.textContent = next ? `Next: ${next.title} →` : "Next: Exercises →";
       }
       setVisible(promptSection!, !interview);
       setVisible(complete!, Boolean(interview));
@@ -209,42 +212,46 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     cursor: not-allowed;
   }
 
-  a.cta {
-    text-decoration: none;
-  }
   .interview-complete {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
     max-width: 30rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.6rem;
+    background: color-mix(in oklch, var(--accent) 12%, transparent);
+    font-size: 0.95rem;
   }
   .interview-complete[hidden] {
     display: none;
   }
+  .interview-complete-body {
+    flex: 1 1 18rem;
+  }
   .interview-complete-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
     margin: 0;
     font-weight: 600;
     color: var(--accent);
   }
-  .interview-complete-check {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.4rem;
-    height: 1.4rem;
-    border-radius: 9999px;
+  .interview-complete-summary {
+    margin: 0.35rem 0 0;
+    line-height: 1.5;
+  }
+  .interview-complete-next {
+    flex-shrink: 0;
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.45rem;
     background: var(--accent);
     color: var(--accent-contrast);
-    font-size: 0.8rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
   }
-  .interview-complete-summary {
-    margin: 0 0 0.5rem;
-    font-size: 1.125rem;
-    line-height: 1.55;
+  .interview-complete-next:hover {
+    filter: brightness(1.05);
   }
   .fine-print {
     margin: 0;
