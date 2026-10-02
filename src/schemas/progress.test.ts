@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { completedExerciseSchema, completedLessonSchema, markProgressSchema, progressSchema } from "./progress";
+import {
+  completedExerciseSchema,
+  completedLessonSchema,
+  markLessonCompleteSchema,
+  markProgressSchema,
+  progressSchema,
+} from "./progress";
 
 describe("markProgressSchema", () => {
   it("accepts exerciseSlug alone", () => {
@@ -37,6 +43,18 @@ describe("markProgressSchema", () => {
 
   it("accepts lessonSlug alone", () => {
     expect(markProgressSchema.parse({ lessonSlug: "models" })).toEqual({ lessonSlug: "models" });
+  });
+
+  it("accepts an optional summary with lessonSlug", () => {
+    expect(markProgressSchema.parse({ lessonSlug: "interview", summary: "You're new to Cloudflare." })).toEqual({
+      lessonSlug: "interview",
+      summary: "You're new to Cloudflare.",
+    });
+  });
+
+  it("rejects an empty or overlong summary", () => {
+    expect(() => markLessonCompleteSchema.parse({ lessonSlug: "interview", summary: "" })).toThrow();
+    expect(() => markLessonCompleteSchema.parse({ lessonSlug: "interview", summary: "x".repeat(281) })).toThrow();
   });
 
   it("accepts the interview lesson", () => {

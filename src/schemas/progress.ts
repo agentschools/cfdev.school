@@ -5,8 +5,9 @@ import { studentIdSchema } from "./student";
 /**
  * Per-student completion of exercises and lessons (see #14). Source of truth
  * for the `exercise_completions` (migrations/0003_create_exercise_completions.sql)
- * and `lesson_completions` (migrations/0004_create_lesson_completions.sql) D1
- * tables, and GET/PUT /api/progress/{studentId}.
+ * and `lesson_completions` (migrations/0004_create_lesson_completions.sql,
+ * plus migrations/0005_add_lesson_completion_summary.sql) D1 tables, and
+ * GET/PUT /api/progress/{studentId}.
  */
 
 export const lessonSlugSchema = z
@@ -38,6 +39,12 @@ export const completedExerciseSchema = z.object({
   }),
 });
 
+const lessonSummarySchema = z.string().min(1).max(280).meta({
+  description:
+    "One sentence, written by the agent for the student, saying what this lesson did for them. For the interview, a summary of their saved answers. Shown on the lesson page and (for the interview) the homepage.",
+  example: "You're comfortable with code, new to Cloudflare, on macOS, want to build a link shortener, and opted into quizzes.",
+});
+
 export const completedLessonSchema = z.object({
   slug: lessonSlugSchema,
   completedAt: z.iso.datetime().meta({
@@ -47,6 +54,7 @@ export const completedLessonSchema = z.object({
     description: "Model ID the agent was running as when it marked this complete, if known.",
     example: "anthropic/claude-sonnet-4-5",
   }),
+  summary: lessonSummarySchema.optional(),
 });
 
 export const progressSchema = z.object({
@@ -79,6 +87,7 @@ export const markLessonCompleteSchema = z.object({
   model: z.string().min(1).optional().meta({
     description: "Optional model ID the agent is running as.",
   }),
+  summary: lessonSummarySchema.optional(),
 });
 
 /** Body for PUT /api/progress/{studentId}. Marks one exercise or one lesson complete. */

@@ -1,6 +1,7 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { buildPrompt } from "./agent-prompt";
 import { subscribeToProgress } from "./progress-client";
+import { setVisible } from "./reveal";
 import type { Progress } from "../schemas/progress";
 
 function formatCompletedBanner(completedAt: string): string {
@@ -16,8 +17,9 @@ function formatCompletedBanner(completedAt: string): string {
  * Lesson page (/lessons/{slug}). Enrolled students get a prompt to paste into
  * their agent; the agent marks the lesson complete via PUT /api/progress, and
  * the live progress subscription flips this page to its completed state
- * (banner + next-lesson button) without a reload. There's no manual
- * mark-complete button: completion is the agent's call.
+ * (banner with the agent's one-sentence summary + next-lesson button),
+ * animated, without a reload. There's no manual mark-complete button:
+ * completion is the agent's call.
  */
 export function initLessonPage(): void {
   const slug = window.location.pathname.split("/").filter(Boolean).pop();
@@ -29,6 +31,7 @@ export function initLessonPage(): void {
   const copyConfirm = document.getElementById("agent-prompt-confirm");
   const banner = document.getElementById("lesson-completed-banner");
   const bannerText = document.getElementById("lesson-completed-text");
+  const bannerSummary = document.getElementById("lesson-completed-summary");
   const next = document.getElementById("lesson-next");
   const nextPending = document.getElementById("lesson-next-pending");
   const nextLink = document.getElementById("lesson-next-link");
@@ -41,6 +44,7 @@ export function initLessonPage(): void {
     !copyConfirm ||
     !banner ||
     !bannerText ||
+    !bannerSummary ||
     !next ||
     !nextPending ||
     !nextLink
@@ -50,10 +54,14 @@ export function initLessonPage(): void {
 
   function renderProgress(progress: Progress): void {
     const completion = progress.completedLessons.find((lesson) => lesson.slug === slug);
-    banner!.hidden = !completion;
-    if (completion) bannerText!.textContent = formatCompletedBanner(completion.completedAt);
-    nextPending!.hidden = Boolean(completion);
-    nextLink!.hidden = !completion;
+    if (completion) {
+      bannerText!.textContent = formatCompletedBanner(completion.completedAt);
+      bannerSummary!.textContent = completion.summary ?? "";
+      bannerSummary!.hidden = !completion.summary;
+    }
+    setVisible(banner!, Boolean(completion));
+    setVisible(nextPending!, !completion);
+    setVisible(nextLink!, Boolean(completion));
   }
 
   function onEnrolled(student: CachedStudent): void {

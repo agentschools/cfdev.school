@@ -61,13 +61,21 @@ const db = {
     }
     if (sql.startsWith("INSERT INTO lesson_completions")) {
       return {
-        bind: (studentId: string, lessonSlug: string, completedAt: string, model: string | null) => ({
+        bind: (
+          studentId: string,
+          lessonSlug: string,
+          completedAt: string,
+          model: string | null,
+          summary: string | null,
+        ) => ({
           run: async () => {
+            const existing = lessonCompletions.get(completionKey(studentId, lessonSlug));
             lessonCompletions.set(completionKey(studentId, lessonSlug), {
               student_id: studentId,
               lesson_slug: lessonSlug,
               completed_at: completedAt,
-              model,
+              model: model ?? existing?.model ?? null,
+              summary: summary ?? existing?.summary ?? null,
             });
           },
         }),
@@ -216,6 +224,22 @@ describe("PUT /api/progress/{studentId}", () => {
 
     const fetched = (await (await GET(context("curious-hacker-2019"))).json()) as typeof body;
     expect(fetched.completedLessons).toEqual(body.completedLessons);
+  });
+
+  it("stores a lesson summary and keeps it when a later PUT omits it", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { lessonSlug: "interview", summary: "You're new to Cloudflare." }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "interview" }));
+    const body = (await response.json()) as { completedLessons: Array<{ summary?: string }> };
+    expect(body.completedLessons[0]?.summary).toBe("You're new to Cloudflare.");
+  });
+
+  it("replaces a lesson summary when a later PUT sends a new one", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { lessonSlug: "interview", summary: "Quizzes on." }));
+    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "interview", summary: "Quizzes off." }));
+    const body = (await response.json()) as { completedLessons: Array<{ summary?: string }> };
+    expect(body.completedLessons[0]?.summary).toBe("Quizzes off.");
   });
 
   it("broadcasts the new progress to the student's ProgressHub", async () => {

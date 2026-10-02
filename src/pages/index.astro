@@ -34,6 +34,11 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
         <p class="fine-print">Free forever. No account required.</p>
       </div>
       <AgentPrompt />
+      <section id="interview-complete" class="interview-complete" aria-live="polite" hidden>
+        <p class="interview-complete-label"><span class="interview-complete-check" aria-hidden="true">✓</span> Interview complete</p>
+        <p id="interview-complete-summary" class="interview-complete-summary"></p>
+        <a id="interview-complete-next" class="cta" href="/lessons/models">Next lesson: Models →</a>
+      </section>
     </div>
 
     <div class="hero-visual">
@@ -65,6 +70,10 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
 <script>
   import { buildPrompt } from "../lib/agent-prompt";
   import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "../lib/enroll-client";
+  import { subscribeToProgress } from "../lib/progress-client";
+  import { setVisible } from "../lib/reveal";
+  import { LESSON_OUTLINE } from "../data/curriculum";
+  import type { Progress } from "../schemas/progress";
   import { initHarnessTooltips } from "../lib/harness-tooltip-client";
 
   initHarnessTooltips();
@@ -76,12 +85,39 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     const promptText = document.getElementById("agent-prompt-text");
     const copyButton = document.getElementById("agent-prompt-copy") as HTMLButtonElement | null;
     const copyConfirm = document.getElementById("agent-prompt-confirm");
-    if (!promptSection || !promptText || !copyButton || !copyConfirm) return;
+    const complete = document.getElementById("interview-complete");
+    const summary = document.getElementById("interview-complete-summary");
+    const nextLink = document.getElementById("interview-complete-next") as HTMLAnchorElement | null;
+    if (!promptSection || !promptText || !copyButton || !copyConfirm || !complete || !summary || !nextLink) return;
+
+    // Until the Interview is complete, show its prompt. Once the student's
+    // agent marks it complete (often while this tab is open, pushed over the
+    // progress socket), swap the prompt for the agent's summary of their
+    // answers and a button to the first lesson they haven't finished yet.
+    let progressReceived = false;
+    function renderProgress(progress: Progress): void {
+      progressReceived = true;
+      const done = new Set(progress.completedLessons.map((lesson) => lesson.slug));
+      const interview = progress.completedLessons.find((lesson) => lesson.slug === "interview");
+      if (interview) {
+        summary!.textContent = interview.summary ?? "Your interview answers are saved.";
+        const next = LESSON_OUTLINE.find((lesson) => !done.has(lesson.slug));
+        nextLink!.href = next ? `/lessons/${next.slug}` : "/exercises";
+        nextLink!.textContent = next ? `Next lesson: ${next.title} →` : "Next up: Exercises →";
+      }
+      setVisible(promptSection!, !interview);
+      setVisible(complete!, Boolean(interview));
+    }
 
     function showPrompt(student: CachedStudent): void {
       promptText!.textContent = buildPrompt(student);
-      promptSection!.hidden = false;
       copyConfirm!.hidden = true;
+      subscribeToProgress(student.id, renderProgress);
+      // If progress can't load (e.g. a cached ID the server doesn't know),
+      // fall back to showing the Interview prompt rather than nothing.
+      setTimeout(() => {
+        if (!progressReceived) setVisible(promptSection!, true);
+      }, 1500);
     }
 
     copyButton.addEventListener("click", async () => {
@@ -170,6 +206,43 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     cursor: not-allowed;
   }
 
+  a.cta {
+    text-decoration: none;
+  }
+  .interview-complete {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    max-width: 30rem;
+  }
+  .interview-complete[hidden] {
+    display: none;
+  }
+  .interview-complete-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .interview-complete-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 9999px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.8rem;
+  }
+  .interview-complete-summary {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    line-height: 1.55;
+  }
   .fine-print {
     margin: 0;
     color: var(--muted-fg);

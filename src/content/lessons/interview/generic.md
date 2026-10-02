@@ -58,11 +58,16 @@ agentInstructions: |
   tell them plainly that they can change any of it at any time just by
   telling you, e.g. "turn off quizzes" or "I'm more experienced than I
   said". Whenever a student asks to change an answer, in this lesson or
-  any later one, PUT just that field and adjust from then on.
+  any later one, PUT just that field, then re-send this lesson's
+  completion (below) with an updated `summary`, and adjust from then on.
 
   Finally, mark this lesson complete with PUT /api/progress/{studentId}
-  using `{ "lessonSlug": "interview" }` and move on to the next lesson,
-  "models". There's no quiz for this lesson.
+  using `{ "lessonSlug": "interview", "summary": "..." }`, where
+  `summary` is one sentence addressed to the student covering their saved
+  answers, e.g. "You're comfortable with code, new to Cloudflare, on
+  macOS, want to build a link shortener, and opted into quizzes." Their
+  homepage shows it to confirm the answers were saved. Then move on to the
+  next lesson, "models". There's no quiz for this lesson.
 ---
 
 In this lesson, your agent will ask you a few questions about your background and what you want to get out of the course. Your answers help it tailor everything that follows: how much it explains, which examples it reaches for, and how comfortable it assumes you are with the terminal and with Cloudflare.

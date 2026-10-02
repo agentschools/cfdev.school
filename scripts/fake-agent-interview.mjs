@@ -67,12 +67,16 @@ async function main() {
   log("Changed quizOptIn alone without disturbing the rest of the interview");
 
   // Step 7: mark the interview lesson complete, as its agentInstructions say.
-  const progress = await request("PUT", `/api/progress/${student.id}`, { lessonSlug: "interview", model: "fake-agent" });
-  assert(
-    progress.completedLessons.some((item) => item.slug === "interview"),
-    "interview lesson wasn't marked complete",
-  );
-  log("Marked the interview lesson complete");
+  const summary = "You're comfortable with code, new to Cloudflare, on Linux, and opted out of quizzes.";
+  const progress = await request("PUT", `/api/progress/${student.id}`, {
+    lessonSlug: "interview",
+    model: "fake-agent",
+    summary,
+  });
+  const completion = progress.completedLessons.find((item) => item.slug === "interview");
+  assert(completion, "interview lesson wasn't marked complete");
+  assert(completion.summary === summary, "interview completion didn't keep its summary");
+  log("Marked the interview lesson complete with a summary");
 
   log("✅ Fake-agent interview run passed");
 }
