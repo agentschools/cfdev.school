@@ -77,6 +77,20 @@ async function loadProgress(studentId: string, fallbackUpdatedAt: string): Promi
   });
 }
 
+/**
+ * Pushes the new progress to any open browser tabs for this student (see
+ * src/durable-objects/progress-hub.ts). The D1 write already succeeded, so a
+ * failed broadcast is logged rather than failing the request: tabs re-fetch
+ * progress when their WebSocket reconnects.
+ */
+async function broadcastProgress(progress: Progress): Promise<void> {
+  try {
+    await env.PROGRESS_HUB.getByName(progress.studentId).broadcast(progress);
+  } catch (error) {
+    console.error("Failed to broadcast progress", error);
+  }
+}
+
 export const GET: APIRoute = async ({ params }) => {
   const studentId = params.studentId ?? "";
 
@@ -121,6 +135,7 @@ export const DELETE: APIRoute = async ({ params }) => {
   ]);
 
   const progress = await loadProgress(studentId, student.created_at);
+  await broadcastProgress(progress);
   return new Response(JSON.stringify(progress), { headers: jsonHeaders });
 };
 
@@ -177,5 +192,6 @@ export const PUT: APIRoute = async ({ params, request }) => {
   }
 
   const progress = await loadProgress(studentId, student.created_at);
+  await broadcastProgress(progress);
   return new Response(JSON.stringify(progress), { headers: jsonHeaders });
 };

@@ -21,4 +21,15 @@ describe("CurriculumSidebar", () => {
     expect(html).not.toContain('href="/exercises/add-first-binding-kv"');
     expect(html).toContain("Add your first Binding: Workers KV");
   });
+
+  it("marks the current page's item with aria-current", async () => {
+    const { default: CurriculumSidebar } = await import("./CurriculumSidebar.astro");
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(CurriculumSidebar, {
+      request: new Request("http://localhost/lessons/models"),
+    });
+
+    expect(html).toMatch(/href="\/lessons\/models"[^>]*aria-current="page"/);
+    expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+  });
 });

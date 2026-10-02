@@ -14,6 +14,7 @@ const existingExerciseSlugs = new Set(
   (await getCollection("exercises")).map((entry) => entry.data.exerciseSlug),
 );
 const exercises = listExercises();
+const currentPath = Astro.url.pathname.replace(/\/$/, "");
 ---
 
 <nav class="curriculum-sidebar" aria-label="Course curriculum">
@@ -44,11 +45,14 @@ const exercises = listExercises();
         return (
           <li data-lesson-slug={lesson.slug}>
             {available ? (
-              <a href={`/lessons/${lesson.slug}`}>
+              <a
+                href={`/lessons/${lesson.slug}`}
+                aria-current={currentPath === `/lessons/${lesson.slug}` ? "page" : undefined}
+              >
                 <span>
                   <span class="index">{num}.</span> {lesson.title}
                 </span>
-                <span class="check" hidden>
+                <span class="check" hidden aria-label="Completed">
                   ✓
                 </span>
               </a>
@@ -71,16 +75,19 @@ const exercises = listExercises();
         return (
           <li data-exercise-slug={exercise.slug}>
             {available ? (
-              <a href={`/exercises/${exercise.slug}`}>
+              <a
+                href={`/exercises/${exercise.slug}`}
+                aria-current={currentPath === `/exercises/${exercise.slug}` ? "page" : undefined}
+              >
                 <span>{exercise.title}</span>
-                <span class="check" hidden>
+                <span class="check" hidden aria-label="Completed">
                   ✓
                 </span>
               </a>
             ) : (
               <span class="pending">
                 {exercise.title}
-                <span class="check" hidden>
+                <span class="check" hidden aria-label="Completed">
                   ✓
                 </span>
               </span>
@@ -178,6 +185,16 @@ const exercises = listExercises();
     background: var(--card-bg);
   }
 
+  .item-list a[aria-current="page"] {
+    background: color-mix(in oklch, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .item-list a[aria-current="page"] .index {
+    color: color-mix(in oklch, var(--accent) 70%, transparent);
+  }
+
   .item-list .pending {
     opacity: 0.55;
   }
@@ -188,9 +205,17 @@ const exercises = listExercises();
   }
 
   .check {
-    color: var(--accent);
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 9999px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.65rem;
+    font-weight: 700;
   }
 
   .check[hidden] {

@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
+import AgentPrompt from "../../components/AgentPrompt.astro";
 import Layout from "../../layouts/Layout.astro";
 
 export const prerender = false;
@@ -24,9 +25,20 @@ const lesson = entry
   ? {
       title: entry.data.title,
       description: entry.data.description,
+      order: entry.data.order,
       Content: (await render(entry)).Content,
     }
   : null;
+
+// Where the "next" button points once this lesson is complete: the next
+// lesson that has content, or the exercises after the last one.
+const lessonsInOrder = (await getCollection("lessons", (item) => item.data.harness === "generic"))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((item) => ({ slug: item.data.lessonSlug, title: item.data.title }));
+const nextLesson = lessonsInOrder[lessonsInOrder.findIndex((item) => item.slug === slug) + 1];
+const next = nextLesson
+  ? { url: `/lessons/${nextLesson.slug}`, label: `Next lesson: ${nextLesson.title} →` }
+  : { url: "/exercises", label: "Next up: Exercises →" };
 
 const title = lesson?.title ?? "Lesson not found";
 ---
@@ -39,15 +51,33 @@ const title = lesson?.title ?? "Lesson not found";
           <p>This lesson doesn't exist.</p>
         ) : (
           <>
-            <h1>
-              {title}
-              <span id="lesson-complete-badge" class="complete-badge" hidden>
-                ✓ Completed
-              </span>
-            </h1>
-            <p class="lesson-description">{lesson.description}</p>
+            <header class="header">
+              <p class="eyebrow">Lesson {lesson.order}</p>
+              <h1>{title}</h1>
+              <p class="lesson-description">{lesson.description}</p>
+            </header>
+
+            <div id="lesson-completed-banner" class="completed-banner" hidden>
+              <span id="lesson-completed-text">You completed this lesson!</span>
+            </div>
+
+            <div id="lesson-enroll-nudge" class="enroll-nudge" hidden>
+              <a href="/">Enroll for free</a> to track your progress through the course.
+            </div>
+
+            <AgentPrompt />
+
             <div class="prose">
               <lesson.Content />
+            </div>
+
+            <div id="lesson-next" class="lesson-next" hidden>
+              <p id="lesson-next-pending" class="lesson-next-pending">
+                Complete this lesson in your agent to continue.
+              </p>
+              <a id="lesson-next-link" class="lesson-next-link" href={next.url} hidden>
+                {next.label}
+              </a>
             </div>
           </>
         )
@@ -75,27 +105,85 @@ const title = lesson?.title ?? "Lesson not found";
     max-width: 42rem;
   }
 
-  h1 {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: clamp(2rem, 4vw, 2.75rem);
-    margin: 0 0 1.5rem;
+  .header {
+    margin-bottom: 1.5rem;
   }
 
-  .complete-badge {
-    font-size: 0.9rem;
+  .eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    background: color-mix(in oklch, var(--accent) 20%, transparent);
-    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    color: var(--muted-fg);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 0.75rem;
   }
 
   .lesson-description {
     color: var(--muted-fg);
     font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .completed-banner {
     margin: 0 0 1.5rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.6rem;
+    background: color-mix(in oklch, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .enroll-nudge {
+    margin: 0 0 2rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    color: var(--muted-fg);
+    font-size: 0.95rem;
+  }
+
+  .enroll-nudge a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .lesson-next {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .lesson-next-pending {
+    margin: 0;
+    text-align: center;
+    color: var(--muted-fg);
+    font-size: 0.9rem;
+  }
+
+  .lesson-next-link {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    border-radius: 0.6rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .lesson-next-link:hover {
+    filter: brightness(1.05);
+  }
+
+  .lesson-next [hidden] {
+    display: none;
   }
 
   .prose {

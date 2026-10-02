@@ -11,6 +11,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 
 - Astro (`output: 'server'`) deployed as a single Cloudflare Worker via `@astrojs/cloudflare`.
 - D1 (`env.DB`, database `cloudflare-dev-school`) for all app data, no KV for business data (see `plan.agent.md`'s Data storage section). The `SESSION` KV namespace is Astro's own session-API binding, not app data storage, pinned by ID in `wrangler.jsonc` so it isn't re-provisioned per preview.
+- `src/worker.ts` is the Worker entry (`main` in `wrangler.jsonc`), wrapping Astro's `@astrojs/cloudflare/handler` so it can also export Durable Object classes. `src/env.d.ts` extends `Cloudflare.Env` for binding types; add new bindings there.
 - Deployed to the personal Cloudflare account (`ziki.workers.dev` subdomain) until `cloudflaredevschool.com` is purchased (see issue #20).
 
 ## Commands
@@ -86,6 +87,16 @@ Shared infrastructure for both:
 - Agent procedure lives in each exercise's `agentInstructions` / `content` and is summarized in `/llms.txt`. For exercise 1 the agent fetches the deployed URL and confirms the expected text before calling `PUT` progress; for exercise 2 the agent does a two-step write-then-separate-read round trip against the deployed URL, to prove the binding actually persists data rather than a single request just echoing something back. Both `agentInstructions` also carry light teaching beats (brief concept explanations adapted to the student's interview answers, plus a comprehension check before marking complete), but completion stays gated on the agent's own URL verification.
 
 Verify exercise 1 with `npm run verify:exercise`, exercise 2 with `npm run verify:exercise-kv` (a sibling script, not a generalized/parameterized version of the first — keeps each diff small), both against `wrangler dev` (or a PR preview via `BASE_URL=...`). Same caveats as `verify:interview`: real enrollment + completion rows in whatever D1 `BASE_URL` points at; delete them afterward. Neither script deploys a Worker or provisions a real KV namespace — they only check the HTTP contract.
+
+## Live progress
+
+Lesson and exercise completion is done by the student's agent (`PUT /api/progress/{studentId}`), and open browser tabs update without polling or reloads:
+
+- `ProgressHub` (`src/durable-objects/progress-hub.ts`, binding `PROGRESS_HUB`) is one Durable Object per student, addressed with `getByName(studentId)`. Browsers hold a hibernatable WebSocket to it; `PUT`/`DELETE` progress calls its `broadcast()` RPC after the D1 write (a failed broadcast is logged, never fails the request).
+- `GET /api/progress/{studentId}/live` (WebSocket upgrade) is routed to the DO in `src/worker.ts` before Astro sees it, so it isn't an Astro API route and isn't in `/llms.txt` or the OpenAPI doc. It's browser-only, agents never need it.
+- `src/lib/progress-client.ts`'s `subscribeToProgress(studentId, listener)` is the only client entry point: one shared socket per page, an HTTP fetch on every (re)connect so missed updates aren't lost, exponential-backoff reconnect, and a `"ping"` keepalive answered by the DO's auto-response (doesn't wake it from hibernation). The sidebar, lesson page, and exercise page all subscribe through it; don't add separate progress fetches.
+- Lesson pages (`src/pages/lessons/[slug].astro` + `src/lib/lesson-client.ts`) show the OpenCode School-style agent prompt, a completed banner, and a footer that reads "Complete this lesson in your agent to continue" until the lesson is complete, then becomes a next-lesson (or "Exercises") link. There's no manual mark-complete button for lessons.
+- To exercise the socket by hand: `npm run build`, then `npx wrangler dev -c dist/server/wrangler.json --port 8788 --persist-to .wrangler/state` (the `--persist-to` is needed, otherwise local D1 state lives under `dist/server/` and has no tables), open a page while enrolled, and `PUT` progress with `curl` (send an `Origin` header).
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 

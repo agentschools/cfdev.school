@@ -99,7 +99,16 @@ const db = {
   },
 };
 
-vi.mock("cloudflare:workers", () => ({ env: { DB: db } }));
+const broadcasts: Array<{ hub: string; progress: { completedLessons: unknown[] } }> = [];
+const progressHub = {
+  getByName: (hub: string) => ({
+    broadcast: async (progress: { completedLessons: unknown[] }) => {
+      broadcasts.push({ hub, progress });
+    },
+  }),
+};
+
+vi.mock("cloudflare:workers", () => ({ env: { DB: db, PROGRESS_HUB: progressHub } }));
 
 function context(studentId: string, body?: unknown): APIContext {
   return {
@@ -111,6 +120,7 @@ function context(studentId: string, body?: unknown): APIContext {
 beforeEach(() => {
   exerciseCompletions.clear();
   lessonCompletions.clear();
+  broadcasts.length = 0;
 });
 
 describe("GET /api/progress/{studentId}", () => {
@@ -208,6 +218,20 @@ describe("PUT /api/progress/{studentId}", () => {
     expect(fetched.completedLessons).toEqual(body.completedLessons);
   });
 
+  it("broadcasts the new progress to the student's ProgressHub", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
+    expect(broadcasts).toHaveLength(1);
+    expect(broadcasts[0]?.hub).toBe("curious-hacker-2019");
+    expect(broadcasts[0]?.progress.completedLessons).toHaveLength(1);
+  });
+
+  it("doesn't broadcast when the request is rejected", async () => {
+    const { PUT } = await import("./[studentId]");
+    await PUT(context("curious-hacker-2019", { lessonSlug: "nope" }));
+    expect(broadcasts).toHaveLength(0);
+  });
+
   it("tracks exercises and lessons independently", async () => {
     const { PUT } = await import("./[studentId]");
     await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
@@ -241,6 +265,7 @@ describe("DELETE /api/progress/{studentId}", () => {
 
     const fetched = await GET(context("curious-hacker-2019"));
     expect(fetched.status).toBe(200);
+    expect(broadcasts.at(-1)?.progress.completedLessons).toEqual([]);
   });
 
   it("only clears the targeted student's progress", async () => {
