@@ -36,7 +36,7 @@ Currently available:
 
 Once a student gives you their student ID (from the handoff prompt), check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order: "interview", then "models", then "instructions", then "cli", then "skills", then "tools". If the prompt names a specific lesson, start there instead.
 
-The "interview" lesson always comes first for a new student: it asks about their background, Cloudflare familiarity, learning goals, and quiz preference, auto-detects their OS, and stores the answers via PUT /api/students/{id}/interview. Use those answers (GET /api/students/{id}/interview) to adjust tone and depth in every later lesson and exercise, and only quiz the student if \`quizOptIn\` is true.
+The "interview" lesson always comes first for a new student: it asks a few short questions, all at once, about their background, Cloudflare familiarity, learning goals, and quiz preference, auto-detects their OS, and stores the answers via PUT /api/students/{id}/interview. Use those answers (GET /api/students/{id}/interview) to adjust tone and depth in every later lesson and exercise, and only quiz the student if \`quizOptIn\` is true. Students can change any answer at any time just by telling you (e.g. "turn off quizzes"): when they do, PUT just that field and adjust from then on.
 
 For each lesson: fetch GET /api/lessons/{slug}?harness={yourHarnessId}, follow its \`agentInstructions\` to teach the material conversationally, then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete with PUT /api/progress/{studentId} using \`{ "lessonSlug": "..." }\` before moving on. Always include \`model\` in that request.
 
