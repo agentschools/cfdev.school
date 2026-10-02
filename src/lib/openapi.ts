@@ -161,7 +161,7 @@ export const openApiDocument = createDocument({
       put: {
         summary: "Mark an exercise or lesson complete",
         description:
-          "Idempotent upsert: marks the given exercise or lesson complete for the student. Send exactly one of exerciseSlug or lessonSlug. Exercises may optionally include deployedUrl (the public Worker URL you verified); both may optionally include model (your current model ID). Lessons require harness (your harness ID) and may include a one-sentence summary; lesson completions are kept per harness, so completing a lesson with a second agent adds a second completion. Unknown slugs are rejected.",
+          "Idempotent upsert: marks the given exercise or lesson complete for the student. Send exactly one of exerciseSlug or lessonSlug. Exercises may optionally include deployedUrl (the public Worker URL you verified); both may optionally include model (your current model ID). Lessons require harness (your harness ID); the interview lesson also takes a one-sentence summary of the student's answers; lesson completions are kept per harness, so completing a lesson with a second agent adds a second completion. Unknown slugs are rejected.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         requestBody: {
           content: {

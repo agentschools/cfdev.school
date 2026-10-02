@@ -71,7 +71,7 @@ const title = lesson?.title ?? "Lesson not found";
             >
               <div class="completed-body">
                 <span id="lesson-completed-text">You completed this lesson!</span>
-                <p id="lesson-completed-summary" class="completed-summary" hidden></p>
+                <button id="lesson-redo" class="completed-redo" type="button">Redo this lesson</button>
               </div>
               <a class="completed-next" href={next.url}>{next.shortLabel}</a>
             </div>
@@ -183,14 +183,26 @@ const title = lesson?.title ?? "Lesson not found";
     filter: brightness(1.05);
   }
 
-  .completed-summary {
-    margin: 0.35rem 0 0;
-    color: var(--fg);
+  .completed-redo {
+    display: block;
+    margin: 0.3rem 0 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted-fg);
+    font: inherit;
+    font-size: 0.85rem;
     font-weight: 400;
-    line-height: 1.5;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    cursor: pointer;
   }
 
-  .completed-summary[hidden] {
+  .completed-redo:hover {
+    color: var(--fg);
+  }
+
+  .completed-redo[hidden] {
     display: none;
   }
 
