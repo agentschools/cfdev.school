@@ -19,7 +19,7 @@ describe("CurriculumSidebar", () => {
     expect(html).toContain('href="/exercises"');
     expect(html).toContain('href="/exercises/deploy-first-worker"');
     expect(html).not.toContain('href="/exercises/add-first-binding-kv"');
-    expect(html).toContain("Add your first Binding: Workers KV");
+    expect(html).toContain("Add your first binding");
   });
 
   it("numbers lessons from 00, starting with the Interview", async () => {

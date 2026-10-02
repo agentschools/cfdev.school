@@ -60,7 +60,7 @@ Teach lightly: briefly explain each new concept (Worker, fetch handler, deployin
 
 Check GET /api/progress/{studentId} first if they might already have completed it.
 
-## Exercise 2: Add your first Binding: Workers KV
+## Exercise 2: Add your first binding
 
 Once exercise 1 is complete, fetch this one with GET /api/exercises/add-first-binding-kv and follow its \`content\` and \`agentInstructions\`. It extends the same Worker from exercise 1, it doesn't start a new project.
 
@@ -79,7 +79,7 @@ Check GET /api/progress/{studentId} first if they might already have completed i
 
 ## Status
 
-Cloudflare Dev School is under active development. Six lessons ("interview", "models", "instructions", "cli", "skills", "tools") and two exercises (Deploy your first Worker, then Add your first Binding: Workers KV) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Six lessons ("interview", "models", "instructions", "cli", "skills", "tools") and two exercises (Deploy your first Worker, then Add your first binding) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

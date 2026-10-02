@@ -2,7 +2,7 @@ import { exerciseSchema, type Exercise } from "../schemas/exercise";
 
 /**
  * Static catalog of course exercises. v1 ships two: Deploy your first Worker,
- * then Add your first Binding: Workers KV. Served via GET /api/exercises and
+ * then Add your first binding. Served via GET /api/exercises and
  * GET /api/exercises/{slug}; agent procedure is also summarized in /llms.txt.
  */
 
@@ -90,7 +90,7 @@ After that, change the response string, redeploy, and hit the URL again. That ed
 const addFirstBindingKv: Exercise = exerciseSchema.parse({
   order: 2,
   slug: "add-first-binding-kv",
-  title: "Add your first Binding: Workers KV",
+  title: "Add your first binding",
   description:
     "Create a Workers KV namespace, bind it to the Worker you already deployed, and read and write a value through it to prove the binding actually persists data.",
   agentInstructions: `Guide the student through this exercise end to end. Do not skip verification.
@@ -112,7 +112,7 @@ If their Worker from exercise 1 has a \`wrangler.jsonc\`/\`wrangler.json\`/\`wra
 9. Afterward: encourage the student to write a few different keys, overwrite an existing key, and confirm each with a GET, to build intuition for how the binding behaves.
 
 Out of scope for this exercise: multiple KV namespaces, list operations, TTL/expiration, R2/D1 bindings, Durable Objects, and additional exercises. If the student asks, say those come later and stay focused on this one binding.`,
-  content: `# Add your first Binding: Workers KV
+  content: `# Add your first binding
 
 This exercise extends the Worker you deployed in "Deploy your first Worker." You will create a Workers KV namespace, bind it to that Worker, and read and write a value through it — the first taste of what a Cloudflare binding is and why it matters.
 

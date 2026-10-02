@@ -60,7 +60,7 @@ This data goes stale fast. Keeping it fresh is a **manual** process, not an auto
 7. Lessons.
 8. "Deploy your first Worker": create, run locally, deploy, and visit a minimal Worker on the student's own Cloudflare account.
 9. The agent confirms the deployed URL works, records the exercise as complete, and encourages the student to change the response and redeploy.
-10. "Add your first Binding: Workers KV": create a KV namespace, bind it to that same Worker, and read and write a value through it.
+10. "Add your first binding": create a KV namespace, bind it to that same Worker, and read and write a value through it.
 11. The agent verifies the binding persists data with a write-then-separate-read round trip, records the exercise as complete, and encourages the student to try a few more keys.
 
 ## Interview
@@ -121,7 +121,7 @@ The agent confirms the deployed URL returns the expected response and records th
 
 Keep this exercise focused on the basic development and deployment loop. Frameworks, databases, and custom domains are out of scope.
 
-### 2. Add your first Binding: Workers KV
+### 2. Add your first binding
 
 Extends the same Worker from exercise 1, rather than starting a new project.
 

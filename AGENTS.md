@@ -4,8 +4,12 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 
 - `plan.human.md`: the original human-written plan.
 - `plan.agent.md`: the agent-refined plan, produced by grilling `plan.human.md`. Where the two disagree, `plan.agent.md` wins.
-- v1 assumes a working agent and covers six setup lessons (starting with the Interview, numbered `00` in the sidebar) followed by two exercises: "Deploy your first Worker," then "Add your first Binding: Workers KV," which extends that same Worker. Use `plan.agent.md` for the current scope.
+- v1 assumes a working agent and covers six setup lessons (starting with the Interview, numbered `00` in the sidebar) followed by two exercises: "Deploy your first Worker," then "Add your first binding," which extends that same Worker. Use `plan.agent.md` for the current scope.
 - Tickets for turning the plan into working software live as GitHub issues #8–#20 on this repo, in dependency order. See each issue's "Blocked by" for sequencing.
+
+## Titles
+
+Use sentence case for every title and heading: lesson and exercise titles, page headings, Markdown headings in content, `/llms.txt` sections. Capitalize only the first word and proper nouns/product names (Cloudflare, Worker, Workers KV, Claude Code). E.g. "Add your first binding", not "Add Your First Binding".
 
 ## Stack
 
@@ -79,7 +83,7 @@ Verify the interview API end to end with `npm run verify:interview` (a "scripted
 v1 ships two exercises, in order:
 
 1. **Deploy your first Worker** (`deploy-first-worker`): create, run locally, deploy, and visit a minimal text-response Worker.
-2. **Add your first Binding: Workers KV** (`add-first-binding-kv`): extends that same Worker — create a KV namespace, bind it, and read/write a value through it. Soft-prerequisite on exercise 1 (the agent checks `GET /api/progress/{studentId}` first, not enforced server-side).
+2. **Add your first binding** (`add-first-binding-kv`): extends that same Worker — create a KV namespace, bind it, and read/write a value through it. Soft-prerequisite on exercise 1 (the agent checks `GET /api/progress/{studentId}` first, not enforced server-side).
 
 Shared infrastructure for both:
 

@@ -2,8 +2,8 @@ import { z } from "zod";
 
 /**
  * Exercises are hands-on projects the agent guides the student through.
- * v1 ships two: "Deploy your first Worker" and "Add your first Binding:
- * Workers KV" (see plan.agent.md Exercises).
+ * v1 ships two: "Deploy your first Worker" and "Add your first binding"
+ * (see plan.agent.md Exercises).
  *
  * Source of truth for GET /api/exercises and GET /api/exercises/{slug}
  * response shapes. Content lives in src/data/exercises.ts.
