@@ -41,7 +41,8 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     {
       LESSON_OUTLINE.map((lesson, index) => {
         const available = existingLessonSlugs.has(lesson.slug);
-        const num = String(index + 1).padStart(2, "0");
+        // Zero-based: the Interview is lesson "00.", Models is "01.", etc.
+        const num = String(index).padStart(2, "0");
         return (
           <li data-lesson-slug={lesson.slug}>
             {available ? (
@@ -134,15 +135,15 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
   }
 
   .section-label {
-    margin: 1.25rem 0.5rem 0.5rem;
+    margin: 2rem 0.5rem 0.5rem;
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--muted-fg);
+    color: color-mix(in oklch, var(--fg) 45%, transparent);
   }
 
-  .section-label:first-of-type {
+  .curriculum-sidebar > p.section-label:first-of-type {
     margin-top: 0;
   }
 
@@ -200,7 +201,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
   }
 
   .index {
-    color: var(--muted-fg);
+    color: color-mix(in oklch, var(--fg) 35%, transparent);
     margin-right: 0.15rem;
   }
 

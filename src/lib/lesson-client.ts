@@ -1,23 +1,40 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { buildPrompt } from "./agent-prompt";
 import { subscribeToProgress } from "./progress-client";
-import type { Progress } from "../schemas/progress";
+import { setVisible } from "./reveal";
+import type { CompletedLesson, Progress } from "../schemas/progress";
 
-function formatCompletedBanner(completedAt: string): string {
-  const date = new Date(completedAt).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  return `You completed this lesson on ${date}.`;
+/**
+ * "You completed this lesson on October 1, 2026 using Claude Code and on
+ * November 1, 2026 using OpenAI Codex." One clause per harness (lesson
+ * completions are per agent, see #52), oldest first. `harnessNames` maps
+ * harness IDs to how the sentence should name them.
+ */
+export function formatCompletedBanner(
+  completions: readonly CompletedLesson[],
+  harnessNames: Readonly<Record<string, string>>,
+): string {
+  const clauses = [...completions]
+    .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+    .map((completion) => {
+      const date = new Date(completion.completedAt).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+      return `on ${date} using ${harnessNames[completion.harness] ?? completion.harness}`;
+    });
+  return `You completed this lesson ${new Intl.ListFormat("en-US", { type: "conjunction" }).format(clauses)}.`;
 }
 
 /**
  * Lesson page (/lessons/{slug}). Enrolled students get a prompt to paste into
  * their agent; the agent marks the lesson complete via PUT /api/progress, and
  * the live progress subscription flips this page to its completed state
- * (banner + next-lesson button) without a reload. There's no manual
- * mark-complete button: completion is the agent's call.
+ * (banner naming each agent that completed it + next-lesson button, with
+ * the prompt tucked behind a "Redo this lesson" button), animated, without a
+ * reload. There's no manual mark-complete button:
+ * completion is the agent's call.
  */
 export function initLessonPage(): void {
   const slug = window.location.pathname.split("/").filter(Boolean).pop();
@@ -29,6 +46,7 @@ export function initLessonPage(): void {
   const copyConfirm = document.getElementById("agent-prompt-confirm");
   const banner = document.getElementById("lesson-completed-banner");
   const bannerText = document.getElementById("lesson-completed-text");
+  const redoButton = document.getElementById("lesson-redo");
   const next = document.getElementById("lesson-next");
   const nextPending = document.getElementById("lesson-next-pending");
   const nextLink = document.getElementById("lesson-next-link");
@@ -41,6 +59,7 @@ export function initLessonPage(): void {
     !copyConfirm ||
     !banner ||
     !bannerText ||
+    !redoButton ||
     !next ||
     !nextPending ||
     !nextLink
@@ -48,22 +67,49 @@ export function initLessonPage(): void {
     return;
   }
 
+  const harnessNames = JSON.parse(banner.dataset.harnessNames ?? "{}") as Record<string, string>;
+  let student: CachedStudent | null = null;
+  let progressReceived = false;
+  // A completed lesson hides its prompt until the student asks to redo it
+  // (e.g. to set up a second agent); after that it stays open.
+  let redoRequested = false;
+
   function renderProgress(progress: Progress): void {
-    const completion = progress.completedLessons.find((lesson) => lesson.slug === slug);
-    banner!.hidden = !completion;
-    if (completion) bannerText!.textContent = formatCompletedBanner(completion.completedAt);
-    nextPending!.hidden = Boolean(completion);
-    nextLink!.hidden = !completion;
+    progressReceived = true;
+    const completions = progress.completedLessons.filter((lesson) => lesson.slug === slug);
+    const latest = completions.reduce<CompletedLesson | undefined>(
+      (newest, item) => (!newest || item.completedAt > newest.completedAt ? item : newest),
+      undefined,
+    );
+    if (latest) bannerText!.textContent = formatCompletedBanner(completions, harnessNames);
+    // Once complete, the prompt asks the agent to redo the lesson.
+    promptText!.textContent = buildPrompt(student!, { kind: "lesson", title: title!, redo: Boolean(latest) });
+    setVisible(promptSection!, !latest || redoRequested);
+    setVisible(redoButton!, !redoRequested);
+    setVisible(banner!, Boolean(latest));
+    setVisible(nextPending!, !latest);
+    setVisible(nextLink!, Boolean(latest));
   }
 
-  function onEnrolled(student: CachedStudent): void {
+  function onEnrolled(enrolled: CachedStudent): void {
+    student = enrolled;
     if (enrollNudge) enrollNudge.hidden = true;
-    promptText!.textContent = buildPrompt(student, { kind: "lesson", title: title! });
-    promptSection!.hidden = false;
+    promptText!.textContent = buildPrompt(enrolled, { kind: "lesson", title: title! });
     copyConfirm!.hidden = true;
     next!.hidden = false;
-    subscribeToProgress(student.id, renderProgress);
+    subscribeToProgress(enrolled.id, renderProgress);
+    // If progress can't load (e.g. a cached ID the server doesn't know),
+    // fall back to showing the prompt rather than nothing.
+    setTimeout(() => {
+      if (!progressReceived) setVisible(promptSection!, true);
+    }, 1500);
   }
+
+  redoButton.addEventListener("click", () => {
+    redoRequested = true;
+    setVisible(redoButton, false);
+    setVisible(promptSection, true);
+  });
 
   copyButton.addEventListener("click", async () => {
     try {

@@ -30,8 +30,10 @@ interface ExerciseCompletionRow {
 interface LessonCompletionRow {
   student_id: string;
   lesson_slug: string;
+  harness: string;
   completed_at: string;
   model: string | null;
+  summary: string | null;
 }
 
 function rowToCompletedExercise(row: ExerciseCompletionRow): CompletedExercise {
@@ -46,8 +48,10 @@ function rowToCompletedExercise(row: ExerciseCompletionRow): CompletedExercise {
 function rowToCompletedLesson(row: LessonCompletionRow): CompletedLesson {
   return completedLessonSchema.parse({
     slug: row.lesson_slug,
+    harness: row.harness,
     completedAt: row.completed_at,
     ...(row.model ? { model: row.model } : {}),
+    ...(row.summary ? { summary: row.summary } : {}),
   });
 }
 
@@ -179,15 +183,17 @@ export const PUT: APIRoute = async ({ params, request }) => {
       .run();
   } else {
     const model = body.model ?? null;
+    const summary = body.summary ?? null;
 
     await env.DB.prepare(
-      `INSERT INTO lesson_completions (student_id, lesson_slug, completed_at, model)
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT(student_id, lesson_slug) DO UPDATE SET
+      `INSERT INTO lesson_completions (student_id, lesson_slug, harness, completed_at, model, summary)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(student_id, lesson_slug, harness) DO UPDATE SET
          completed_at = excluded.completed_at,
-         model = COALESCE(excluded.model, lesson_completions.model)`,
+         model = COALESCE(excluded.model, lesson_completions.model),
+         summary = COALESCE(excluded.summary, lesson_completions.summary)`,
     )
-      .bind(studentId, body.lessonSlug, completedAt, model)
+      .bind(studentId, body.lessonSlug, body.harness, completedAt, model, summary)
       .run();
   }
 

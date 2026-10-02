@@ -30,25 +30,17 @@ Currently available:
 - GET /api/exercises: list all exercises (content + agentInstructions).
 - GET /api/exercises/{slug}: fetch a single exercise by slug.
 - GET /api/progress/{studentId}: fetch which exercises and lessons the student has completed.
-- PUT /api/progress/{studentId}: mark an exercise or lesson complete. Send exactly one of \`{ "exerciseSlug": "deploy-first-worker" }\` or \`{ "lessonSlug": "models" }\`. Exercises may also include \`deployedUrl\` (the public URL you verified); either may include \`model\` (your current model ID, e.g. \`anthropic/claude-sonnet-4-5\`). Idempotent upsert.
-
-## Interview
-
-Right after a student gives you their student ID (from the handoff prompt), conduct a short interview before anything else:
-
-1. Ask about their technical background (\`technicalBackground\`: "beginner", "intermediate", or "advanced").
-2. Ask how familiar they are with Cloudflare (\`cloudflareFamiliarity\`: "new", "some-experience", or "regular-user"). Use this only to adjust your tone and depth of explanation later, never to skip lessons or change what content you show, that isn't supported in v1.
-3. Ask what they want to get out of the course (\`learningGoals\`, free text).
-4. Auto-detect their OS yourself (e.g. inspect \`uname\` or an OS environment variable), don't ask them. Send it as \`os\`: "macos", "linux", "windows", or "other".
-5. Ask if they want to be quizzed at the end of each lesson (\`quizOptIn\`, boolean). Recommend trying it, but make clear they can skip any individual quiz or turn it off entirely at any time, it's just a preference, not a commitment.
-
-Submit each answer via PUT /api/students/{id}/interview as you get it, or batch them into one call at the end, either works. If a returning student already has interview answers (check with GET first), don't re-ask questions they've already answered, just confirm nothing's changed.
+- PUT /api/progress/{studentId}: mark an exercise or lesson complete. Send exactly one of \`{ "exerciseSlug": "deploy-first-worker" }\` or \`{ "lessonSlug": "models", "harness": "claude-code" }\`. Lessons require \`harness\`, your harness id: lesson completions are tracked per agent, since lessons set up agent-specific files, so a student can complete the same lesson once with each agent they use. Exercises may also include \`deployedUrl\` (the public URL you verified); either may include \`model\` (your current model ID, e.g. \`anthropic/claude-sonnet-4-5\`). The "interview" lesson also takes \`summary\`: one sentence (max 280 characters), addressed to the student, summarizing their saved answers; it's shown on their homepage. Other lessons don't need one. Idempotent upsert (per lesson and harness for lessons), and a later PUT without \`summary\` keeps the previous one.
 
 ## Lessons
 
-After the interview, check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order: "models", then "instructions", then "cli", then "skills", then "tools".
+Once a student gives you their student ID (from the handoff prompt), check GET /api/progress/{studentId} to see what's already done, then work through incomplete lessons in order: "interview", then "models", then "instructions", then "cli", then "skills", then "tools". If the prompt names a specific lesson, start there instead.
 
-For each lesson: fetch GET /api/lessons/{slug}?harness={yourHarnessId}, follow its \`agentInstructions\` to teach the material conversationally, then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete with PUT /api/progress/{studentId} using \`{ "lessonSlug": "..." }\` before moving on. Always include \`model\` in that request.
+The "interview" lesson always comes first for a new student: it asks a few short questions, all at once, about their background, Cloudflare familiarity, learning goals, and quiz preference, auto-detects their OS, and stores the answers via PUT /api/students/{id}/interview. Use those answers (GET /api/students/{id}/interview) to adjust tone and depth in every later lesson and exercise, and only quiz the student if \`quizOptIn\` is true. Students can change any answer at any time just by telling you (e.g. "turn off quizzes"): when they do, PUT just that field, then PUT the "interview" lesson completion again (with your \`harness\`) and an updated \`summary\` so the student's homepage shows the change, and adjust from then on.
+
+For each lesson: fetch GET /api/lessons/{slug}?harness={yourHarnessId}, follow its \`agentInstructions\` to teach the material conversationally, then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete with PUT /api/progress/{studentId} using \`{ "lessonSlug": "...", "harness": "..." }\` before moving on. Always include \`model\` in that request too.
+
+If the student asks to redo a lesson they've already completed (the prompt says so, e.g. because they're trying the course with a second agent), go through it fully again rather than skipping it, then PUT its completion with your own \`harness\`. The student's lesson page lists each agent they completed it with.
 
 Don't invent lesson content that isn't in \`agentInstructions\`, and don't invent lesson slugs or endpoints that aren't listed above.
 
@@ -70,7 +62,7 @@ Teach lightly: briefly explain each new concept (Worker, fetch handler, deployin
 
 Check GET /api/progress/{studentId} first if they might already have completed it.
 
-## Exercise 2: Add your first Binding: Workers KV
+## Exercise 2: Add your first binding
 
 Once exercise 1 is complete, fetch this one with GET /api/exercises/add-first-binding-kv and follow its \`content\` and \`agentInstructions\`. It extends the same Worker from exercise 1, it doesn't start a new project.
 
@@ -89,7 +81,7 @@ Check GET /api/progress/{studentId} first if they might already have completed i
 
 ## Status
 
-Cloudflare Dev School is under active development. Five lessons ("models", "instructions", "cli", "skills", "tools") and two exercises (Deploy your first Worker, then Add your first Binding: Workers KV) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Six lessons ("interview", "models", "instructions", "cli", "skills", "tools") and two exercises (Deploy your first Worker, then Add your first binding) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

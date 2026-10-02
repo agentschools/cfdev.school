@@ -34,6 +34,14 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
         <p class="fine-print">Free forever. No account required.</p>
       </div>
       <AgentPrompt />
+      <!-- Same treatment as the lesson pages' completed banner. -->
+      <section id="interview-complete" class="interview-complete" aria-live="polite" hidden>
+        <div class="interview-complete-body">
+          <p class="interview-complete-label">Interview complete</p>
+          <p id="interview-complete-summary" class="interview-complete-summary"></p>
+        </div>
+        <a id="interview-complete-next" class="interview-complete-next" href="/lessons/models">Next: Models →</a>
+      </section>
     </div>
 
     <div class="hero-visual">
@@ -65,6 +73,10 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
 <script>
   import { buildPrompt } from "../lib/agent-prompt";
   import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "../lib/enroll-client";
+  import { subscribeToProgress } from "../lib/progress-client";
+  import { setVisible } from "../lib/reveal";
+  import { LESSON_OUTLINE } from "../data/curriculum";
+  import type { Progress } from "../schemas/progress";
   import { initHarnessTooltips } from "../lib/harness-tooltip-client";
 
   initHarnessTooltips();
@@ -76,12 +88,42 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     const promptText = document.getElementById("agent-prompt-text");
     const copyButton = document.getElementById("agent-prompt-copy") as HTMLButtonElement | null;
     const copyConfirm = document.getElementById("agent-prompt-confirm");
-    if (!promptSection || !promptText || !copyButton || !copyConfirm) return;
+    const complete = document.getElementById("interview-complete");
+    const summary = document.getElementById("interview-complete-summary");
+    const nextLink = document.getElementById("interview-complete-next") as HTMLAnchorElement | null;
+    if (!promptSection || !promptText || !copyButton || !copyConfirm || !complete || !summary || !nextLink) return;
+
+    // Until the Interview is complete, show its prompt. Once the student's
+    // agent marks it complete (often while this tab is open, pushed over the
+    // progress socket), swap the prompt for the agent's summary of their
+    // answers and a button to the first lesson they haven't finished yet.
+    let progressReceived = false;
+    function renderProgress(progress: Progress): void {
+      progressReceived = true;
+      const done = new Set(progress.completedLessons.map((lesson) => lesson.slug));
+      // Newest Interview completion: there's one per agent the student used.
+      const interview = progress.completedLessons
+        .filter((lesson) => lesson.slug === "interview")
+        .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
+      if (interview) {
+        summary!.textContent = interview.summary ?? "Your interview answers are saved.";
+        const next = LESSON_OUTLINE.find((lesson) => !done.has(lesson.slug));
+        nextLink!.href = next ? `/lessons/${next.slug}` : "/exercises";
+        nextLink!.textContent = next ? `Next: ${next.title} →` : "Next: Exercises →";
+      }
+      setVisible(promptSection!, !interview);
+      setVisible(complete!, Boolean(interview));
+    }
 
     function showPrompt(student: CachedStudent): void {
       promptText!.textContent = buildPrompt(student);
-      promptSection!.hidden = false;
       copyConfirm!.hidden = true;
+      subscribeToProgress(student.id, renderProgress);
+      // If progress can't load (e.g. a cached ID the server doesn't know),
+      // fall back to showing the Interview prompt rather than nothing.
+      setTimeout(() => {
+        if (!progressReceived) setVisible(promptSection!, true);
+      }, 1500);
     }
 
     copyButton.addEventListener("click", async () => {
@@ -170,6 +212,47 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     cursor: not-allowed;
   }
 
+  .interview-complete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    max-width: 30rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.6rem;
+    background: color-mix(in oklch, var(--accent) 12%, transparent);
+    font-size: 0.95rem;
+  }
+  .interview-complete[hidden] {
+    display: none;
+  }
+  .interview-complete-body {
+    flex: 1 1 18rem;
+  }
+  .interview-complete-label {
+    margin: 0;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .interview-complete-summary {
+    margin: 0.35rem 0 0;
+    line-height: 1.5;
+  }
+  .interview-complete-next {
+    flex-shrink: 0;
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.45rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .interview-complete-next:hover {
+    filter: brightness(1.05);
+  }
   .fine-print {
     margin: 0;
     color: var(--muted-fg);

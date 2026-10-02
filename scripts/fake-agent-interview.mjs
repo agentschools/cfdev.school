@@ -27,7 +27,14 @@ async function main() {
   const llmsTxt = await fetchText("/llms.txt");
   assert(llmsTxt.includes("PUT /api/students/{id}/interview"), "llms.txt doesn't document PUT interview endpoint");
   assert(llmsTxt.includes("GET /api/students/{id}/interview"), "llms.txt doesn't document GET interview endpoint");
-  log("Fetched /llms.txt and confirmed it documents the interview endpoints");
+  assert(llmsTxt.includes('"interview"'), "llms.txt doesn't list the interview lesson");
+  log("Fetched /llms.txt and confirmed it documents the interview endpoints and lesson");
+
+  // Step 2b: the interview is a lesson; fetch its agentInstructions.
+  const lesson = await request("GET", "/api/lessons/interview?harness=generic");
+  assert(lesson.slug === "interview", `expected the interview lesson, got ${lesson.slug}`);
+  assert(lesson.agentInstructions.includes("/api/students/{id}/interview"), "interview lesson doesn't point at the interview API");
+  log("Fetched the interview lesson's agentInstructions");
 
   // Step 3: a fresh student has no interview yet.
   const notFound = await requestRaw("GET", `/api/students/${student.id}/interview`);
@@ -58,6 +65,19 @@ async function main() {
   assert(optedOut.quizOptIn === false, "quizOptIn didn't update");
   assert(optedOut.technicalBackground === "intermediate", "changing quizOptIn clobbered technicalBackground");
   log("Changed quizOptIn alone without disturbing the rest of the interview");
+
+  // Step 7: mark the interview lesson complete, as its agentInstructions say.
+  const summary = "You're comfortable with code, new to Cloudflare, on Linux, and opted out of quizzes.";
+  const progress = await request("PUT", `/api/progress/${student.id}`, {
+    lessonSlug: "interview",
+    harness: "generic",
+    model: "fake-agent",
+    summary,
+  });
+  const completion = progress.completedLessons.find((item) => item.slug === "interview");
+  assert(completion, "interview lesson wasn't marked complete");
+  assert(completion.summary === summary, "interview completion didn't keep its summary");
+  log("Marked the interview lesson complete with a summary");
 
   log("✅ Fake-agent interview run passed");
 }

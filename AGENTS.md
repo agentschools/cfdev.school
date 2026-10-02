@@ -4,8 +4,12 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 
 - `plan.human.md`: the original human-written plan.
 - `plan.agent.md`: the agent-refined plan, produced by grilling `plan.human.md`. Where the two disagree, `plan.agent.md` wins.
-- v1 assumes a working agent and covers five setup lessons followed by two exercises: "Deploy your first Worker," then "Add your first Binding: Workers KV," which extends that same Worker. Use `plan.agent.md` for the current scope.
+- v1 assumes a working agent and covers six setup lessons (starting with the Interview, numbered `00` in the sidebar) followed by two exercises: "Deploy your first Worker," then "Add your first binding," which extends that same Worker. Use `plan.agent.md` for the current scope.
 - Tickets for turning the plan into working software live as GitHub issues #8–#20 on this repo, in dependency order. See each issue's "Blocked by" for sequencing.
+
+## Titles
+
+Use sentence case for every title and heading: lesson and exercise titles, page headings, Markdown headings in content, `/llms.txt` sections. Capitalize only the first word and proper nouns/product names (Cloudflare, Worker, Workers KV, Claude Code). E.g. "Add your first binding", not "Add Your First Binding".
 
 ## Stack
 
@@ -70,6 +74,8 @@ There is no student-facing harness picker (removed in #37). The homepage layout 
 
 `src/schemas/interview.ts` / `migrations/0002_create_interview_answers.sql` / `src/pages/api/students/[id]/interview.ts` implement the interview from `plan.agent.md`'s Interview section: technical background, Cloudflare familiarity (tone/depth only, never lesson branching in v1), learning goals, auto-detected OS, and a standalone `quizOptIn` preference. `PUT` does a partial merge (upsert), safe to call once per question or just to change one field later; `GET` 404s until the student has at least one answer on file.
 
+The interview is also the first lesson (`interview`, `order: 0`, `quiz: false`, generic content only in `src/content/lessons/interview/generic.md`). Its `agentInstructions` hold the interview procedure (all questions asked at once, kept short, via the harness's structured question tool if it has one, else one numbered plain-text message; students can change any answer later just by telling their agent); `/llms.txt` only summarizes it and lists `"interview"` first in the lesson order. The agent marks it complete with `PUT /api/progress` like any lesson. The homepage prompt (`buildPrompt()` with no context) points at this lesson.
+
 Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent" per plan.agent.md's tickets: it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). Run it against `wrangler dev` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
 
 ## Exercises and progress
@@ -77,7 +83,7 @@ Verify the interview API end to end with `npm run verify:interview` (a "scripted
 v1 ships two exercises, in order:
 
 1. **Deploy your first Worker** (`deploy-first-worker`): create, run locally, deploy, and visit a minimal text-response Worker.
-2. **Add your first Binding: Workers KV** (`add-first-binding-kv`): extends that same Worker — create a KV namespace, bind it, and read/write a value through it. Soft-prerequisite on exercise 1 (the agent checks `GET /api/progress/{studentId}` first, not enforced server-side).
+2. **Add your first binding** (`add-first-binding-kv`): extends that same Worker — create a KV namespace, bind it, and read/write a value through it. Soft-prerequisite on exercise 1 (the agent checks `GET /api/progress/{studentId}` first, not enforced server-side).
 
 Shared infrastructure for both:
 
@@ -95,7 +101,11 @@ Lesson and exercise completion is done by the student's agent (`PUT /api/progres
 - `ProgressHub` (`src/durable-objects/progress-hub.ts`, binding `PROGRESS_HUB`) is one Durable Object per student, addressed with `getByName(studentId)`. Browsers hold a hibernatable WebSocket to it; `PUT`/`DELETE` progress calls its `broadcast()` RPC after the D1 write (a failed broadcast is logged, never fails the request).
 - `GET /api/progress/{studentId}/live` (WebSocket upgrade) is routed to the DO in `src/worker.ts` before Astro sees it, so it isn't an Astro API route and isn't in `/llms.txt` or the OpenAPI doc. It's browser-only, agents never need it.
 - `src/lib/progress-client.ts`'s `subscribeToProgress(studentId, listener)` is the only client entry point: one shared socket per page, an HTTP fetch on every (re)connect so missed updates aren't lost, exponential-backoff reconnect, and a `"ping"` keepalive answered by the DO's auto-response (doesn't wake it from hibernation). The sidebar, lesson page, and exercise page all subscribe through it; don't add separate progress fetches.
-- Lesson pages (`src/pages/lessons/[slug].astro` + `src/lib/lesson-client.ts`) show the OpenCode School-style agent prompt, a completed banner, and a footer that reads "Complete this lesson in your agent to continue" until the lesson is complete, then becomes a next-lesson (or "Exercises") link. There's no manual mark-complete button for lessons.
+- Lesson pages (`src/pages/lessons/[slug].astro` + `src/lib/lesson-client.ts`) show the OpenCode School-style agent prompt, a completed banner, and a footer that reads "Complete this lesson in your agent to continue" until the lesson is complete, then becomes a next-lesson (or "Exercises") link. There's no manual mark-complete button for lessons. Once a lesson is complete its prompt is hidden behind a "Redo this lesson" button in the completed banner; revealing it shows the redo wording and keeps it open through later progress updates.
+- Lesson completions are per harness (#52): `PUT /api/progress` requires `harness` for lessons, and the key is (student, lesson, harness), so a student can complete a lesson once per agent (`migrations/0006_lesson_completions_per_harness.sql`). `completedLessons` can hold several entries for one slug; use the newest for summaries and "is it done" checks. The lesson banner names each agent ("...using Claude Code and on ... using OpenAI Codex", `generic` reads as "an unknown agent"), and once complete the lesson prompt (behind "Redo this lesson") asks the agent to redo it. Exercises stay one completion per student.
+- Lesson completions carry an optional agent-written one-sentence `summary` (`PUT /api/progress` body, `migrations/0005_add_lesson_completion_summary.sql`); a later PUT without one keeps the previous summary. Only the Interview uses it (per-lesson summaries felt like overkill and were removed from lesson pages); it's shown in the homepage's "Interview complete" box. The Interview's summary describes the student's saved answers, and agents re-send it whenever the student changes an answer, so the existing progress broadcast keeps it live; there's no separate interview broadcast.
+- The homepage hero is progress-driven once enrolled: the Interview prompt until `interview` is complete, then an "Interview complete" box (same look as the lesson pages' completed banner) with its summary and a "Next: ..." button to the first incomplete lesson in `LESSON_OUTLINE` (or Exercises). If progress hasn't loaded after 1.5s (e.g. a cached ID the server doesn't know) it falls back to showing the prompt.
+- Anything that appears or disappears in response to live progress uses `setVisible()` from `src/lib/reveal.ts` (height + fade + slide, skipped for `prefers-reduced-motion`) rather than toggling `hidden` directly. It tracks its target state in `data-reveal-target`, so don't mix it with direct `hidden` writes on the same element.
 - To exercise the socket by hand: `npm run build`, then `npx wrangler dev -c dist/server/wrangler.json --port 8788 --persist-to .wrangler/state` (the `--persist-to` is needed, otherwise local D1 state lives under `dist/server/` and has no tables), open a page while enrolled, and `PUT` progress with `curl` (send an `Origin` header).
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.

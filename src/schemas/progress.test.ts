@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { completedExerciseSchema, completedLessonSchema, markProgressSchema, progressSchema } from "./progress";
+import {
+  completedExerciseSchema,
+  completedLessonSchema,
+  markLessonCompleteSchema,
+  markProgressSchema,
+  progressSchema,
+} from "./progress";
 
 describe("markProgressSchema", () => {
   it("accepts exerciseSlug alone", () => {
@@ -35,13 +41,38 @@ describe("markProgressSchema", () => {
     ).toThrow();
   });
 
-  it("accepts lessonSlug alone", () => {
-    expect(markProgressSchema.parse({ lessonSlug: "models" })).toEqual({ lessonSlug: "models" });
+  it("rejects a lessonSlug without a harness", () => {
+    expect(() => markProgressSchema.parse({ lessonSlug: "models" })).toThrow();
+  });
+
+  it("rejects an unknown harness", () => {
+    expect(() => markLessonCompleteSchema.parse({ lessonSlug: "models", harness: "notepad" })).toThrow();
+  });
+
+  it("accepts lessonSlug with a harness", () => {
+    const body = { lessonSlug: "models", harness: "claude-code" };
+    expect(markProgressSchema.parse(body)).toEqual(body);
+  });
+
+  it("accepts an optional summary with lessonSlug", () => {
+    const body = { lessonSlug: "interview", harness: "claude-code", summary: "You're new to Cloudflare." };
+    expect(markProgressSchema.parse(body)).toEqual(body);
+  });
+
+  it("rejects an empty or overlong summary", () => {
+    const body = { lessonSlug: "interview", harness: "claude-code" };
+    expect(() => markLessonCompleteSchema.parse({ ...body, summary: "" })).toThrow();
+    expect(() => markLessonCompleteSchema.parse({ ...body, summary: "x".repeat(281) })).toThrow();
+  });
+
+  it("accepts the interview lesson", () => {
+    const body = { lessonSlug: "interview", harness: "claude-code" };
+    expect(markProgressSchema.parse(body)).toEqual(body);
   });
 
   it("accepts an optional model with lessonSlug", () => {
     expect(
-      markProgressSchema.parse({ lessonSlug: "models", model: "anthropic/claude-sonnet-4-5" }),
+      markProgressSchema.parse({ lessonSlug: "models", harness: "claude-code", model: "anthropic/claude-sonnet-4-5" }),
     ).toMatchObject({
       lessonSlug: "models",
       model: "anthropic/claude-sonnet-4-5",
@@ -49,7 +80,7 @@ describe("markProgressSchema", () => {
   });
 
   it("rejects an unknown lesson slug", () => {
-    expect(() => markProgressSchema.parse({ lessonSlug: "nope" })).toThrow();
+    expect(() => markProgressSchema.parse({ lessonSlug: "nope", harness: "claude-code" })).toThrow();
   });
 
   it("rejects a body with neither exerciseSlug nor lessonSlug", () => {
@@ -73,6 +104,7 @@ describe("completedLessonSchema", () => {
     expect(() =>
       completedLessonSchema.parse({
         slug: "models",
+        harness: "claude-code",
         completedAt: "2026-09-14T12:00:00.000Z",
       }),
     ).not.toThrow();
@@ -82,6 +114,7 @@ describe("completedLessonSchema", () => {
     expect(() =>
       completedLessonSchema.parse({
         slug: "nope",
+        harness: "claude-code",
         completedAt: "2026-09-14T12:00:00.000Z",
       }),
     ).toThrow();
@@ -114,6 +147,7 @@ describe("progressSchema", () => {
         completedLessons: [
           {
             slug: "models",
+            harness: "claude-code",
             completedAt: "2026-09-14T12:00:00.000Z",
           },
         ],

@@ -15,7 +15,7 @@ describe("exercises catalog", () => {
 
   it("looks up by slug and returns undefined for unknown", () => {
     expect(getExercise("deploy-first-worker")?.title).toContain("Deploy");
-    expect(getExercise("add-first-binding-kv")?.title).toContain("Binding");
+    expect(getExercise("add-first-binding-kv")?.title).toBe("Add your first binding");
     expect(getExercise("nope")).toBeUndefined();
   });
 
