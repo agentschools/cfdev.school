@@ -73,7 +73,7 @@ Modeled on OpenCode School's interview. The agent auto-detects the student's OS.
 
 ## Lessons
 
-Same five lessons as the human plan: Models, Instructions, CLI, Skills, Tools.
+The Interview (above) is lesson 00, followed by the same five lessons as the human plan: Models, Instructions, CLI, Skills, Tools.
 
 ### Lesson: Models
 

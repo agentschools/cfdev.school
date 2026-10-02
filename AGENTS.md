@@ -4,7 +4,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 
 - `plan.human.md`: the original human-written plan.
 - `plan.agent.md`: the agent-refined plan, produced by grilling `plan.human.md`. Where the two disagree, `plan.agent.md` wins.
-- v1 assumes a working agent and covers five setup lessons followed by two exercises: "Deploy your first Worker," then "Add your first Binding: Workers KV," which extends that same Worker. Use `plan.agent.md` for the current scope.
+- v1 assumes a working agent and covers six setup lessons (starting with the Interview, numbered `00` in the sidebar) followed by two exercises: "Deploy your first Worker," then "Add your first Binding: Workers KV," which extends that same Worker. Use `plan.agent.md` for the current scope.
 - Tickets for turning the plan into working software live as GitHub issues #8–#20 on this repo, in dependency order. See each issue's "Blocked by" for sequencing.
 
 ## Stack
@@ -69,6 +69,8 @@ There is no student-facing harness picker (removed in #37). The homepage layout 
 ## Interview
 
 `src/schemas/interview.ts` / `migrations/0002_create_interview_answers.sql` / `src/pages/api/students/[id]/interview.ts` implement the interview from `plan.agent.md`'s Interview section: technical background, Cloudflare familiarity (tone/depth only, never lesson branching in v1), learning goals, auto-detected OS, and a standalone `quizOptIn` preference. `PUT` does a partial merge (upsert), safe to call once per question or just to change one field later; `GET` 404s until the student has at least one answer on file.
+
+The interview is also the first lesson (`interview`, `order: 0`, `quiz: false`, generic content only in `src/content/lessons/interview/generic.md`). Its `agentInstructions` hold the step-by-step interview procedure; `/llms.txt` only summarizes it and lists `"interview"` first in the lesson order. The agent marks it complete with `PUT /api/progress` like any lesson. The homepage prompt (`buildPrompt()` with no context) points at this lesson.
 
 Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent" per plan.agent.md's tickets: it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). Run it against `wrangler dev` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
 

@@ -22,6 +22,15 @@ describe("CurriculumSidebar", () => {
     expect(html).toContain("Add your first Binding: Workers KV");
   });
 
+  it("numbers lessons from 00, starting with the Interview", async () => {
+    const { default: CurriculumSidebar } = await import("./CurriculumSidebar.astro");
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(CurriculumSidebar);
+
+    expect(html).toMatch(/00\.<\/span>\s*Interview/);
+    expect(html).toMatch(/01\.<\/span>\s*Models/);
+  });
+
   it("marks the current page's item with aria-current", async () => {
     const { default: CurriculumSidebar } = await import("./CurriculumSidebar.astro");
     const container = await AstroContainer.create();

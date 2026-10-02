@@ -39,6 +39,10 @@ describe("markProgressSchema", () => {
     expect(markProgressSchema.parse({ lessonSlug: "models" })).toEqual({ lessonSlug: "models" });
   });
 
+  it("accepts the interview lesson", () => {
+    expect(markProgressSchema.parse({ lessonSlug: "interview" })).toEqual({ lessonSlug: "interview" });
+  });
+
   it("accepts an optional model with lessonSlug", () => {
     expect(
       markProgressSchema.parse({ lessonSlug: "models", model: "anthropic/claude-sonnet-4-5" }),

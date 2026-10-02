@@ -41,7 +41,8 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     {
       LESSON_OUTLINE.map((lesson, index) => {
         const available = existingLessonSlugs.has(lesson.slug);
-        const num = String(index + 1).padStart(2, "0");
+        // Zero-based: the Interview is lesson "00.", Models is "01.", etc.
+        const num = String(index).padStart(2, "0");
         return (
           <li data-lesson-slug={lesson.slug}>
             {available ? (

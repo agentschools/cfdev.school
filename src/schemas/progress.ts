@@ -11,6 +11,7 @@ import { studentIdSchema } from "./student";
 
 export const lessonSlugSchema = z
   .union([
+    z.literal("interview"),
     z.literal("models"),
     z.literal("instructions"),
     z.literal("cli"),
