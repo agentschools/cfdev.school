@@ -100,14 +100,17 @@ Your agent asks all the questions at once, and each one takes a few words to ans
 
 ## What gets saved
 
-Your answers are saved with your student ID so your agent can pick up where you left off in later lessons:
+This is saved with your student ID so your agent can pick up where you left off in later lessons:
 
 - How much you've used AI coding agents
 - Where you've deployed apps before, if anywhere
 - What you want to build or learn, in your own words
 - Whether you want a short quiz at the end of each lesson
 - Your operating system, which your agent detects by itself so it can give you the right commands
-- Lesson progress: which lessons and exercises you've completed, which agent you used (e.g. Claude Code or Codex) and usually its model, and the URL of anything you deploy in an exercise
+- Which lessons and exercises you've completed
+- Which agent you used for each lesson, like Claude Code or Codex
+- Which model your agent was running, when it reports one
+- The URL of anything you deploy in an exercise
 
 Your agent also checks whether a few tools it needs are installed, like Node.js and the `cf` CLI. That isn't saved.
 
