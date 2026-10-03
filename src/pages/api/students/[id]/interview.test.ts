@@ -1,5 +1,6 @@
 import type { APIContext } from "astro";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Interview } from "../../../../schemas/interview";
 
 const students = new Set<string>(["curious-hacker-2019"]);
 const interviews = new Map<string, Record<string, unknown>>();
@@ -24,8 +25,8 @@ const db = {
       return {
         bind: (
           studentId: string,
-          technicalBackground: string | null,
-          cloudflareFamiliarity: string | null,
+          agentExperience: string | null,
+          platformsUsed: string | null,
           learningGoals: string | null,
           os: string | null,
           quizOptIn: number,
@@ -34,8 +35,8 @@ const db = {
           run: async () => {
             interviews.set(studentId, {
               student_id: studentId,
-              technical_background: technicalBackground,
-              cloudflare_familiarity: cloudflareFamiliarity,
+              agent_experience: agentExperience,
+              platforms_used: platformsUsed,
               learning_goals: learningGoals,
               os,
               quiz_opt_in: quizOptIn,
@@ -79,27 +80,44 @@ describe("PUT /api/students/{id}/interview", () => {
 
   it("creates an interview with quizOptIn defaulting to true", async () => {
     const { PUT } = await import("./interview");
-    const response = await PUT(context("curious-hacker-2019", { technicalBackground: "intermediate" }));
+    const response = await PUT(context("curious-hacker-2019", { agentExperience: "occasional" }));
 
     expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.technicalBackground).toBe("intermediate");
+    const body = (await response.json()) as Interview;
+    expect(body.agentExperience).toBe("occasional");
+    expect(body.platformsUsed).toBeNull();
     expect(body.quizOptIn).toBe(true);
     expect(body.learningGoals).toBeNull();
   });
 
   it("merges partial updates without clobbering previously answered fields", async () => {
     const { PUT, GET } = await import("./interview");
-    await PUT(context("curious-hacker-2019", { technicalBackground: "advanced", learningGoals: "Ship a Worker" }));
+    await PUT(
+      context("curious-hacker-2019", {
+        agentExperience: "daily",
+        platformsUsed: ["Vercel", "AWS"],
+        learningGoals: "Ship a Worker",
+      }),
+    );
 
     const updateResponse = await PUT(context("curious-hacker-2019", { quizOptIn: false }));
-    const updated = await updateResponse.json();
+    const updated = (await updateResponse.json()) as Interview;
     expect(updated.quizOptIn).toBe(false);
-    expect(updated.technicalBackground).toBe("advanced");
+    expect(updated.agentExperience).toBe("daily");
+    expect(updated.platformsUsed).toEqual(["Vercel", "AWS"]);
     expect(updated.learningGoals).toBe("Ship a Worker");
 
     const getResponse = await GET(context("curious-hacker-2019"));
-    const fetched = await getResponse.json();
+    const fetched = (await getResponse.json()) as Interview;
     expect(fetched).toEqual(updated);
+  });
+
+  it("stores an empty platformsUsed list (none) rather than treating it as unanswered", async () => {
+    const { PUT } = await import("./interview");
+    await PUT(context("curious-hacker-2019", { platformsUsed: [] }));
+
+    const response = await PUT(context("curious-hacker-2019", { quizOptIn: false }));
+    const body = (await response.json()) as Interview;
+    expect(body.platformsUsed).toEqual([]);
   });
 });

@@ -48,7 +48,7 @@ export const openApiDocument = createDocument({
       get: {
         summary: "Get a student's interview answers",
         description:
-          "Returns the student's technical background, Cloudflare familiarity, learning goals, OS, and quiz opt-in preference. Familiarity and background only inform tone and depth of explanation, they never skip lessons or branch logic in v1.",
+          "Returns the student's AI agent experience, platforms used before, learning goals, OS, and quiz opt-in preference. Agent experience and platforms only inform tone and depth of explanation, they never skip lessons or branch logic in v1.",
         requestParams: { path: z.object({ id: studentIdSchema }) },
         responses: {
           "200": {

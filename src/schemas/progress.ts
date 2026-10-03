@@ -46,7 +46,7 @@ export const completedExerciseSchema = z.object({
 const lessonSummarySchema = z.string().min(1).max(280).meta({
   description:
     "One sentence, written by the agent for the student, summarizing their saved interview answers. Shown on the homepage. Only used by the interview lesson.",
-  example: "You're comfortable with code, new to Cloudflare, on macOS, want to build a link shortener, and opted into quizzes.",
+  example: "You're new to AI agents, haven't deployed anything before, are on macOS, want to build a link shortener, and opted into quizzes.",
 });
 
 const lessonHarnessSchema = harnessProfileSchema.shape.id.meta({

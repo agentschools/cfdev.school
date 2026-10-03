@@ -8,8 +8,9 @@ const jsonHeaders = { "Content-Type": "application/json" };
 
 interface InterviewRow {
   student_id: string;
-  technical_background: string | null;
-  cloudflare_familiarity: string | null;
+  agent_experience: string | null;
+  /** JSON array of strings. */
+  platforms_used: string | null;
   learning_goals: string | null;
   os: string | null;
   quiz_opt_in: number;
@@ -19,8 +20,8 @@ interface InterviewRow {
 function rowToInterview(row: InterviewRow): Interview {
   return interviewSchema.parse({
     studentId: row.student_id,
-    technicalBackground: row.technical_background,
-    cloudflareFamiliarity: row.cloudflare_familiarity,
+    agentExperience: row.agent_experience,
+    platformsUsed: row.platforms_used === null ? null : JSON.parse(row.platforms_used),
     learningGoals: row.learning_goals,
     os: row.os,
     quizOptIn: Boolean(row.quiz_opt_in),
@@ -54,31 +55,39 @@ export const PUT: APIRoute = async ({ params, request }) => {
     .bind(studentId)
     .first<InterviewRow>();
 
-  const technicalBackground = body.technicalBackground ?? existing?.technical_background ?? null;
-  const cloudflareFamiliarity = body.cloudflareFamiliarity ?? existing?.cloudflare_familiarity ?? null;
+  const agentExperience = body.agentExperience ?? existing?.agent_experience ?? null;
+  const platformsUsed = body.platformsUsed ?? (existing?.platforms_used ? JSON.parse(existing.platforms_used) : null);
   const learningGoals = body.learningGoals ?? existing?.learning_goals ?? null;
   const os = body.os ?? existing?.os ?? null;
   const quizOptIn = body.quizOptIn ?? (existing ? Boolean(existing.quiz_opt_in) : true);
   const updatedAt = new Date().toISOString();
 
   await env.DB.prepare(
-    `INSERT INTO interview_answers (student_id, technical_background, cloudflare_familiarity, learning_goals, os, quiz_opt_in, updated_at)
+    `INSERT INTO interview_answers (student_id, agent_experience, platforms_used, learning_goals, os, quiz_opt_in, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(student_id) DO UPDATE SET
-       technical_background = excluded.technical_background,
-       cloudflare_familiarity = excluded.cloudflare_familiarity,
+       agent_experience = excluded.agent_experience,
+       platforms_used = excluded.platforms_used,
        learning_goals = excluded.learning_goals,
        os = excluded.os,
        quiz_opt_in = excluded.quiz_opt_in,
        updated_at = excluded.updated_at`,
   )
-    .bind(studentId, technicalBackground, cloudflareFamiliarity, learningGoals, os, quizOptIn ? 1 : 0, updatedAt)
+    .bind(
+      studentId,
+      agentExperience,
+      platformsUsed === null ? null : JSON.stringify(platformsUsed),
+      learningGoals,
+      os,
+      quizOptIn ? 1 : 0,
+      updatedAt,
+    )
     .run();
 
   const interview = interviewSchema.parse({
     studentId,
-    technicalBackground,
-    cloudflareFamiliarity,
+    agentExperience,
+    platformsUsed,
     learningGoals,
     os,
     quizOptIn,
