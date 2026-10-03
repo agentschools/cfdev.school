@@ -77,7 +77,7 @@ The Interview (above) is lesson 00, followed by the same five lessons as the hum
 
 ### Lesson: Models
 
-Tailored per harness (OpenCode, Claude Code, Codex, Pi, plus generic fallback content for unsupported harnesses).
+One lesson for every harness. Harness-specific billing facts come from each harness profile in `src/data/harnesses.ts`, served to agents by `GET /api/harnesses/{id}`.
 
 Needs deep research before writing final content:
 

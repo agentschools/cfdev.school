@@ -1,6 +1,5 @@
 ---
 lessonSlug: tools
-harness: generic
 title: "Tools"
 description: "Connect your agent to the Cloudflare API with the Cloudflare MCP server, which uses Code Mode to stay token-efficient."
 order: 5

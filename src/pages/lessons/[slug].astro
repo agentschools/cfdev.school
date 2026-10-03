@@ -7,16 +7,7 @@ import { harnesses } from "../../data/harnesses";
 export const prerender = false;
 
 const { slug } = Astro.params;
-const entries = await getCollection(
-  "lessons",
-  (entry) => entry.data.lessonSlug === slug && entry.data.harness === "generic",
-);
-
-// The harness-specific variants (e.g. claude-code.md) exist only for the
-// /api/lessons/{slug} endpoint, which agents call with their own detected
-// harness. Human visitors to this page always see the generic content:
-// there's no harness picker to tell us which variant they'd want.
-const entry = entries[0];
+const entry = (await getCollection("lessons", (entry) => entry.data.lessonSlug === slug))[0];
 
 if (!entry) {
   Astro.response.status = 404;
@@ -33,7 +24,7 @@ const lesson = entry
 
 // Where the "next" button points once this lesson is complete: the next
 // lesson that has content, or the exercises after the last one.
-const lessonsInOrder = (await getCollection("lessons", (item) => item.data.harness === "generic"))
+const lessonsInOrder = (await getCollection("lessons"))
   .sort((a, b) => a.data.order - b.data.order)
   .map((item) => ({ slug: item.data.lessonSlug, title: item.data.title }));
 const nextLesson = lessonsInOrder[lessonsInOrder.findIndex((item) => item.slug === slug) + 1];

@@ -2,9 +2,8 @@ import type { APIContext } from "astro";
 import { describe, expect, it, vi } from "vitest";
 
 const fakeEntries = [
-  { data: { lessonSlug: "models", harness: "claude-code", title: "Models", agentInstructions: "claude instructions" } },
-  { data: { lessonSlug: "models", harness: "codex", title: "Models", agentInstructions: "codex instructions" } },
-  { data: { lessonSlug: "models", harness: "generic", title: "Models", agentInstructions: "generic instructions" } },
+  { data: { lessonSlug: "models", title: "Models", description: "Pick a model", quiz: true, agentInstructions: "models instructions" } },
+  { data: { lessonSlug: "tools", title: "Tools", description: "Add tools", quiz: true, agentInstructions: "tools instructions" } },
 ];
 
 vi.mock("astro:content", () => ({
@@ -12,9 +11,8 @@ vi.mock("astro:content", () => ({
     filter ? fakeEntries.filter(filter) : fakeEntries,
 }));
 
-function context(slug: string, harness?: string): APIContext {
-  const url = new URL(`https://example.com/api/lessons/${slug}${harness ? `?harness=${harness}` : ""}`);
-  return { params: { slug }, url } as unknown as APIContext;
+function context(slug: string): APIContext {
+  return { params: { slug } } as unknown as APIContext;
 }
 
 describe("GET /api/lessons/{slug}", () => {
@@ -24,25 +22,16 @@ describe("GET /api/lessons/{slug}", () => {
     expect(response.status).toBe(404);
   });
 
-  it("returns the requested harness variant", async () => {
-    const { GET } = await import("./[slug]");
-    const response = await GET(context("models", "codex"));
-    const body = await response.json();
-    expect(body.harness).toBe("codex");
-    expect(body.agentInstructions).toBe("codex instructions");
-  });
-
-  it("falls back to generic for a harness with no dedicated variant", async () => {
-    const { GET } = await import("./[slug]");
-    const response = await GET(context("models", "pi"));
-    const body = await response.json();
-    expect(body.harness).toBe("generic");
-  });
-
-  it("falls back to generic when no harness is given", async () => {
+  it("returns the lesson's content", async () => {
     const { GET } = await import("./[slug]");
     const response = await GET(context("models"));
     const body = await response.json();
-    expect(body.harness).toBe("generic");
+    expect(body).toEqual({
+      slug: "models",
+      title: "Models",
+      description: "Pick a model",
+      quiz: true,
+      agentInstructions: "models instructions",
+    });
   });
 });

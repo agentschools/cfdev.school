@@ -51,7 +51,7 @@ const lessonSummarySchema = z.string().min(1).max(280).meta({
 
 const lessonHarnessSchema = harnessProfileSchema.shape.id.meta({
   description:
-    'Harness (agent) that completed the lesson, the same ID used for GET /api/lessons/{slug}?harness=. Use "generic" if yours isn\'t listed.',
+    'Harness (agent) that completed the lesson, the same ID used for GET /api/harnesses/{id}. Use "generic" if yours isn\'t listed.',
   example: "claude-code",
 });
 

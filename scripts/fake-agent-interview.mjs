@@ -31,7 +31,7 @@ async function main() {
   log("Fetched /llms.txt and confirmed it documents the interview endpoints and lesson");
 
   // Step 2b: the interview is a lesson; fetch its agentInstructions.
-  const lesson = await request("GET", "/api/lessons/interview?harness=generic");
+  const lesson = await request("GET", "/api/lessons/interview");
   assert(lesson.slug === "interview", `expected the interview lesson, got ${lesson.slug}`);
   assert(lesson.agentInstructions.includes("/api/students/{id}/interview"), "interview lesson doesn't point at the interview API");
   log("Fetched the interview lesson's agentInstructions");
