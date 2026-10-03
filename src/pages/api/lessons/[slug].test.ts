@@ -27,7 +27,7 @@ describe("GET /api/lessons/{slug}", () => {
   it("returns the requested harness variant", async () => {
     const { GET } = await import("./[slug]");
     const response = await GET(context("models", "codex"));
-    const body = await response.json();
+    const body = (await response.json()) as { harness: string; agentInstructions: string };
     expect(body.harness).toBe("codex");
     expect(body.agentInstructions).toBe("codex instructions");
   });
@@ -35,14 +35,14 @@ describe("GET /api/lessons/{slug}", () => {
   it("falls back to generic for a harness with no dedicated variant", async () => {
     const { GET } = await import("./[slug]");
     const response = await GET(context("models", "pi"));
-    const body = await response.json();
+    const body = (await response.json()) as { harness: string; agentInstructions: string };
     expect(body.harness).toBe("generic");
   });
 
   it("falls back to generic when no harness is given", async () => {
     const { GET } = await import("./[slug]");
     const response = await GET(context("models"));
-    const body = await response.json();
+    const body = (await response.json()) as { harness: string; agentInstructions: string };
     expect(body.harness).toBe("generic");
   });
 });

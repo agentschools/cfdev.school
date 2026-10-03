@@ -18,7 +18,8 @@
     "preview:destroy": "node scripts/preview-env.mjs destroy",
     "verify:interview": "node scripts/fake-agent-interview.mjs",
     "verify:exercise": "node scripts/fake-agent-exercise.mjs",
-    "verify:exercise-kv": "node scripts/fake-agent-exercise-kv.mjs"
+    "verify:exercise-kv": "node scripts/fake-agent-exercise-kv.mjs",
+    "typecheck": "astro check"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.6",
@@ -30,11 +31,13 @@
     "esbuild": true
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "@cloudflare/workers-types": "5.20260901.1",
     "@eslint/js": "10.0.1",
     "eslint": "10.9.1",
     "eslint-plugin-astro": "3.1.0",
     "globals": "17.11.0",
+    "typescript": "^6.0.3",
     "typescript-eslint": "8.69.0",
     "vitest": "4.1.11",
     "wrangler": "4.128.0",

@@ -1,6 +1,7 @@
 import type { APIContext } from "astro";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { isValidStudentId } from "../../lib/student-id";
+import type { Student } from "../../schemas/student";
 
 const rows = new Map<string, { id: string; created_at: string }>();
 
@@ -35,7 +36,7 @@ describe("POST /api/students", () => {
     const response = await POST({} as APIContext);
 
     expect(response.status).toBe(201);
-    const body = await response.json();
+    const body = (await response.json()) as Student;
     expect(isValidStudentId(body.id)).toBe(true);
     expect(new Date(body.createdAt).toString()).not.toBe("Invalid Date");
     expect(rows.has(body.id)).toBe(true);

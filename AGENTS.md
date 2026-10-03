@@ -24,6 +24,7 @@ Use sentence case for every title and heading: lesson and exercise titles, page 
 - `npm run build` — `astro build`
 - `npm run test` — `vitest run`
 - `npm run lint` — `eslint .`
+- `npm run typecheck` — `astro check` (plain `tsc` can't resolve `.astro` imports, use this instead)
 - `npm run deploy` — applies D1 migrations, then build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
 - `npm run preview:deploy` / `npm run preview:destroy` — used by `.github/workflows/preview.yml` for per-PR previews, not meant to be run by hand
 - `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `wrangler dev` after touching the interview API
@@ -129,7 +130,7 @@ The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` ca
 
 ## CI/CD
 
-- `.github/workflows/ci.yml`: lint and test run as separate parallel jobs on every PR and on push to `main`.
+- `.github/workflows/ci.yml`: lint, test, and typecheck run as separate parallel jobs on every PR and on push to `main`.
 - `.github/workflows/preview.yml`: per-PR preview Worker at `cloudflare-dev-school-pr-<N>.ziki.workers.dev`, torn down on PR close. Triggered independently of `ci.yml` (no `needs:` between them) so previews don't wait on lint/test. Uses the **shared production resources** strategy (previews share the production D1 database and SESSION KV namespace). As of the enrollment flow (#11), previews now write real student rows into the production D1 database when testing enrollment by hand, this is an accepted tradeoff for now, not a bug. Revisit and switch to per-PR seeded/empty D1 if that becomes a real problem (e.g. once interview/progress data makes stray preview rows more than just noise).
 - `.github/workflows/deploy.yml`: deploys to production on push to `main`.
 - Required repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to `Workers Scripts:Edit` + `D1:Edit`), `CLOUDFLARE_ACCOUNT_ID`.
