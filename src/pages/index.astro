@@ -100,7 +100,7 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     let progressReceived = false;
     function renderProgress(progress: Progress): void {
       progressReceived = true;
-      const done = new Set(progress.completedLessons.map((lesson) => lesson.slug));
+      const done = new Set<string>(progress.completedLessons.map((lesson) => lesson.slug));
       // Newest Interview completion: there's one per agent the student used.
       const interview = progress.completedLessons
         .filter((lesson) => lesson.slug === "interview")

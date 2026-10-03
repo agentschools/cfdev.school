@@ -49,13 +49,13 @@ export function initExercisePage(): void {
   let currentStudent: CachedStudent | null = null;
   let alreadyComplete = false;
 
-  function fillPrompt(student: CachedStudent): void {
-    promptText!.textContent = buildPrompt(student, { kind: "exercise", title: exercise.title });
-    promptSection!.hidden = false;
-    copyConfirm!.hidden = true;
-  }
+  const fillPrompt = (student: CachedStudent): void => {
+    promptText.textContent = buildPrompt(student, { kind: "exercise", title: exercise.title });
+    promptSection.hidden = false;
+    copyConfirm.hidden = true;
+  };
 
-  function showCompleted(completedAt?: string): void {
+  const showCompleted = (completedAt?: string): void => {
     alreadyComplete = true;
     if (banner && bannerText) {
       bannerText.textContent = formatCompletedBanner(completedAt);
@@ -72,9 +72,9 @@ export function initExercisePage(): void {
       actionBtn.disabled = true;
       actionBtn.onclick = null;
     }
-  }
+  };
 
-  async function markComplete(): Promise<void> {
+  const markComplete = async (): Promise<void> => {
     if (!currentStudent || alreadyComplete) return;
     actionBtn.disabled = true;
     const original = actionLabel.textContent;
@@ -102,9 +102,9 @@ export function initExercisePage(): void {
       actionBtn.disabled = false;
       actionLabel.textContent = original;
     }
-  }
+  };
 
-  function onEnrolled(student: CachedStudent): void {
+  const onEnrolled = (student: CachedStudent): void => {
     currentStudent = student;
     if (enrollNudge) enrollNudge.hidden = true;
     fillPrompt(student);
@@ -118,7 +118,7 @@ export function initExercisePage(): void {
       const completion = progress.completedExercises.find((item) => item.slug === exercise.slug);
       if (completion && !alreadyComplete) showCompleted(completion.completedAt);
     });
-  }
+  };
 
   copyButton.addEventListener("click", async () => {
     try {
@@ -151,7 +151,7 @@ export function initExercisesIndex(): void {
   if (!student) return;
 
   fetch(`/api/progress/${student.id}`)
-    .then((response) => (response.ok ? response.json() : null))
+    .then((response) => (response.ok ? (response.json() as Promise<Progress>) : null))
     .then((progress: Progress | null) => {
       if (!progress) return;
       for (const exercise of progress.completedExercises) {
