@@ -41,7 +41,8 @@ jobs:
       - id: today
         run: echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
 
-      - uses: anthropics/claude-code-action@v1.0.240
+      - id: claude
+        uses: anthropics/claude-code-action@v1.0.240
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # Without this the action exchanges an OIDC token for a Claude GitHub App token, which needs id-token: write and the app installed.
@@ -79,6 +80,14 @@ jobs:
             in the repository root (it's never committed): one bullet per changed
             claim (harness, field, old value, new value, source URL), then a list of
             anything you couldn't verify. If nothing changed, write "No changes."
+
+      # The action hides Claude's output by default (full output can leak secrets),
+      # so on failure print only the final result message, e.g. an API error.
+      - name: Show Claude's error
+        if: failure() && steps.claude.outputs.execution_file != ''
+        env:
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+        run: jq -r '.[] | select(.type == "result") | .result' "$EXECUTION_FILE"
 
       - name: Check for substantive changes
         id: diff
