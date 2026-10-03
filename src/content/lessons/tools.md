@@ -23,29 +23,29 @@ agentInstructions: |
      cost about 1,100 tokens in total, around 0.5% of what individual
      tools would, and the full API is still reachable.
 
-  2. Add the server, named `cloudflare-api`, using the student's agent.
+  2. Add the server, named `cloudflare`, using the student's agent.
      Use the OAuth option (the server redirects to Cloudflare to
      authorize and pick permissions), not an API token. Use the steps
      for the agent you are:
 
      - Claude Code:
-         claude mcp add --transport http --scope user cloudflare-api https://mcp.cloudflare.com/mcp
+         claude mcp add --transport http --scope user cloudflare https://mcp.cloudflare.com/mcp
        then run `/mcp` and follow the browser steps to log in.
      - Codex:
-         codex mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp
-         codex mcp login cloudflare-api
+         codex mcp add cloudflare --url https://mcp.cloudflare.com/mcp
+         codex mcp login cloudflare
        If login fails, check Codex's current MCP docs for whether an
        rmcp client feature flag is still needed.
      - OpenCode: run `opencode mcp add` (Type: remote, Name:
-       cloudflare-api, URL: https://mcp.cloudflare.com/mcp) or add
-       `"mcp": { "cloudflare-api": { "type": "remote", "url":
+       cloudflare, URL: https://mcp.cloudflare.com/mcp) or add
+       `"mcp": { "cloudflare": { "type": "remote", "url":
        "https://mcp.cloudflare.com/mcp" } }` to opencode.json, then run
-       `opencode mcp auth cloudflare-api`.
+       `opencode mcp auth cloudflare`.
      - Pi (0.99 or newer; older versions have no MCP, so check
        `pi --version` and have the student update first):
-         pi mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp
-         pi mcp login cloudflare-api
-       Or add `{ "mcpServers": { "cloudflare-api": { "url":
+         pi mcp add cloudflare --url https://mcp.cloudflare.com/mcp
+         pi mcp login cloudflare
+       Or add `{ "mcpServers": { "cloudflare": { "url":
        "https://mcp.cloudflare.com/mcp" } } }` to ~/.pi/agent/mcp.json and
        run `/reload`. `/mcp` opens a TUI to check the connection. Pi's
        MCP servers default to `codemode` exposure: Pi has its own Code
@@ -65,7 +65,7 @@ agentInstructions: |
 
      Generic config:
 
-       { "mcpServers": { "cloudflare-api": { "type": "http", "url": "https://mcp.cloudflare.com/mcp" } } }
+       { "mcpServers": { "cloudflare": { "type": "http", "url": "https://mcp.cloudflare.com/mcp" } } }
 
      Prefer the agent's own add command over hand-editing config files.
      When you do edit a file, merge into what's there; don't overwrite
@@ -125,21 +125,21 @@ The whole definition costs about 1,100 tokens, around 0.5% of the alternative, a
 
 The server lives at `https://mcp.cloudflare.com/mcp` and uses OAuth: your agent sends you to Cloudflare to log in and choose which permissions to grant. Start with read-only if you're not sure.
 
-| Agent              | Add it                                                                                   | Then                               |
-| ------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------- |
-| Claude Code        | `claude mcp add --transport http --scope user cloudflare-api https://mcp.cloudflare.com/mcp` | Run `/mcp` and log in              |
-| Codex              | `codex mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp`                      | `codex mcp login cloudflare-api`   |
-| OpenCode           | `opencode mcp add` (type `remote`)                                                       | `opencode mcp auth cloudflare-api` |
+| Agent              | Add it                                                                                   | Then                                |
+| ------------------ | ---------------------------------------------------------------------------------------- | ----------------------------------- |
+| Claude Code        | `claude mcp add --transport http --scope user cloudflare https://mcp.cloudflare.com/mcp` | Run `/mcp` and log in               |
+| Codex              | `codex mcp add cloudflare --url https://mcp.cloudflare.com/mcp`                          | `codex mcp login cloudflare`        |
+| OpenCode           | `opencode mcp add` (type `remote`)                                                       | `opencode mcp auth cloudflare`      |
 | Cursor             | Add the config below to `~/.cursor/mcp.json`                                             | Connect it in Settings, Tools & MCP |
-| GitHub Copilot CLI | `/mcp add` (type HTTP)                                                                   | Authorize in the browser           |
-| Pi (0.99+)         | `pi mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp`                         | `pi mcp login cloudflare-api`      |
+| GitHub Copilot CLI | `/mcp add` (type HTTP)                                                                   | Authorize in the browser            |
+| Pi (0.99+)         | `pi mcp add cloudflare --url https://mcp.cloudflare.com/mcp`                             | `pi mcp login cloudflare`           |
 
 Any other agent that supports remote MCP servers can use this config:
 
 ```json
 {
   "mcpServers": {
-    "cloudflare-api": {
+    "cloudflare": {
       "type": "http",
       "url": "https://mcp.cloudflare.com/mcp"
     }

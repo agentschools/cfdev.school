@@ -60,7 +60,7 @@ export const harnessProfileSchema = z.object({
     .object({
       /** False when the harness ships without MCP support and needs an extension (none today; Pi gained built-in MCP in 0.99). */
       nativeSupport: z.boolean(),
-      /** Command or config edit that adds a remote HTTP server named "cloudflare-api". */
+      /** Command or config edit that adds a remote HTTP server named "cloudflare". */
       addRemoteServer: z.string(),
       /** How to complete the OAuth login after adding it. */
       oauthLogin: z.string(),
@@ -107,9 +107,9 @@ export const harnesses: HarnessProfile[] = [
     mcp: {
       nativeSupport: true,
       addRemoteServer:
-        "claude mcp add --transport http --scope user cloudflare-api https://mcp.cloudflare.com/mcp",
+        "claude mcp add --transport http --scope user cloudflare https://mcp.cloudflare.com/mcp",
       oauthLogin:
-        "Run `/mcp` inside Claude Code and follow the browser steps (or `claude mcp login cloudflare-api` from the shell). `claude mcp list` shows connection status.",
+        "Run `/mcp` inside Claude Code and follow the browser steps (or `claude mcp login cloudflare` from the shell). `claude mcp list` shows connection status.",
       restartBehavior:
         "No restart needed: per the docs, adding a server or authenticating takes effect immediately in a running session. Run `/mcp` to check, or `/mcp reconnect all` to retry failed servers.",
     },
@@ -199,9 +199,9 @@ export const harnesses: HarnessProfile[] = [
     mcp: {
       nativeSupport: true,
       addRemoteServer:
-        "codex mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp (writes a [mcp_servers.cloudflare-api] block to ~/.codex/config.toml)",
+        "codex mcp add cloudflare --url https://mcp.cloudflare.com/mcp (writes a [mcp_servers.cloudflare] block to ~/.codex/config.toml)",
       oauthLogin:
-        "codex mcp login cloudflare-api. Codex has gated OAuth login behind an rmcp client feature flag in the past; if login fails, check the current Codex MCP docs for that flag.",
+        "codex mcp login cloudflare. Codex has gated OAuth login behind an rmcp client feature flag in the past; if login fails, check the current Codex MCP docs for that flag.",
       restartBehavior:
         "Restart Codex after adding the server. The current docs only say to restart for the desktop app and IDE extension; CLI behavior is not documented, so restarting is the safe default.",
     },
@@ -279,9 +279,9 @@ export const harnesses: HarnessProfile[] = [
     mcp: {
       nativeSupport: true,
       addRemoteServer:
-        "opencode mcp add (interactive: Type remote, Name cloudflare-api, URL https://mcp.cloudflare.com/mcp), or add { \"mcp\": { \"cloudflare-api\": { \"type\": \"remote\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to opencode.json",
+        "opencode mcp add (interactive: Type remote, Name cloudflare, URL https://mcp.cloudflare.com/mcp), or add { \"mcp\": { \"cloudflare\": { \"type\": \"remote\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to opencode.json",
       oauthLogin:
-        "opencode mcp auth cloudflare-api (OpenCode also starts the OAuth flow itself on a 401, using dynamic client registration).",
+        "opencode mcp auth cloudflare (OpenCode also starts the OAuth flow itself on a 401, using dynamic client registration).",
       restartBehavior:
         "Restart OpenCode after editing its config.",
     },
@@ -348,9 +348,9 @@ export const harnesses: HarnessProfile[] = [
     mcp: {
       nativeSupport: true,
       addRemoteServer:
-        "pi mcp add cloudflare-api --url https://mcp.cloudflare.com/mcp (writes ~/.pi/agent/mcp.json; -l writes the project .pi/mcp.json), or add { \"mcpServers\": { \"cloudflare-api\": { \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.pi/agent/mcp.json. Requires Pi 0.99 or newer (earlier versions have no MCP).",
+        "pi mcp add cloudflare --url https://mcp.cloudflare.com/mcp (writes ~/.pi/agent/mcp.json; -l writes the project .pi/mcp.json), or add { \"mcpServers\": { \"cloudflare\": { \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.pi/agent/mcp.json. Requires Pi 0.99 or newer (earlier versions have no MCP).",
       oauthLogin:
-        "pi mcp login cloudflare-api, or sign in from the /mcp TUI inside Pi.",
+        "pi mcp login cloudflare, or sign in from the /mcp TUI inside Pi.",
       restartBehavior:
         "Run /reload after editing mcp.json by hand. Servers default to `codemode` exposure: the model reaches their tools by writing JavaScript in Pi's built-in codemode QuickJS sandbox (searchTools()/describeTool()), not as individual tool definitions. Not hands-on verified with the Cloudflare server specifically.",
     },
@@ -419,7 +419,7 @@ export const harnesses: HarnessProfile[] = [
     mcp: {
       nativeSupport: true,
       addRemoteServer:
-        "Add { \"mcpServers\": { \"cloudflare-api\": { \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",
+        "Add { \"mcpServers\": { \"cloudflare\": { \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",
       oauthLogin:
         "Cursor prompts for OAuth in the browser the first time the server connects (Settings, Tools & MCP, then Connect).",
       restartBehavior:
@@ -508,7 +508,7 @@ export const harnesses: HarnessProfile[] = [
     mcp: {
       nativeSupport: true,
       addRemoteServer:
-        "/mcp add inside Copilot CLI (type HTTP), or add { \"mcpServers\": { \"cloudflare-api\": { \"type\": \"http\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.copilot/mcp-config.json.",
+        "/mcp add inside Copilot CLI (type HTTP), or add { \"mcpServers\": { \"cloudflare\": { \"type\": \"http\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.copilot/mcp-config.json.",
       oauthLogin:
         "Copilot CLI prompts for authorization when the server requires OAuth. Not hands-on verified; fall back to an API token header if it does not.",
       restartBehavior:
