@@ -59,7 +59,9 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
               </a>
             ) : (
               <span class="pending">
-                <span class="index">{num}.</span> {lesson.title}
+                <span>
+                  <span class="index">{num}.</span> {lesson.title}
+                </span>
               </span>
             )}
           </li>
@@ -203,6 +205,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
   .index {
     color: color-mix(in oklch, var(--fg) 35%, transparent);
     margin-right: 0.15rem;
+    font-variant-numeric: tabular-nums;
   }
 
   .check {
