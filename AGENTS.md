@@ -37,7 +37,7 @@ All lesson, exercise, and `/llms.txt` content tells students' agents to use `cf`
 
 `src/data/harnesses.ts` is a manually maintained, Zod-schema-typed data source covering the harnesses this school supports (Claude Code, Codex, OpenCode, Pi, generic fallback): instructions file location, CLI command, skills support/install location/restart behavior, config/MCP file locations plus how to add a remote MCP server (`mcp` field, used by the Tools lesson), model comparison data, and subscription-vs-API-billing policy for third-party routing. It's consumed by the homepage harness cards and lesson content, not re-derived per lesson.
 
-Each harness profile carries its own `lastVerified` date and a `sources` list. This data goes stale fast (pricing and vendor policy on third-party subscription routing change often), so it's a manual process, not a scheduled job:
+Each harness profile carries its own `lastVerified` date and a `sources` list. This data goes stale fast (pricing and vendor policy on third-party subscription routing change often), so `.github/workflows/refresh-harnesses.yml` re-verifies it daily: Claude (via `anthropics/claude-code-action`, file and web tools only) edits `harnesses.ts`, and the workflow opens or updates a single `chore/refresh-harnesses` PR when something besides `lastVerified` changed. Review those PRs against their cited sources before merging. Whether a person or that job edits the file, the same rules apply:
 
 - Before shipping or editing a lesson that depends on a harness's data, re-verify its entries against current sources (use web search, don't rely on training data) and bump `lastVerified`.
 - Add new sources when you change a claim; don't delete old ones unless they're wrong, they help explain why a value is what it is.
@@ -132,7 +132,8 @@ The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` ca
 - `.github/workflows/ci.yml`: lint and test run as separate parallel jobs on every PR and on push to `main`.
 - `.github/workflows/preview.yml`: per-PR preview Worker at `cloudflare-dev-school-pr-<N>.ziki.workers.dev`, torn down on PR close. Triggered independently of `ci.yml` (no `needs:` between them) so previews don't wait on lint/test. Uses the **shared production resources** strategy (previews share the production D1 database and SESSION KV namespace). As of the enrollment flow (#11), previews now write real student rows into the production D1 database when testing enrollment by hand, this is an accepted tradeoff for now, not a bug. Revisit and switch to per-PR seeded/empty D1 if that becomes a real problem (e.g. once interview/progress data makes stray preview rows more than just noise).
 - `.github/workflows/deploy.yml`: deploys to production on push to `main`.
-- Required repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to `Workers Scripts:Edit` + `D1:Edit`), `CLOUDFLARE_ACCOUNT_ID`.
+- `.github/workflows/refresh-harnesses.yml`: daily (and manual `workflow_dispatch`) harness data check, see "AI harness research data". It runs lint and test itself before opening its PR, because PRs created with `GITHUB_TOKEN` don't trigger `ci.yml` or `preview.yml`. Needs "Allow GitHub Actions to create and approve pull requests" enabled in the repo's Actions settings.
+- Required repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to `Workers Scripts:Edit` + `D1:Edit`), `CLOUDFLARE_ACCOUNT_ID`, `ANTHROPIC_API_KEY` (refresh-harnesses only).
 
 ## Testing Astro components
 

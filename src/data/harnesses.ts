@@ -5,12 +5,11 @@ import { z } from "zod";
  * supports. Feeds the homepage harness cards and the per-harness lesson
  * content (Models, Instructions, CLI, Skills, Tools).
  *
- * This is a MANUALLY maintained, living data source, not an automated or
- * scheduled system (see plan.agent.md's "AI tools research" section). Prices,
- * billing policy, and CLI flags shift often. Each harness carries its own
- * `lastVerified` date and a `sources` list; re-verify and bump the date by
- * hand when a lesson touches this data, don't trust it blindly past a few
- * months old. See AGENTS.md for the freshness process.
+ * A living data source, re-verified daily by
+ * .github/workflows/refresh-harnesses.yml (which opens a PR for review) and by
+ * hand when a lesson touches it. Prices, billing policy, and CLI flags shift
+ * often. Each harness carries its own `lastVerified` date and a `sources`
+ * list. See AGENTS.md for the freshness process.
  */
 
 const modelSchema = z.object({

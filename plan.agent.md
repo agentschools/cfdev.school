@@ -47,7 +47,7 @@ Build structured data profiles per harness:
 - global config file location (MCP config, etc.)
 - supported models, with cost/speed/accuracy/context-window/vision/tool-use data
 
-This data goes stale fast. Keeping it fresh is a **manual** process, not an automated system, some combination of a repo script, a skill, and/or notes in the project's `AGENTS.md`. No cron jobs or scheduled Workers for this.
+This data goes stale fast. A daily GitHub Actions job (`.github/workflows/refresh-harnesses.yml`) has Claude re-verify it against current sources and opens a PR for human review when something changed; nothing merges without review. The process itself is described in the project's `AGENTS.md`.
 
 ## Student journey
 
