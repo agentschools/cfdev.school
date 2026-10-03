@@ -44,6 +44,8 @@ jobs:
       - uses: anthropics/claude-code-action@v1.0.240
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Without this the action exchanges an OIDC token for a Claude GitHub App token, which needs id-token: write and the app installed.
+          github_token: ${{ github.token }}
           claude_args: |
             --model claude-sonnet-5-5
             --max-turns 150
