@@ -2,8 +2,8 @@ import { z } from "zod";
 
 /**
  * Structured research data on the AI agent harnesses Cloudflare Dev School
- * supports. Feeds the homepage harness cards and the per-harness lesson
- * content (Models, Instructions, CLI, Skills, Tools).
+ * supports. Feeds the homepage "Works with" grid and GET /api/harnesses/{id},
+ * which agents fetch for harness-specific facts while teaching lessons.
  *
  * A living data source, re-verified daily by
  * .github/workflows/refresh-harnesses.yml (which opens a PR for review) and by
@@ -278,7 +278,7 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: false,
       thirdPartyRoutingHonorsPlanLimits: false,
       summary:
-        "OpenCode's own docs state Anthropic explicitly prohibits driving a Claude Pro/Max subscription from OpenCode; the bundled plugins that did this were removed as of OpenCode 1.3.0. For Claude models, only an Anthropic API key (pay-per-token) or OpenCode's own Zen gateway work. OpenCode does support ChatGPT Plus, GitHub Copilot, and GitLab Duo subscription logins with zero extra setup, since OpenAI/GitHub/GitLab permit third-party routing.",
+        "OpenCode's own docs state Anthropic explicitly prohibits driving a Claude Pro/Max subscription from OpenCode; the bundled plugins that did this were removed as of OpenCode 1.3.0. For Claude models, only an Anthropic API key (pay-per-token) or OpenCode's own Zen gateway work. OpenCode does support ChatGPT Plus, GitHub Copilot, and GitLab Duo subscription logins with zero extra setup, since OpenAI/GitHub/GitLab permit third-party routing. OpenCode Go is OpenCode's own subscription for a curated set of open models.",
     },
     models: [],
     lastVerified: "2026-10-01",

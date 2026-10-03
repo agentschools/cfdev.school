@@ -1,19 +1,16 @@
 import { glob } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
-import { harnessProfileSchema } from "./data/harnesses";
 import { exerciseSlugSchema } from "./schemas/exercise";
 
 /**
- * One entry per (lesson, harness) pair, e.g. `models/claude-code.md`. The
- * "generic" harness id is the fallback used when a student's harness has no
- * dedicated variant, or when no harness is known yet (see
- * src/lib/lesson-client.ts and src/pages/api/lessons/[slug].ts).
+ * One entry per lesson, e.g. `models.md`. Lessons are written for any agent;
+ * harness-specific facts (file paths, commands, billing) live in
+ * src/data/harnesses.ts, served to agents by GET /api/harnesses/{id}.
  */
 const lessons = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "src/content/lessons" }),
+  loader: glob({ pattern: "*.md", base: "src/content/lessons" }),
   schema: z.object({
     lessonSlug: z.string(),
-    harness: harnessProfileSchema.shape.id,
     title: z.string(),
     description: z.string(),
     order: z.number(),

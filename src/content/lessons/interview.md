@@ -1,6 +1,5 @@
 ---
 lessonSlug: interview
-harness: generic
 title: "Interview"
 description: "Tell your agent a bit about yourself so it can tailor the course to you."
 order: 0

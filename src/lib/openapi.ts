@@ -8,7 +8,6 @@ import { studentIdSchema, studentSchema } from "../schemas/student";
 
 const lessonContentSchema = z.object({
   slug: z.string(),
-  harness: harnessProfileSchema.shape.id,
   title: z.string(),
   description: z.string(),
   quiz: z.boolean(),
@@ -26,7 +25,7 @@ export const openApiDocument = createDocument({
     title: "Cloudflare Dev School API",
     version: "0.1.0",
     description:
-      "Public, versioned API for Cloudflare Dev School: enrollment, interview, exercises, and progress. No authentication required.",
+      "Public, versioned API for Cloudflare Dev School: enrollment, interview, lessons, harness profiles, exercises, and progress. No authentication required.",
   },
   paths: {
     "/api/students": {
@@ -120,22 +119,38 @@ export const openApiDocument = createDocument({
     },
     "/api/lessons/{slug}": {
       get: {
-        summary: "Get lesson content for a harness",
+        summary: "Get lesson content",
         description:
-          "Returns the agent instructions and description for a lesson, tailored to the given harness. Falls back to the generic variant if the harness has no dedicated content or is omitted.",
-        requestParams: {
-          path: z.object({ slug: z.string() }),
-          query: z.object({ harness: harnessProfileSchema.shape.id.optional() }),
-        },
+          "Returns the agent instructions and description for a lesson. Lessons are written for any agent; fetch GET /api/harnesses/{id} for facts specific to yours.",
+        requestParams: { path: z.object({ slug: z.string() }) },
         responses: {
           "200": {
-            description: "Lesson content for the resolved harness.",
+            description: "Lesson content.",
             content: {
               "application/json": { schema: lessonContentSchema },
             },
           },
           "404": {
             description: "No lesson exists with that slug.",
+          },
+        },
+      },
+    },
+    "/api/harnesses/{id}": {
+      get: {
+        summary: "Get a harness profile",
+        description:
+          "Returns researched, manually maintained facts about one agent harness: instructions file location, MCP and skills setup, subscription billing policy, and models. Each profile has a lastVerified date and sources. These facts change often, so confirm commands against the harness's own CLI help or docs before running them, and trust those over this data if they disagree.",
+        requestParams: { path: z.object({ id: harnessProfileSchema.shape.id }) },
+        responses: {
+          "200": {
+            description: "Harness profile.",
+            content: {
+              "application/json": { schema: harnessProfileSchema },
+            },
+          },
+          "404": {
+            description: "No harness exists with that ID.",
           },
         },
       },

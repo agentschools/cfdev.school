@@ -1,6 +1,5 @@
 ---
 lessonSlug: skills
-harness: generic
 title: "Skills"
 description: "Install Cloudflare's Agent Skills globally so your agent knows how to build on Cloudflare in every project."
 order: 4

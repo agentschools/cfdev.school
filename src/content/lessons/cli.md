@@ -1,6 +1,5 @@
 ---
 lessonSlug: cli
-harness: generic
 title: "CLI"
 description: "Install and authenticate cf, Cloudflare's new CLI, and tell your agent to prefer it over Wrangler."
 order: 3

@@ -1,13 +1,13 @@
 ---
 lessonSlug: models
-harness: generic
 title: "Models"
 description: "Choose the right model for your agent and your budget."
 order: 1
 quiz: true
 agentInstructions: |
-  Cover these topics, adapted to whatever harness the student is actually
-  using (you already know this from context):
+  Cover these topics for the harness you're running in. Use your harness
+  profile (GET /api/harnesses/{yourHarnessId}), especially its
+  `subscriptionBilling` and `models` fields, for the specifics.
 
   1. The cost vs. capability tradeoff: the most capable models (current
      flagship models from Anthropic and OpenAI, and comparable models from
@@ -15,6 +15,10 @@ agentInstructions: |
      but cost more per request. Cheaper or free models are fine for small,
      well-specified tasks but tend to need more course-correction on
      anything complex, which often costs more time than the money saved.
+     Show the student how to see and switch the current model in your
+     harness (most use a `/model` command; check yours). Model lineups
+     change often, so don't present specific model names or prices as
+     current unless your profile or the vendor's docs confirm them.
 
   2. Subscription vs. API billing: most harnesses support two ways to pay
      for models: a flat monthly subscription (e.g. a ChatGPT or Claude
@@ -23,9 +27,20 @@ agentInstructions: |
      better value and avoids surprise bills. Explain that free tiers
      specifically tend to default to weaker models, and that this often
      costs more in wasted time than a paid plan would have cost in money.
-     If the student's harness or model provider isn't one you have specific
-     billing details for, say so plainly rather than guessing, and point
-     them to that provider's own pricing page.
+     Then explain how billing works in your harness specifically, from
+     your profile's `subscriptionBilling.summary`: which subscription
+     logins it supports, whether a subscription login actually draws on
+     the plan's limits when used from this harness, and how an API key
+     changes that. Call out the common surprise for your harness, e.g. in
+     Claude Code a stray ANTHROPIC_API_KEY in the environment silently
+     switches to per-token billing (`/status` shows which is active). If
+     your harness is `generic` or its profile doesn't cover the student's
+     provider, say so plainly rather than guessing, and point them to that
+     provider's own pricing page.
+
+     Never suggest routing a Claude Pro/Max subscription through any
+     harness other than Claude Code. Anthropic's terms prohibit it, and
+     don't offer community plugins or workarounds that do it.
 
   3. Context windows: what they are (the amount of text, in tokens, a
      model can "see" at once, including the conversation, file contents,

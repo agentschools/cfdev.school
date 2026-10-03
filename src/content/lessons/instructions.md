@@ -1,19 +1,19 @@
 ---
 lessonSlug: instructions
-harness: generic
 title: "Instructions"
 description: "Add Cloudflare-flavored guidance to your agent's global instructions file."
 order: 2
 quiz: true
 agentInstructions: |
-  Cover these topics, adapted to whatever harness the student is
-  actually using (you already know this from context):
+  Cover these topics for the harness you're running in:
 
   1. Most agent harnesses support a global (or "user-scope") instructions
      file that applies to every project, separate from a project-level
-     file that only applies to one repo. Find and state the correct
-     location for the student's specific harness, don't guess, check its
-     docs if you aren't certain.
+     file that only applies to one repo. State the correct location for
+     your harness from your profile's `instructionsFile` (GET
+     /api/harnesses/{yourHarnessId}), and explain its `notes` if any,
+     e.g. how global and project files combine. Don't guess: if your
+     harness is `generic`, check its docs.
 
   2. Help the student create or open that global file and add a short
      "Working with Cloudflare" section with a few defaults they want to
@@ -32,9 +32,13 @@ agentInstructions: |
      the de facto standard filename for project-level instructions,
      read directly by Claude Code, Codex, OpenCode, Pi, and others,
      specifically so one file can work across every tool a project uses
-     instead of a different file per tool. If the student's harness
-     supports it (check its docs), recommend AGENTS.md for any new
-     project-level instructions file over a harness-specific name.
+     instead of a different file per tool. Recommend AGENTS.md for any
+     new project-level instructions file over a harness-specific name.
+     If your harness reads AGENTS.md only with caveats (your profile's
+     `instructionsFile.notes` says so, e.g. Claude Code reads it only as
+     a fallback when no CLAUDE.md exists, and its global file is always
+     ~/.claude/CLAUDE.md), explain those caveats and the workaround the
+     notes give, briefly.
 
   This lesson has no automated verification step (an agent can't
   directly confirm what's in the student's home directory from here).
