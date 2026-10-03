@@ -42,19 +42,19 @@ async function main() {
   log("Confirmed GET 404s before any answers exist");
 
   // Step 4: conduct the interview, one PUT per answer, as llms.txt allows.
-  await request("PUT", `/api/students/${student.id}/interview`, { technicalBackground: "intermediate" });
-  await request("PUT", `/api/students/${student.id}/interview`, { cloudflareFamiliarity: "some-experience" });
+  await request("PUT", `/api/students/${student.id}/interview`, { agentExperience: "occasional" });
+  await request("PUT", `/api/students/${student.id}/interview`, { platformsUsed: ["Vercel", "AWS"] });
   await request("PUT", `/api/students/${student.id}/interview`, {
     learningGoals: "Deploy my side project on Workers.",
   });
   const afterOs = await request("PUT", `/api/students/${student.id}/interview`, { os: "macos" });
   assert(afterOs.quizOptIn === true, `quizOptIn should default to true, got ${afterOs.quizOptIn}`);
-  log("Submitted background, familiarity, learning goals, and OS; quizOptIn defaulted to true");
+  log("Submitted agent experience, platforms used, learning goals, and OS; quizOptIn defaulted to true");
 
   // Step 5: fetch it back and confirm nothing was clobbered along the way.
   const interview = await request("GET", `/api/students/${student.id}/interview`);
-  assert(interview.technicalBackground === "intermediate", "technicalBackground was lost");
-  assert(interview.cloudflareFamiliarity === "some-experience", "cloudflareFamiliarity was lost");
+  assert(interview.agentExperience === "occasional", "agentExperience was lost");
+  assert(JSON.stringify(interview.platformsUsed) === '["Vercel","AWS"]', "platformsUsed was lost");
   assert(interview.learningGoals === "Deploy my side project on Workers.", "learningGoals was lost");
   assert(interview.os === "macos", "os was lost");
   log("GET returned all four answers intact");
@@ -63,11 +63,11 @@ async function main() {
   // re-answering the rest of the interview.
   const optedOut = await request("PUT", `/api/students/${student.id}/interview`, { quizOptIn: false });
   assert(optedOut.quizOptIn === false, "quizOptIn didn't update");
-  assert(optedOut.technicalBackground === "intermediate", "changing quizOptIn clobbered technicalBackground");
+  assert(optedOut.agentExperience === "occasional", "changing quizOptIn clobbered agentExperience");
   log("Changed quizOptIn alone without disturbing the rest of the interview");
 
   // Step 7: mark the interview lesson complete, as its agentInstructions say.
-  const summary = "You're comfortable with code, new to Cloudflare, on Linux, and opted out of quizzes.";
+  const summary = "You use AI agents now and then, have deployed on Vercel and AWS, are on macOS, and opted out of quizzes.";
   const progress = await request("PUT", `/api/progress/${student.id}`, {
     lessonSlug: "interview",
     harness: "generic",

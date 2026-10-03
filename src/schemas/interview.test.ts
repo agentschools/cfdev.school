@@ -11,7 +11,7 @@ describe("interviewAnswersSchema", () => {
   });
 
   it("rejects an invalid enum value", () => {
-    expect(() => interviewAnswersSchema.parse({ technicalBackground: "wizard" })).toThrow();
+    expect(() => interviewAnswersSchema.parse({ agentExperience: "wizard" })).toThrow();
   });
 });
 
@@ -20,8 +20,8 @@ describe("interviewSchema", () => {
     expect(() =>
       interviewSchema.parse({
         studentId: "curious-hacker-2019",
-        technicalBackground: "intermediate",
-        cloudflareFamiliarity: "some-experience",
+        agentExperience: "occasional",
+        platformsUsed: ["Vercel"],
         learningGoals: "Deploy my side project.",
         os: "macos",
         quizOptIn: true,
@@ -34,8 +34,8 @@ describe("interviewSchema", () => {
     expect(() =>
       interviewSchema.parse({
         studentId: "curious-hacker-2019",
-        technicalBackground: null,
-        cloudflareFamiliarity: null,
+        agentExperience: null,
+        platformsUsed: null,
         learningGoals: null,
         os: null,
         quizOptIn: true,

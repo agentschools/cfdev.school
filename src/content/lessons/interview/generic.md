@@ -40,22 +40,35 @@ agentInstructions: |
   The questions (every one is optional, if the student skips one, move on
   without pushing):
 
-  1. "How comfortable are you with code and the terminal?" Choices:
-     new to it / some experience / very comfortable. Store as
-     `technicalBackground`: "beginner", "intermediate", or "advanced".
-  2. "How familiar are you with Cloudflare?" Choices: new to it / used it
-     a bit / use it regularly. Store as `cloudflareFamiliarity`: "new",
-     "some-experience", or "regular-user". Use this only to adjust your
-     tone and depth of explanation in later lessons, never to skip lessons
-     or change what content you show.
+  1. "How much have you used AI coding agents like this one?" Choices:
+     this is my first time / now and then / daily. Store as
+     `agentExperience`: "new", "occasional", or "daily".
+  2. "Where have you deployed apps before? (pick any)" Choices, multiple
+     allowed: nowhere yet / Vercel or Netlify / AWS, Google Cloud, or
+     Azure / Cloudflare. Store as `platformsUsed`, an array of the
+     platform names they picked or typed (e.g. `["Vercel", "AWS"]`), or
+     `[]` for nowhere yet.
   3. "What do you want to build or learn?" Free text, one line is plenty.
      Store as `learningGoals` in their words, lightly trimmed.
   4. "Want a short quiz at the end of each lesson? (recommended, skippable
      anytime)" Choices: yes / no. Store as `quizOptIn`.
 
-  Don't ask about their operating system: detect it yourself (e.g. run
-  `uname`, or check an OS environment variable), store it as `os`
-  ("macos", "linux", "windows", or "other"), and mention what you found.
+  Use the first two answers only to adjust your tone, depth, and
+  comparisons in later lessons (e.g. explain a Worker by comparison to a
+  Vercel function for someone who's used Vercel), never to skip lessons or
+  change what content you show.
+
+  Don't ask about things you can check yourself:
+
+  - Detect their operating system (e.g. run `uname`, or check an OS
+    environment variable), store it as `os` ("macos", "linux", "windows",
+    or "other"), and mention what you found.
+  - Check whether Node.js (`node --version`) and the `cf` CLI
+    (`cf --version`) are installed, whether `cf auth whoami` reports them
+    as logged in, and whether they already have a global instructions file
+    for you. Mention what you found in a sentence and use it to pace the
+    setup lessons that follow. Don't store these, and don't install or
+    change anything yet.
 
   Store the answers with PUT /api/students/{id}/interview. It's a partial
   update, so send only the fields you're setting; one call with all of
@@ -64,7 +77,7 @@ agentInstructions: |
   Then, in two or three sentences: summarize what you'll do with their
   answers (how you'll pitch explanations, whether you'll quiz them), and
   tell them plainly that they can change any of it at any time just by
-  telling you, e.g. "turn off quizzes" or "I'm more experienced than I
+  telling you, e.g. "turn off quizzes" or "I use AI agents more than I
   said". Whenever a student asks to change an answer, in this lesson or
   any later one, PUT just that field, then re-send this lesson's
   completion (below, same `harness`) with an updated `summary`, and adjust
@@ -74,20 +87,38 @@ agentInstructions: |
   using `{ "lessonSlug": "interview", "harness": "<your harness id>",
   "summary": "..." }`, where
   `summary` is one sentence addressed to the student covering their saved
-  answers, e.g. "You're comfortable with code, new to Cloudflare, on
-  macOS, want to build a link shortener, and opted into quizzes." Their
+  answers, e.g. "You're new to AI agents, haven't deployed anything
+  before, are on macOS, want to build a link shortener, and opted into
+  quizzes." Their
   homepage shows it to confirm the answers were saved. Then move on to the
   next lesson, "models". There's no quiz for this lesson.
 ---
 
-In this lesson, your agent will ask you a few questions about your background and what you want to get out of the course. Your answers help it tailor everything that follows: how much it explains, which examples it reaches for, and how comfortable it assumes you are with the terminal and with Cloudflare.
+In this lesson, your agent asks you a few quick questions so it can tailor the rest of the course to you: how much it explains, which examples it reaches for, and what it compares new ideas to.
 
 Your agent asks all the questions at once, and each one takes a few words to answer. Every question is optional. Skip any you'd rather not answer.
 
-Your agent will also check which operating system you're on by itself, so it can give you the right commands later on, and it'll ask whether you want a short quiz at the end of each lesson. Quizzes are a good way to check what stuck.
+## What gets saved
 
-You can change any of your answers at any time, in any lesson, just by telling your agent. For example: "turn off quizzes," "I'm more comfortable with the terminal than I said," or "I want to focus on building APIs now." Nothing you say here locks you in.
+Your answers are saved with your student ID so your agent can pick up where you left off in later lessons:
 
-Your answers are stored with your student ID, not your name or email. Cloudflare Dev School doesn't have accounts, and doesn't collect personal information.
+- How much you've used AI coding agents
+- Where you've deployed apps before, if anywhere
+- What you want to build or learn, in your own words
+- Whether you want a short quiz at the end of each lesson
+- Your operating system, which your agent detects by itself so it can give you the right commands
+- Lesson progress: which lessons and exercises you've completed, which agent you used (e.g. Claude Code or Codex) and usually its model, and the URL of anything you deploy in an exercise
+
+Your agent also checks whether a few tools it needs are installed, like Node.js and the `cf` CLI. That isn't saved.
+
+## No personal information
+
+Cloudflare Dev School doesn't have accounts. Your student ID is a random name like `smooth-operator-4629`, not your name or email, and nothing above asks who you are. The one free-text answer, what you want to build, is the only place personal details could end up, so keep it about the project.
+
+To clear your progress, or to forget your student ID in this browser, use the [Disenroll](/disenroll) page.
+
+## Changing your answers
+
+You can change any answer at any time, in any lesson, just by telling your agent. For example: "turn off quizzes," "I've used AWS before, too," or "I want to focus on building APIs now." Nothing you say here locks you in.
 
 Early in the course, your agent may ask for permission before running commands or making web requests. Approving those prompts is normal here: it needs to reach this site's API to save your answers and track your progress.
