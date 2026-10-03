@@ -288,4 +288,40 @@ const title = lesson?.title ?? "Lesson not found";
     font-size: 0.9em;
   }
 
+  .prose :global(table) {
+    width: 100%;
+    margin: 0 0 1rem;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    padding: 0.6rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .prose :global(th) {
+    font-weight: 600;
+    color: var(--muted-fg);
+  }
+
+  .prose :global(:is(th, td):first-child) {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .prose :global(table) {
+      display: block;
+      overflow-x: auto;
+    }
+
+    .prose :global(td code) {
+      white-space: nowrap;
+    }
+  }
+
 </style>

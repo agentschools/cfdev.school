@@ -124,8 +124,11 @@ Most of the time you won't think about skills at all. Your agent compares your r
 
 Agents can miss a relevant skill, though. To make sure one is used, invoke it by name:
 
-| Agent                                  | Syntax              | Example                         |
-| -------------------------------------- | ------------------- | ------------------------------- |
-| Claude Code, OpenCode, Cursor, Copilot | `/skill-name`       | `/workers-best-practices`       |
-| Codex                                  | `$skill-name`       | `$workers-best-practices`       |
-| Pi                                     | `/skill:skill-name` | `/skill:workers-best-practices` |
+| Agent              | Syntax              | Example                         |
+| ------------------ | ------------------- | ------------------------------- |
+| Claude Code        | `/skill-name`       | `/workers-best-practices`       |
+| Codex              | `$skill-name`       | `$workers-best-practices`       |
+| Pi                 | `/skill:skill-name` | `/skill:workers-best-practices` |
+| GitHub Copilot CLI | `/skill-name`       | `/workers-best-practices`       |
+| OpenCode           | `/skill-name`       | `/workers-best-practices`       |
+| Cursor             | `/skill-name`       | `/workers-best-practices`       |
