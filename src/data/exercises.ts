@@ -1,9 +1,8 @@
 import { exerciseSchema, type Exercise } from "../schemas/exercise";
 
 /**
- * Static catalog of course exercises. v1 ships three: Deploy your first Worker,
- * Add your first binding, then Use Worker Previews. Served via GET /api/exercises and
- * GET /api/exercises/{slug}; agent procedure is also summarized in /llms.txt.
+ * Static catalog of course exercises, in order. Served via GET /api/exercises and
+ * GET /api/exercises/{slug}; /llms.txt points agents here.
  */
 
 const deployFirstWorker: Exercise = exerciseSchema.parse({

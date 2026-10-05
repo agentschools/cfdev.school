@@ -49,66 +49,15 @@ If the student asks to redo a lesson they've already completed (the prompt says 
 
 Don't invent lesson content that isn't in \`agentInstructions\`, and don't invent lesson slugs or endpoints that aren't listed above.
 
-## Exercise 1: Deploy your first Worker
+## Exercises
 
-Once all available lessons are complete, the hands-on exercises are available. Fetch this one with GET /api/exercises/deploy-first-worker (or list all via GET /api/exercises) and follow its \`content\` and \`agentInstructions\`.
+Once all available lessons are complete, the hands-on exercises are available. GET /api/exercises lists them in order (by \`order\`). Work through them in order, and check GET /api/progress/{studentId} first to see which are already done. If the prompt names a specific exercise, start there; its \`agentInstructions\` say whether it builds on an earlier one.
 
-Summary of what you must do:
-
-1. Guide the student to create a minimal Worker that returns a plain-text response (scaffold with \`cf init <directory>\`). No frameworks, databases, or custom domains.
-2. Run it locally (\`cf dev\`) and confirm the expected text.
-3. Deploy with their existing \`cf\` auth from the CLI lesson (\`cf deploy\`). If they aren't logged in yet (\`cf auth whoami\`), help them run \`cf auth login\` first.
-4. Visit the public URL \`cf deploy\` prints.
-5. **Verify yourself:** fetch the deployed URL and confirm the response body matches the expected text. Do not mark the exercise complete until you have checked this.
-6. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "deploy-first-worker" }\`. Optionally send \`deployedUrl\` and \`model\`.
-7. Encourage them to change the response text, redeploy, and hit the URL again.
-
-Teach lightly: briefly explain each new concept (Worker, fetch handler, deploying, workers.dev URL) with depth adapted to their interview answers, and before marking complete ask them to explain what happens when someone visits their URL. Verification is still the gate.
-
-Check GET /api/progress/{studentId} first if they might already have completed it.
-
-## Exercise 2: Add your first binding
-
-Once exercise 1 is complete, fetch this one with GET /api/exercises/add-first-binding-kv and follow its \`content\` and \`agentInstructions\`. It extends the same Worker from exercise 1, it doesn't start a new project.
-
-Summary of what you must do:
-
-1. Create a Workers KV namespace (\`cf kv namespaces create --title <name>\`) and bind it to the existing Worker in \`cloudflare.config.ts\` (\`KV: bindings.kv({ id })\`).
-2. Extend the Worker's \`fetch\` handler to write a value to KV and read it back through the binding.
-3. Run it locally, then deploy.
-4. **Verify yourself with a two-step round trip:** against the deployed URL, write a value, then in a *separate* follow-up request read it back and confirm it matches. This proves the binding persists data, not just that a single request echoes something back.
-5. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "add-first-binding-kv" }\`. Optionally send \`deployedUrl\` and \`model\`.
-6. Encourage them to write a few more keys and read them back to build intuition for the binding.
-
-Teach lightly: briefly explain each new concept (KV namespace, binding, env) with depth adapted to their interview answers, tell them why the two-step round trip proves persistence, and before marking complete ask them to explain what a binding is. Verification is still the gate.
-
-Check GET /api/progress/{studentId} first if they might already have completed it.
-
-## Exercise 3: Use Worker Previews
-
-Once exercise 2 is complete, fetch this one with GET /api/exercises/use-worker-previews and follow its \`content\` and \`agentInstructions\`. It extends the same Worker from exercise 2, it doesn't start a new project.
-
-Summary of what you must do:
-
-1. Make sure \`cf previews deploy\` exists (update \`cf\` if not) and the project is a git repository, then create a branch.
-2. Run \`cf previews deploy\` unchanged and show the student that the Preview reads production's KV data, because \`cf\` builds it from the same \`cloudflare.config.ts\`.
-3. Create a second KV namespace and switch \`cloudflare.config.ts\` to \`defineConfig(({ isPreview }) => ...)\`, picking the KV namespace ID with \`isPreview\`. Add an \`ENVIRONMENT\` text binding and enable observability.
-4. Commit and redeploy the Preview. Explain the Preview URL (one per branch) versus deployment URLs (one per deploy).
-5. **Verify yourself:** the Preview URL says "preview", can't see production's value, and reads back its own value from a separate request, while production still returns its own value.
-6. Read the Preview's logs with \`cf observability telemetry query\`, filtered on \`$workers.scriptName\` and \`$workers.preview.slug\`.
-7. Merge to \`main\`, \`cf deploy\`, and verify production now says "production" and kept its data.
-8. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "use-worker-previews" }\`. Optionally send \`deployedUrl\` (the Preview URL) and \`model\`.
-9. Afterward, briefly suggest next steps (a second Preview, Workers Builds for pull requests, Access and custom domains, Preview secrets, isolating D1/R2).
-
-Throughout, offer to open the matching Cloudflare dashboard pages (Preview overview, deployments, settings, observability, and both KV namespaces); the exercise's \`agentInstructions\` list the URL patterns.
-
-Teach lightly: briefly explain each new concept (Preview, bindings by resource ID, Preview vs deployment URL, per-Preview logs) with depth adapted to their interview answers, and before marking complete ask them what a Preview shares with production and what it doesn't. Verification is still the gate.
-
-Check GET /api/progress/{studentId} first if they might already have completed it.
+For each exercise: fetch GET /api/exercises/{slug} and follow its \`content\` and \`agentInstructions\`. Teach lightly as you go, with depth adapted to the student's interview answers. Every exercise ends with a verification step: do it yourself against the live URL, don't take the student's word for it. Only after it passes, PUT /api/progress/{studentId} with \`{ "exerciseSlug": "..." }\`, optionally including \`deployedUrl\` (the URL you verified) and \`model\`.
 
 ## Status
 
-Cloudflare Dev School is under active development. Six lessons ("interview", "models", "instructions", "cli", "skills", "tools") and three exercises (Deploy your first Worker, Add your first binding, then Use Worker Previews) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Lessons and exercises are added over time; the ones listed above and at GET /api/exercises are the ones available now. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

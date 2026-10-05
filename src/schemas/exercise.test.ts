@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { exerciseSchema, exerciseSlugSchema } from "./exercise";
+import { listExercises } from "../data/exercises";
 
 describe("exerciseSlugSchema", () => {
-  it("accepts every v1 exercise slug", () => {
-    expect(exerciseSlugSchema.parse("deploy-first-worker")).toBe("deploy-first-worker");
-    expect(exerciseSlugSchema.parse("add-first-binding-kv")).toBe("add-first-binding-kv");
-    expect(exerciseSlugSchema.parse("use-worker-previews")).toBe("use-worker-previews");
+  it("accepts every catalog slug", () => {
+    for (const { slug } of listExercises()) {
+      expect(exerciseSlugSchema.parse(slug)).toBe(slug);
+    }
   });
 
   it("rejects an unknown slug", () => {

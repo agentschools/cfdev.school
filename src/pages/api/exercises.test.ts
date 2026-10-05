@@ -1,9 +1,10 @@
 import type { APIContext } from "astro";
 import { describe, expect, it } from "vitest";
 import { GET } from "./exercises";
+import { listExercises } from "../../data/exercises";
 
 describe("GET /api/exercises", () => {
-  it("lists the v1 exercise catalog", async () => {
+  it("lists the exercise catalog in order", async () => {
     const response = await GET({} as APIContext);
     expect(response.status).toBe(200);
     const body = (await response.json()) as Array<{
@@ -11,13 +12,10 @@ describe("GET /api/exercises", () => {
       agentInstructions: string;
       content: string;
     }>;
-    expect(body).toHaveLength(3);
-    expect(body[0]?.slug).toBe("deploy-first-worker");
-    expect(body[0]?.agentInstructions).toBeTruthy();
-    expect(body[0]?.content).toBeTruthy();
-    expect(body[1]?.slug).toBe("add-first-binding-kv");
-    expect(body[1]?.agentInstructions).toBeTruthy();
-    expect(body[1]?.content).toBeTruthy();
-    expect(body[2]?.slug).toBe("use-worker-previews");
+    expect(body.map((e) => e.slug)).toEqual(listExercises().map((e) => e.slug));
+    for (const exercise of body) {
+      expect(exercise.agentInstructions).toBeTruthy();
+      expect(exercise.content).toBeTruthy();
+    }
   });
 });
