@@ -1,8 +1,8 @@
 import { exerciseSchema, type Exercise } from "../schemas/exercise";
 
 /**
- * Static catalog of course exercises. v1 ships two: Deploy your first Worker,
- * then Add your first binding. Served via GET /api/exercises and
+ * Static catalog of course exercises. v1 ships three: Deploy your first Worker,
+ * Add your first binding, then Use Worker Previews. Served via GET /api/exercises and
  * GET /api/exercises/{slug}; agent procedure is also summarized in /llms.txt.
  */
 
@@ -202,7 +202,160 @@ After that, try writing a few different keys, overwriting one, and reading each 
 `,
 });
 
-export const exercises: readonly Exercise[] = [deployFirstWorker, addFirstBindingKv];
+const useWorkerPreviews: Exercise = exerciseSchema.parse({
+  order: 3,
+  slug: "use-worker-previews",
+  title: "Use Worker Previews",
+  description:
+    "Deploy a branch of your Worker to its own Preview, give it its own KV namespace so it stays away from production data, test it and read its logs, then merge and ship to production.",
+  agentInstructions: `Guide the student through this exercise end to end. Do not skip verification.
+
+This exercise extends the same Worker from "Add your first binding" (add-first-binding-kv). Check GET /api/progress/{studentId} first; if that exercise isn't complete yet, help them finish it before starting this one.
+
+Teach lightly as you go. Adapt depth to their interview answers (agentExperience, platformsUsed): students who haven't deployed anywhere get a brief, two-or-three-sentence explanation of each new concept as it comes up; students who've used another platform get a one-line comparison to what they know (e.g. Vercel or Netlify preview deployments); Cloudflare users can skip straight to the mechanics. Don't lecture. Run the commands yourself where you can, the student should spend their attention on what's happening, not on typing.
+
+Before starting: confirm \`cf previews deploy --help\` works. If \`cf previews\` isn't a command, the student's \`cf\` is too old: update it globally (\`npm i -g cf@latest\`) and in the project (\`npm i -D cf@latest\`, the project's \`cf/config\` import comes from there). Previews are named after the current git branch, so the project must be a git repository: if it isn't, run \`git init -b main\` and commit the current state first.
+
+1. Branch: create a branch with a short, URL-safe name, e.g. \`git checkout -b try-previews\`. Explain what a Preview is: an isolated copy of the Worker for one branch, under the same Worker, with its own URL and its own logs, so a change can be tested before it reaches production.
+2. First Preview, unchanged: write a marker value to production (e.g. \`PUT <production URL>/?key=dev-school&value=production\`), then run \`cf previews deploy\` without changing any code. It prints JSON with \`preview_urls\` and \`deployment_urls\`. Fetch \`<Preview URL>/?key=dev-school\`: it returns \`production\`. Explain why: \`cf\` builds the Preview from the same \`cloudflare.config.ts\`, so the same KV namespace ID means the Preview reads and writes production data. Don't write to KV from this Preview.
+3. Isolate: create a second namespace with \`cf kv namespaces create --title <name>-preview\`. Change \`cloudflare.config.ts\` to the function form, \`defineConfig(({ isPreview }) => ({ ... }))\`, and pick the KV namespace ID with \`isPreview\` (preview ID when true, the existing production ID otherwise). In the same edit, add \`ENVIRONMENT: bindings.text(isPreview ? "preview" : "production")\` to \`worker.env\` and \`observability: { enabled: true }\` to \`worker\`, and change the Worker's default response to include \`env.ENVIRONMENT\`. Explain: KV, D1, and R2 are separate resources bound by ID, anything bound to the same ID shares the same data, so isolation means binding the Preview to a different resource. (Durable Objects are the exception: each Preview gets fresh Durable Object storage automatically.)
+4. Redeploy the Preview: commit the change, then run \`cf previews deploy\` again. Point out that the Preview URL is the same as before but there's a new deployment URL, and that the first deployment URL still serves the old version. Explain the two kinds of URL: the Preview URL (one per branch) always serves the branch's latest deploy, it's the one to share; a deployment URL (one per deploy) is pinned to one exact version.
+5. Test the Preview yourself, with separate requests, and report each status and body to the student in a short table:
+   - \`GET <Preview URL>/\` mentions "preview".
+   - \`GET <Preview URL>/?key=dev-school\` returns 404 (the Preview's namespace is empty).
+   - \`PUT <Preview URL>/?key=dev-school&value=preview\`, then a separate \`GET <Preview URL>/?key=dev-school\` returns \`preview\`.
+   - \`GET <production URL>/?key=dev-school\` still returns \`production\`.
+6. Read the Preview's logs: query Workers Observability with \`cf observability telemetry query\`, \`view\` set to \`events\`, filtered on \`$workers.scriptName\` (the Worker's name) and \`$workers.preview.slug\` (the branch name), over the last hour. The exercise content has an example \`--body\`. Show the student the requests you made in step 5. Explain that every log line from a Preview is tagged with its slug, so you can read exactly this branch's logs without production traffic mixed in. Logs can take a minute to arrive; retry if the result is empty.
+7. Ship it: \`git checkout main\`, \`git merge try-previews\`, \`cf deploy\`. Then fetch \`<production URL>/\` (it should now mention "production") and \`<production URL>/?key=dev-school\` (still \`production\`). Explain: merging shipped the code; production kept its own binding and its own data, because the config picks the production namespace when \`isPreview\` is false.
+8. Verify before completing: YOU must have seen every check in steps 5 and 7 pass. Do not trust the student saying it worked, check it yourself.
+9. Comprehension check: before marking complete, ask the student what a Preview shares with production and what it doesn't (it runs the branch's code from the same config file; with \`cf\`, bindings are only separate when the config picks different resources for \`isPreview\`), and when they'd share a Preview URL versus a deployment URL. Gently correct anything off. The checks above are the gate, not their answer.
+10. Mark complete: only after verification succeeds, PUT /api/progress/{studentId} with \`{ "exerciseSlug": "use-worker-previews" }\`. Optionally include \`deployedUrl\` (the Preview URL you verified) and \`model\` (your current model ID). Never invent other progress endpoints.
+11. Afterward: suggest they make a small change on a new branch and run \`cf previews deploy\` to get a second Preview named after that branch. Mention that Preview URLs are public by default (workers.dev Preview URLs send \`X-Robots-Tag: noindex\`, and Cloudflare Access can require sign-in), and that Workers Builds can run Previews automatically for every pull request.
+
+Out of scope for this exercise: Workers Builds and GitHub pull request integration, custom domains and Cloudflare Access for Previews, Preview secrets, D1/R2, and deleting Previews. If the student asks, point them at the Previews docs (https://developers.cloudflare.com/workers/previews/) and stay focused on this loop.`,
+  content: `# Use Worker Previews
+
+This exercise extends the Worker you built in "Add your first binding." A Preview is an isolated copy of your Worker for one git branch, with its own URL and its own logs, so you can test a change before it reaches production. You'll deploy a branch to a Preview, see that it's still reading production data, give it its own KV namespace, test it, read its logs, and then merge and ship.
+
+Out of scope: Workers Builds and GitHub pull requests, custom domains, Cloudflare Access, Preview secrets, and other storage. Stay on the branch → Preview → isolate → test → merge loop.
+
+## Prerequisites
+
+- You've completed "Add your first binding" and have that project on disk.
+- A \`cf\` version with \`cf previews deploy\` (update with \`npm i -g cf@latest\` and \`npm i -D cf@latest\` in the project if it's missing).
+- The project is a git repository (\`git init -b main\` and commit if it isn't). Previews are named after your current branch.
+
+## 1. Make a branch
+
+\`\`\`bash
+git checkout -b try-previews
+\`\`\`
+
+## 2. Deploy a Preview without changing anything
+
+Write a marker value to production first, then deploy the branch to a Preview:
+
+\`\`\`bash
+curl -X PUT "https://<your-worker>.<subdomain>.workers.dev/?key=dev-school&value=production"
+cf previews deploy
+\`\`\`
+
+It prints JSON with a Preview URL (\`preview_urls\`) and a deployment URL (\`deployment_urls\`). Read the marker from the Preview URL:
+
+\`\`\`bash
+curl "https://try-previews-<your-worker>.<subdomain>.workers.dev/?key=dev-school"
+\`\`\`
+
+You get \`production\` back. \`cf\` builds the Preview from the same \`cloudflare.config.ts\`, so it's bound to the same KV namespace as production.
+
+## 3. Give Previews their own KV namespace
+
+\`\`\`bash
+cf kv namespaces create --title my-first-kv-preview
+\`\`\`
+
+Then turn your config into a function of \`isPreview\`:
+
+\`\`\`ts
+import { bindings, defineConfig } from "cf/config";
+
+export default defineConfig(({ isPreview }) => ({
+  worker: {
+    // name, compatibilityDate, and entrypoint stay as they were
+    env: {
+      KV: bindings.kv({
+        id: isPreview ? "<preview namespace id>" : "<production namespace id>",
+      }),
+      ENVIRONMENT: bindings.text(isPreview ? "preview" : "production"),
+    },
+    observability: { enabled: true },
+  },
+}));
+\`\`\`
+
+And make your Worker's default response say where it's running:
+
+\`\`\`ts
+return new Response(\`Hello from \${env.ENVIRONMENT}\`);
+\`\`\`
+
+KV, D1, and R2 are separate resources bound by ID. Anything bound to the same ID shares its data, so isolating a Preview means binding it to a different resource.
+
+## 4. Redeploy the Preview
+
+\`\`\`bash
+git commit -am "Give Previews their own KV namespace"
+cf previews deploy
+\`\`\`
+
+The Preview URL stays the same, but there's a new deployment URL. Your Preview has two kinds of URL:
+
+- Preview URL, one per branch: always serves the branch's latest deploy. Share this one.
+- Deployment URL, one per deploy: pinned to one exact version. The first deployment URL still serves the old code.
+
+## 5. Test the Preview
+
+Your agent checks that the Preview says "preview", that it can't see production's \`dev-school\` value, that a value written to the Preview reads back from the Preview, and that production still returns \`production\`.
+
+## 6. Read the Preview's logs
+
+Every log line from a Preview is tagged with its slug (\`$workers.preview.slug\`), so you can read one branch's logs without production traffic mixed in:
+
+\`\`\`bash
+NOW=$(($(date +%s) * 1000))
+cf observability telemetry query --body "{
+  \\"queryId\\": \\"preview-logs\\",
+  \\"view\\": \\"events\\",
+  \\"limit\\": 10,
+  \\"timeframe\\": { \\"from\\": $((NOW - 3600000)), \\"to\\": $NOW },
+  \\"parameters\\": { \\"filters\\": [
+    { \\"key\\": \\"\\$workers.scriptName\\", \\"operation\\": \\"eq\\", \\"type\\": \\"string\\", \\"value\\": \\"<your-worker>\\" },
+    { \\"key\\": \\"\\$workers.preview.slug\\", \\"operation\\": \\"eq\\", \\"type\\": \\"string\\", \\"value\\": \\"try-previews\\" }
+  ] }
+}"
+\`\`\`
+
+Logs can take a minute to show up.
+
+## 7. Merge and ship
+
+\`\`\`bash
+git checkout main
+git merge try-previews
+cf deploy
+\`\`\`
+
+Production now says "production" and still returns its own \`dev-school\` value. Merging shipped the code; production kept its own binding and its own data.
+
+## 8. Done, then iterate
+
+Once your agent has verified all of that, it will record the exercise complete via the Dev School API.
+
+After that, make a small change on a new branch and run \`cf previews deploy\` again. You'll get a second Preview, named after that branch, with the same isolated namespace.
+`,
+});
+
+export const exercises: readonly Exercise[] = [deployFirstWorker, addFirstBindingKv, useWorkerPreviews];
 
 export function listExercises(): Exercise[] {
   return [...exercises].sort((a, b) => a.order - b.order);

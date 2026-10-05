@@ -108,7 +108,7 @@ Generated dynamically from lesson content during the conversation (unless the co
 
 ## Exercises
 
-v1 ships two exercises, in order.
+v1 ships three exercises, in order.
 
 ### 1. Deploy your first Worker
 
@@ -133,6 +133,18 @@ Extends the same Worker from exercise 1, rather than starting a new project.
 The agent verifies the binding actually persists data with a two-step round trip — write, then a *separate* follow-up read confirming the same value — before recording the exercise complete through the Dev School API. It then encourages the student to try a few more keys.
 
 Keep this exercise focused on one KV namespace and the basic put/get loop. Multiple namespaces, list operations, TTL/expiration, other storage bindings (R2, D1, Durable Objects), and further exercises are deferred.
+
+### 3. Use Worker Previews
+
+Extends the same Worker from exercise 2. Adapted from Cloudflare's Worker Previews workshop, done entirely from the CLI with `cf` and local git, no GitHub or Workers Builds.
+
+1. Create a branch and deploy it with `cf previews deploy`, then show that the Preview reads production's KV data, since `cf` builds it from the same `cloudflare.config.ts`.
+2. Create a second KV namespace and pick the namespace ID with `isPreview` in `cloudflare.config.ts`, plus an `ENVIRONMENT` text binding and observability.
+3. Redeploy the Preview and compare the Preview URL (one per branch) with deployment URLs (one per deploy).
+4. Read the Preview's own logs with `cf observability telemetry query`, filtered by `$workers.preview.slug`.
+5. Merge to `main` and `cf deploy`.
+
+The agent verifies that the Preview and production can't see each other's data, and that production kept its data after the merge, before recording the exercise complete. Pull request automation, custom domains, Cloudflare Access, Preview secrets, and D1/R2 are out of scope.
 
 ## Public API
 

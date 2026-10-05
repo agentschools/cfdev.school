@@ -22,5 +22,7 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("deploy-first-worker");
     expect(text).toContain("add-first-binding-kv");
     expect(text).toContain("Exercise 2");
+    expect(text).toContain("use-worker-previews");
+    expect(text).toContain("Exercise 3");
   });
 });

@@ -84,9 +84,28 @@ Teach lightly: briefly explain each new concept (KV namespace, binding, env) wit
 
 Check GET /api/progress/{studentId} first if they might already have completed it.
 
+## Exercise 3: Use Worker Previews
+
+Once exercise 2 is complete, fetch this one with GET /api/exercises/use-worker-previews and follow its \`content\` and \`agentInstructions\`. It extends the same Worker from exercise 2, it doesn't start a new project.
+
+Summary of what you must do:
+
+1. Make sure \`cf previews deploy\` exists (update \`cf\` if not) and the project is a git repository, then create a branch.
+2. Run \`cf previews deploy\` unchanged and show the student that the Preview reads production's KV data, because \`cf\` builds it from the same \`cloudflare.config.ts\`.
+3. Create a second KV namespace and switch \`cloudflare.config.ts\` to \`defineConfig(({ isPreview }) => ...)\`, picking the KV namespace ID with \`isPreview\`. Add an \`ENVIRONMENT\` text binding and enable observability.
+4. Commit and redeploy the Preview. Explain the Preview URL (one per branch) versus deployment URLs (one per deploy).
+5. **Verify yourself:** the Preview URL says "preview", can't see production's value, and reads back its own value from a separate request, while production still returns its own value.
+6. Read the Preview's logs with \`cf observability telemetry query\`, filtered on \`$workers.scriptName\` and \`$workers.preview.slug\`.
+7. Merge to \`main\`, \`cf deploy\`, and verify production now says "production" and kept its data.
+8. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "use-worker-previews" }\`. Optionally send \`deployedUrl\` (the Preview URL) and \`model\`.
+
+Teach lightly: briefly explain each new concept (Preview, bindings by resource ID, Preview vs deployment URL, per-Preview logs) with depth adapted to their interview answers, and before marking complete ask them what a Preview shares with production and what it doesn't. Verification is still the gate.
+
+Check GET /api/progress/{studentId} first if they might already have completed it.
+
 ## Status
 
-Cloudflare Dev School is under active development. Six lessons ("interview", "models", "instructions", "cli", "skills", "tools") and two exercises (Deploy your first Worker, then Add your first binding) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Six lessons ("interview", "models", "instructions", "cli", "skills", "tools") and three exercises (Deploy your first Worker, Add your first binding, then Use Worker Previews) are available. Quiz scoring is not available yet — quizzes are conversational only. Don't invent lesson, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

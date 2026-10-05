@@ -4,7 +4,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 
 - `plan.human.md`: the original human-written plan.
 - `plan.agent.md`: the agent-refined plan, produced by grilling `plan.human.md`. Where the two disagree, `plan.agent.md` wins.
-- v1 assumes a working agent and covers six setup lessons (starting with the Interview, numbered `00` in the sidebar) followed by two exercises: "Deploy your first Worker," then "Add your first binding," which extends that same Worker. Use `plan.agent.md` for the current scope.
+- v1 assumes a working agent and covers six setup lessons (starting with the Interview, numbered `00` in the sidebar) followed by three exercises: "Deploy your first Worker," then "Add your first binding" and "Use Worker Previews," which each extend that same Worker. Use `plan.agent.md` for the current scope.
 - Tickets for turning the plan into working software live as GitHub issues #8–#20 on this repo, in dependency order. See each issue's "Blocked by" for sequencing.
 
 ## Titles
@@ -27,7 +27,7 @@ Use sentence case for every title and heading: lesson and exercise titles, page 
 - `npm run deploy` — applies D1 migrations, then build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
 - `npm run preview:deploy` / `npm run preview:destroy` — used by `.github/workflows/preview.yml` for per-PR previews, not meant to be run by hand
 - `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `wrangler dev` after touching the interview API
-- `npm run verify:exercise` / `npm run verify:exercise-kv` — same idea, for the two exercises; run against `wrangler dev` after touching the exercise/progress API
+- `npm run verify:exercise` / `npm run verify:exercise-kv` / `npm run verify:exercise-previews` — same idea, for the three exercises; run against `wrangler dev` after touching the exercise/progress API
 
 ## cf, not Wrangler, in student-facing content
 
@@ -80,19 +80,20 @@ Verify the interview API end to end with `npm run verify:interview` (a "scripted
 
 ## Exercises and progress
 
-v1 ships two exercises, in order:
+v1 ships three exercises, in order:
 
 1. **Deploy your first Worker** (`deploy-first-worker`): create, run locally, deploy, and visit a minimal text-response Worker.
 2. **Add your first binding** (`add-first-binding-kv`): extends that same Worker — create a KV namespace, bind it, and read/write a value through it. Soft-prerequisite on exercise 1 (the agent checks `GET /api/progress/{studentId}` first, not enforced server-side).
+3. Use Worker Previews (`use-worker-previews`): extends the same Worker again. Branch, `cf previews deploy`, see the Preview share production's KV data, isolate it with a second namespace picked via `defineConfig(({ isPreview }) => ...)`, read the Preview's logs with `cf observability telemetry query`, then merge and `cf deploy`. Soft-prerequisite on exercise 2. Adapted from Cloudflare's Worker Previews workshop (https://worker-previews-workshop.thomas-development.workers.dev/), minus the deploy button, GitHub, Workers Builds, and D1. Unlike Wrangler's `previews` block, a `cf` Preview evaluates the same `cloudflare.config.ts` and gets the same bindings unless the config branches on `isPreview`; the exercise leans on that. `cf previews` needs a recent `cf` (it's missing from 0.11.0, present in 1.0.0-beta.12).
 
 Shared infrastructure for both:
 
-- Catalog: `src/data/exercises.ts` (static), served by `GET /api/exercises` and `GET /api/exercises/{slug}`. `exerciseSlugSchema` in `src/schemas/exercise.ts` is a union of both slugs — extend it (and add a catalog entry) the same way for any future exercise.
+- Catalog: `src/data/exercises.ts` (static), served by `GET /api/exercises` and `GET /api/exercises/{slug}`. `exerciseSlugSchema` in `src/schemas/exercise.ts` is a union of all exercise slugs — extend it (and add a catalog entry) the same way for any future exercise.
 - Student-facing pages: `/exercises` (`src/pages/exercises/index.astro`) and `/exercises/{slug}` (`src/pages/exercises/[slug].astro`). The short page prose (intro, what you'll build, prerequisites) lives in the `exercises` content collection (`src/content/exercises/<slug>.md`, frontmatter just `exerciseSlug`); title/description/order and the agent-facing walkthrough stay in the catalog, don't duplicate them into frontmatter. Each page shows a copyable agent prompt naming the exercise (reused `AgentPrompt.astro`, prompt built by the optional exercise arg to `buildPrompt` in `src/lib/agent-prompt.ts`), a manual mark-complete button (PUTs progress, bypasses agent URL verification by design), a completed banner, and an enroll nudge for logged-out visitors. Client logic: `src/lib/exercise-client.ts` (derives the slug from the URL and reads the catalog client-side, same pattern as `lesson-client.ts`). The sidebar links exercises that have a content entry, same cross-reference pattern as lessons.
-- Completion: `migrations/0003_create_exercise_completions.sql` + `GET|PUT /api/progress/{studentId}` (`src/pages/api/progress/[studentId].ts`, schemas in `src/schemas/progress.ts`). `PUT` body is `{ exerciseSlug, deployedUrl?, model? }` — `deployedUrl` is optional (store when the agent has it; never required). Idempotent upsert on `(student_id, exercise_slug)`; a student can have both completions at once.
-- Agent procedure lives in each exercise's `agentInstructions` / `content` and is summarized in `/llms.txt`. For exercise 1 the agent fetches the deployed URL and confirms the expected text before calling `PUT` progress; for exercise 2 the agent does a two-step write-then-separate-read round trip against the deployed URL, to prove the binding actually persists data rather than a single request just echoing something back. Both `agentInstructions` also carry light teaching beats (brief concept explanations adapted to the student's interview answers, plus a comprehension check before marking complete), but completion stays gated on the agent's own URL verification.
+- Completion: `migrations/0003_create_exercise_completions.sql` + `GET|PUT /api/progress/{studentId}` (`src/pages/api/progress/[studentId].ts`, schemas in `src/schemas/progress.ts`). `PUT` body is `{ exerciseSlug, deployedUrl?, model? }` — `deployedUrl` is optional (store when the agent has it; never required). Idempotent upsert on `(student_id, exercise_slug)`; a student can have several completions at once.
+- Agent procedure lives in each exercise's `agentInstructions` / `content` and is summarized in `/llms.txt`. For exercise 1 the agent fetches the deployed URL and confirms the expected text before calling `PUT` progress; for exercise 2 the agent does a two-step write-then-separate-read round trip against the deployed URL, to prove the binding actually persists data rather than a single request just echoing something back; for exercise 3 the agent checks that the Preview and production can't see each other's KV data, before and after merging. All `agentInstructions` also carry light teaching beats (brief concept explanations adapted to the student's interview answers, plus a comprehension check before marking complete), but completion stays gated on the agent's own URL verification.
 
-Verify exercise 1 with `npm run verify:exercise`, exercise 2 with `npm run verify:exercise-kv` (a sibling script, not a generalized/parameterized version of the first — keeps each diff small), both against `wrangler dev` (or a PR preview via `BASE_URL=...`). Same caveats as `verify:interview`: real enrollment + completion rows in whatever D1 `BASE_URL` points at; delete them afterward. Neither script deploys a Worker or provisions a real KV namespace — they only check the HTTP contract.
+Verify exercise 1 with `npm run verify:exercise`, exercise 2 with `npm run verify:exercise-kv`, exercise 3 with `npm run verify:exercise-previews` (sibling scripts, not a generalized/parameterized version of the first — keeps each diff small), all against `wrangler dev` (or a PR preview via `BASE_URL=...`). Same caveats as `verify:interview`: real enrollment + completion rows in whatever D1 `BASE_URL` points at; delete them afterward. None of them deploys a Worker or provisions a real KV namespace — they only check the HTTP contract.
 
 ## Live progress
 
