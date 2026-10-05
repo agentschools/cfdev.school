@@ -207,7 +207,7 @@ const useWorkerPreviews: Exercise = exerciseSchema.parse({
   slug: "use-worker-previews",
   title: "Use Worker Previews",
   description:
-    "Deploy a branch of your Worker to its own Preview, give it its own KV namespace so it stays away from production data, test it and read its logs, then merge and ship to production.",
+    "Test changes to your Worker on an isolated Preview before shipping them to production.",
   agentInstructions: `Guide the student through this exercise end to end. Do not skip verification.
 
 This exercise extends the same Worker from "Add your first binding" (add-first-binding-kv). Check GET /api/progress/{studentId} first; if that exercise isn't complete yet, help them finish it before starting this one.
