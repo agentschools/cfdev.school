@@ -42,6 +42,7 @@ describe("exercises catalog", () => {
     expect(exercise?.agentInstructions).toContain("use-worker-previews");
     expect(exercise?.agentInstructions).toContain("cf previews deploy");
     expect(exercise?.agentInstructions).toContain("isPreview");
+    expect(exercise?.agentInstructions).toContain("https://dash.cloudflare.com/<account-id>/workers/services/view/<worker-name>/production/previews/<preview-slug>");
     expect(exercise?.agentInstructions).toMatch(/PUT \/api\/progress/i);
   });
 

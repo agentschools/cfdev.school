@@ -216,28 +216,38 @@ Teach lightly as you go. Adapt depth to their interview answers (agentExperience
 
 Before starting: confirm \`cf previews deploy --help\` works. If \`cf previews\` isn't a command, the student's \`cf\` is too old: update it globally (\`npm i -g cf@latest\`) and in the project (\`npm i -D cf@latest\`, the project's \`cf/config\` import comes from there). Previews are named after the current git branch, so the project must be a git repository: if it isn't, run \`git init -b main\` and commit the current state first.
 
+Dashboard: at the moments called out below, offer to open the matching Cloudflare dashboard page so the student has something visual to click around on (offer, don't just open it; if they say yes, open it in their default browser). Get the account ID from \`cf auth whoami\` (\`accounts[].id\`). The URL patterns are:
+   - Worker overview (production): \`https://dash.cloudflare.com/<account-id>/workers/services/view/<worker-name>/production\`. The Production dropdown in its header switches between production and each Preview.
+   - A Preview's overview: \`https://dash.cloudflare.com/<account-id>/workers/services/view/<worker-name>/production/previews/<preview-slug>\`. Append \`/deployments\`, \`/observability\`, or \`/settings\` for those tabs.
+   - A KV namespace: \`https://dash.cloudflare.com/<account-id>/workers/kv/namespaces/<namespace-id>\`.
+   - Production logs: \`https://dash.cloudflare.com/<account-id>/workers/services/view/<worker-name>/production/observability\`.
+
 1. Branch: create a branch with a short, URL-safe name, e.g. \`git checkout -b try-previews\`. Explain what a Preview is: an isolated copy of the Worker for one branch, under the same Worker, with its own URL and its own logs, so a change can be tested before it reaches production.
-2. First Preview, unchanged: write a marker value to production (e.g. \`PUT <production URL>/?key=dev-school&value=production\`), then run \`cf previews deploy\` without changing any code. It prints JSON with \`preview_urls\` and \`deployment_urls\`. Fetch \`<Preview URL>/?key=dev-school\`: it returns \`production\`. Explain why: \`cf\` builds the Preview from the same \`cloudflare.config.ts\`, so the same KV namespace ID means the Preview reads and writes production data. Don't write to KV from this Preview.
+2. First Preview, unchanged: write a marker value to production (e.g. \`PUT <production URL>/?key=dev-school&value=production\`), then run \`cf previews deploy\` without changing any code. It prints JSON with \`preview_urls\` and \`deployment_urls\`. Fetch \`<Preview URL>/?key=dev-school\`: it returns \`production\`. Explain why: \`cf\` builds the Preview from the same \`cloudflare.config.ts\`, so the same KV namespace ID means the Preview reads and writes production data. Don't write to KV from this Preview. Dashboard: offer to open the Preview's \`/settings\` page, where its bindings list the same KV namespace ID as production, and point out the Production dropdown that now includes the branch.
 3. Isolate: create a second namespace with \`cf kv namespaces create --title <name>-preview\`. Change \`cloudflare.config.ts\` to the function form, \`defineConfig(({ isPreview }) => ({ ... }))\`, and pick the KV namespace ID with \`isPreview\` (preview ID when true, the existing production ID otherwise). In the same edit, add \`ENVIRONMENT: bindings.text(isPreview ? "preview" : "production")\` to \`worker.env\` and \`observability: { enabled: true }\` to \`worker\`, and change the Worker's default response to include \`env.ENVIRONMENT\`. Explain: KV, D1, and R2 are separate resources bound by ID, anything bound to the same ID shares the same data, so isolation means binding the Preview to a different resource. (Durable Objects are the exception: each Preview gets fresh Durable Object storage automatically.)
-4. Redeploy the Preview: commit the change, then run \`cf previews deploy\` again. Point out that the Preview URL is the same as before but there's a new deployment URL, and that the first deployment URL still serves the old version. Explain the two kinds of URL: the Preview URL (one per branch) always serves the branch's latest deploy, it's the one to share; a deployment URL (one per deploy) is pinned to one exact version.
+4. Redeploy the Preview: commit the change, then run \`cf previews deploy\` again. Point out that the Preview URL is the same as before but there's a new deployment URL, and that the first deployment URL still serves the old version. Dashboard: offer to open the Preview's \`/deployments\` page (two deployments, one Preview) and its \`/settings\` page (now bound to the preview namespace). Explain the two kinds of URL: the Preview URL (one per branch) always serves the branch's latest deploy, it's the one to share; a deployment URL (one per deploy) is pinned to one exact version.
 5. Test the Preview yourself, with separate requests, and report each status and body to the student in a short table:
    - \`GET <Preview URL>/\` mentions "preview".
    - \`GET <Preview URL>/?key=dev-school\` returns 404 (the Preview's namespace is empty).
    - \`PUT <Preview URL>/?key=dev-school&value=preview\`, then a separate \`GET <Preview URL>/?key=dev-school\` returns \`preview\`.
    - \`GET <production URL>/?key=dev-school\` still returns \`production\`.
-6. Read the Preview's logs: query Workers Observability with \`cf observability telemetry query\`, \`view\` set to \`events\`, filtered on \`$workers.scriptName\` (the Worker's name) and \`$workers.preview.slug\` (the branch name), over the last hour. The exercise content has an example \`--body\`. Show the student the requests you made in step 5. Explain that every log line from a Preview is tagged with its slug, so you can read exactly this branch's logs without production traffic mixed in. Logs can take a minute to arrive; retry if the result is empty.
-7. Ship it: \`git checkout main\`, \`git merge try-previews\`, \`cf deploy\`. Then fetch \`<production URL>/\` (it should now mention "production") and \`<production URL>/?key=dev-school\` (still \`production\`). Explain: merging shipped the code; production kept its own binding and its own data, because the config picks the production namespace when \`isPreview\` is false.
+   Dashboard: offer to open both KV namespace pages side by side, each holding its own \`dev-school\` value. Invite the student to edit the preview namespace's value in the dashboard, then fetch it from the Preview URL again so they see the change land.
+6. Read the Preview's logs: query Workers Observability with \`cf observability telemetry query\`, \`view\` set to \`events\`, filtered on \`$workers.scriptName\` (the Worker's name) and \`$workers.preview.slug\` (the branch name), over the last hour. The exercise content has an example \`--body\`. Show the student the requests you made in step 5. Explain that every log line from a Preview is tagged with its slug, so you can read exactly this branch's logs without production traffic mixed in. Logs can take a minute to arrive; retry if the result is empty. Dashboard: offer to open the Preview's \`/observability\` page, which shows the same events, and suggest they compare it with production's logs.
+7. Ship it: \`git checkout main\`, \`git merge try-previews\`, \`cf deploy\`. Then fetch \`<production URL>/\` (it should now mention "production") and \`<production URL>/?key=dev-school\` (still \`production\`). Explain: merging shipped the code; production kept its own binding and its own data, because the config picks the production namespace when \`isPreview\` is false. Dashboard: offer to open the production Worker overview, where the Preview is still listed in the dropdown.
 8. Verify before completing: YOU must have seen every check in steps 5 and 7 pass. Do not trust the student saying it worked, check it yourself.
 9. Comprehension check: before marking complete, ask the student what a Preview shares with production and what it doesn't (it runs the branch's code from the same config file; with \`cf\`, bindings are only separate when the config picks different resources for \`isPreview\`), and when they'd share a Preview URL versus a deployment URL. Gently correct anything off. The checks above are the gate, not their answer.
 10. Mark complete: only after verification succeeds, PUT /api/progress/{studentId} with \`{ "exerciseSlug": "use-worker-previews" }\`. Optionally include \`deployedUrl\` (the Preview URL you verified) and \`model\` (your current model ID). Never invent other progress endpoints.
-11. Afterward: suggest they make a small change on a new branch and run \`cf previews deploy\` to get a second Preview named after that branch. Mention that Preview URLs are public by default (workers.dev Preview URLs send \`X-Robots-Tag: noindex\`, and Cloudflare Access can require sign-in), and that Workers Builds can run Previews automatically for every pull request.
+11. Afterward: once the exercise is complete, briefly suggest where they could go next. Keep each to a sentence or two, lead with the ones that fit their interview answers, and only walk through one if they ask:
+   - Make a small change on a new branch and run \`cf previews deploy\` to get a second Preview, named after that branch, sharing the same preview namespace.
+   - Connect the repository to Workers Builds so every pull request gets a Preview and its URL posted automatically (https://developers.cloudflare.com/workers/ci-cd/builds/).
+   - Preview URLs are public by default (workers.dev Preview URLs send \`X-Robots-Tag: noindex\`); Cloudflare Access can require sign-in, and Previews can also be served on a custom domain (https://developers.cloudflare.com/workers/previews/custom-domains/).
+   - Preview secrets can't live in the config file and are set separately (https://developers.cloudflare.com/workers/previews/configuration/).
+   - The same \`isPreview\` pattern isolates D1 databases and R2 buckets; Durable Objects get fresh storage per Preview automatically (https://developers.cloudflare.com/workers/previews/resources/).
 
-Out of scope for this exercise: Workers Builds and GitHub pull request integration, custom domains and Cloudflare Access for Previews, Preview secrets, D1/R2, and deleting Previews. If the student asks, point them at the Previews docs (https://developers.cloudflare.com/workers/previews/) and stay focused on this loop.`,
+If the student brings up any of those topics mid-exercise, say they're coming up at the end and stay focused on the main loop.`,
   content: `# Use Worker Previews
 
 This exercise extends the Worker you built in "Add your first binding." A Preview is an isolated copy of your Worker for one git branch, with its own URL and its own logs, so you can test a change before it reaches production. You'll deploy a branch to a Preview, see that it's still reading production data, give it its own KV namespace, test it, read its logs, and then merge and ship.
-
-Out of scope: Workers Builds and GitHub pull requests, custom domains, Cloudflare Access, Preview secrets, and other storage. Stay on the branch → Preview → isolate → test → merge loop.
 
 ## Prerequisites
 
@@ -349,9 +359,15 @@ Production now says "production" and still returns its own \`dev-school\` value.
 
 ## 8. Done, then iterate
 
-Once your agent has verified all of that, it will record the exercise complete via the Dev School API.
+Once your agent has verified all of that, it will record the exercise complete via the Dev School API. Along the way it will offer to open the matching Cloudflare dashboard pages, so you can see your Preview, its deployments, its logs, and both KV namespaces for yourself.
 
-After that, make a small change on a new branch and run \`cf previews deploy\` again. You'll get a second Preview, named after that branch, with the same isolated namespace.
+Then your agent will suggest a few places to go next:
+
+- A second Preview from a new branch.
+- Workers Builds, which creates a Preview for every pull request automatically.
+- Cloudflare Access and custom domains for Previews.
+- Preview secrets.
+- Isolating D1 and R2 the same way you isolated KV.
 `,
 });
 

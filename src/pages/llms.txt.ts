@@ -98,6 +98,9 @@ Summary of what you must do:
 6. Read the Preview's logs with \`cf observability telemetry query\`, filtered on \`$workers.scriptName\` and \`$workers.preview.slug\`.
 7. Merge to \`main\`, \`cf deploy\`, and verify production now says "production" and kept its data.
 8. Only then PUT /api/progress/{studentId} with \`{ "exerciseSlug": "use-worker-previews" }\`. Optionally send \`deployedUrl\` (the Preview URL) and \`model\`.
+9. Afterward, briefly suggest next steps (a second Preview, Workers Builds for pull requests, Access and custom domains, Preview secrets, isolating D1/R2).
+
+Throughout, offer to open the matching Cloudflare dashboard pages (Preview overview, deployments, settings, observability, and both KV namespaces); the exercise's \`agentInstructions\` list the URL patterns.
 
 Teach lightly: briefly explain each new concept (Preview, bindings by resource ID, Preview vs deployment URL, per-Preview logs) with depth adapted to their interview answers, and before marking complete ask them what a Preview shares with production and what it doesn't. Verification is still the gate.
 

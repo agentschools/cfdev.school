@@ -9,12 +9,12 @@ In this exercise, you'll use Worker Previews to create temporary deployments of 
 ## What you'll build
 
 1. A Preview of your Worker for a `try-previews` branch, with its own URL.
-2. A second KV namespace just for Previews, so the Preview and production can't see each other's data.
+2. A separate KV namespace just for Previews.
 3. A quick look at the two kinds of Preview URL: one per branch, and one per deploy.
 4. A query for the Preview's own logs, without production traffic mixed in.
 5. A merge back to `main` and a production deploy, with production's data untouched.
 
-Out of scope: GitHub pull requests and Workers Builds, custom domains, Cloudflare Access, and Preview secrets.
+Along the way, your agent will offer to open each of these in the Cloudflare dashboard so you can click around. Once you're done, it'll suggest where to go next, like automatic Previews for every pull request.
 
 ## Prerequisites
 
