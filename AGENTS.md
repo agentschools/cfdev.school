@@ -27,7 +27,6 @@ Use sentence case for every title and heading: lesson and exercise titles, page 
 - `npm run deploy` — applies D1 migrations, then build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
 - `npm run preview:deploy` / `npm run preview:destroy` — used by `.github/workflows/preview.yml` for per-PR previews, not meant to be run by hand
 - `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `wrangler dev` after touching the interview API
-- `npm run verify:exercise` / `npm run verify:exercise-kv` — same idea, for the `deploy-first-worker` and `add-first-binding-kv` exercises; run against `wrangler dev` after touching the exercise/progress API
 
 ## cf, not Wrangler, in student-facing content
 
@@ -88,8 +87,6 @@ Shared infrastructure:
 - Student-facing pages: `/exercises` (`src/pages/exercises/index.astro`) and `/exercises/{slug}` (`src/pages/exercises/[slug].astro`). The short page prose (intro, what you'll build, prerequisites) lives in the `exercises` content collection (`src/content/exercises/<slug>.md`, frontmatter just `exerciseSlug`); title/description/order and the agent-facing walkthrough stay in the catalog, don't duplicate them into frontmatter. Each page shows a copyable agent prompt naming the exercise (reused `AgentPrompt.astro`, prompt built by the optional exercise arg to `buildPrompt` in `src/lib/agent-prompt.ts`), a manual mark-complete button (PUTs progress, bypasses agent URL verification by design), a completed banner, and an enroll nudge for logged-out visitors. Client logic: `src/lib/exercise-client.ts` (derives the slug from the URL and reads the catalog client-side, same pattern as `lesson-client.ts`). The sidebar links exercises that have a content entry, same cross-reference pattern as lessons.
 - Completion: `migrations/0003_create_exercise_completions.sql` + `GET|PUT /api/progress/{studentId}` (`src/pages/api/progress/[studentId].ts`, schemas in `src/schemas/progress.ts`). `PUT` body is `{ exerciseSlug, deployedUrl?, model? }` — `deployedUrl` is optional (store when the agent has it; never required). Idempotent upsert on `(student_id, exercise_slug)`; a student can have several completions at once.
 - Agent procedure lives in each exercise's `agentInstructions` / `content`. `/llms.txt` only describes exercises generically (list via the API, follow `agentInstructions`, verify before `PUT` progress), so adding an exercise doesn't require touching it. Every exercise's `agentInstructions` must have the agent verify the result itself against the live URL before marking complete, plus light teaching beats adapted to the student's interview answers and a comprehension check; `src/data/exercises.test.ts` checks this for every catalog entry.
-
-Verify the HTTP contract with `npm run verify:exercise` or `npm run verify:exercise-kv` against `wrangler dev` (or a PR preview via `BASE_URL=...`). Same caveats as `verify:interview`: real enrollment + completion rows in whatever D1 `BASE_URL` points at; delete them afterward. Neither script deploys a Worker or provisions a real KV namespace — they only check the HTTP contract.
 
 ## Live progress
 
