@@ -68,7 +68,7 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
 export function updateBody(body, urls) {
   const pattern = new RegExp(`\\s*${START}[\\s\\S]*?${END}\\s*`, "g");
   const rest = (body || "").replace(pattern, "\n\n").trim();
-  const list = urls.map((url) => `- [${new URL(url).pathname}](${url})`).join("\n");
+  const list = urls.map((url) => `- ${url}`).join("\n");
   return `${rest ? `${rest}\n\n` : ""}${START}\n${list}\n${END}\n`;
 }
 

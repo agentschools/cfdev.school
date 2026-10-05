@@ -61,7 +61,7 @@ describe("updateBody", () => {
 
   it("appends the list to the end of the body", () => {
     expect(updateBody("This PR adds foo.", urls)).toBe(
-      "This PR adds foo.\n\n<!-- preview-links:start -->\n- [/lessons/foo](https://pr-1.example.dev/lessons/foo)\n<!-- preview-links:end -->\n",
+      "This PR adds foo.\n\n<!-- preview-links:start -->\n- https://pr-1.example.dev/lessons/foo\n<!-- preview-links:end -->\n",
     );
   });
 
