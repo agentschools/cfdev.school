@@ -168,6 +168,10 @@ export const harnesses: HarnessProfile[] = [
         note: "Current model lineup, API prices and context windows (Fable 5.1 $10/$50, Opus 5.5 $4/$20, Sonnet 5.5 $2/$10, all 1M context; Haiku 4.5 $1/$5, 200K). Verified 2026-10-03. Pro/Max plan prices were not re-confirmed this pass.",
       },
       {
+        url: "https://claude.com/pricing",
+        note: "Checked 2026-10-05: Pro $20/mo, Max 5x $100/mo, Claude Code included in all paid plans. The fetched page text showed Max 20x as $100, which looks like an extraction error; secondary sources say $200. Max 20x $200 is not confirmed on an official page.",
+      },
+      {
         url: "https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan",
         note: "Pro/Max plan coverage, API key precedence, opting out of API credits.",
       },
@@ -203,7 +207,7 @@ export const harnesses: HarnessProfile[] = [
       oauthLogin:
         "codex mcp login cloudflare. Codex has gated OAuth login behind an rmcp client feature flag in the past; if login fails, check the current Codex MCP docs for that flag.",
       restartBehavior:
-        "Restart Codex after adding the server. The current docs only say to restart for the desktop app and IDE extension; CLI behavior is not documented, so restarting is the safe default.",
+        "No restart needed for the CLI: per the current docs it picks up MCP config changes automatically. The ChatGPT desktop app and IDE extension do need a restart (Restart / Restart extension) after saving.",
     },
     skills: {
       supported: true,
@@ -231,7 +235,11 @@ export const harnesses: HarnessProfile[] = [
     sources: [
       {
         url: "https://learn.chatgpt.com/docs/extend/mcp?surface=cli",
-        note: "Redirect target of developers.openai.com/codex/mcp. Verified 2026-10-03: codex mcp add --url, codex mcp login, ~/.codex/config.toml. Docs only mention a Restart step for the desktop app and IDE extension; CLI restart behavior is not stated.",
+        note: "Redirect target of developers.openai.com/codex/mcp. Verified 2026-10-03: codex mcp add --url, codex mcp login, ~/.codex/config.toml. Re-checked 2026-10-05: the docs now state the CLI recognizes config changes without a restart; only the desktop app and IDE extension need one.",
+      },
+      {
+        url: "https://www.morphllm.com/codex-pricing",
+        note: "Secondary source only (2026-10-05): reports ChatGPT Pro as three tiers ($100, $200, $500/mo) rather than a single $200 tier. Not confirmed on an official OpenAI page (chatgpt.com/pricing returned 403), so the plan prices in subscriptionBilling.summary are left unchanged and unverified.",
       },
       {
         url: "https://learn.chatgpt.com/docs/models",
@@ -312,7 +320,11 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://opencode.ai/docs/skills/",
-        note: "Skill directory search order.",
+        note: "Skill directory search order. Re-checked 2026-10-05: docs say nothing about restart behavior or /skill-name invocation (both still rest on the source-code sources below).",
+      },
+      {
+        url: "https://opencode.ai/docs/rules/",
+        note: "Re-checked 2026-10-05: docs say lookup order is local AGENTS.md/CLAUDE.md, then ~/.config/opencode/AGENTS.md, then ~/.claude/CLAUDE.md, and \"the first matching file wins in each category\". That is ambiguous against the \"combined, not one-wins\" claim in instructionsFile.notes, which is left unchanged and unconfirmed.",
       },
       {
         url: "https://opencode.ai/docs/config/",
@@ -371,7 +383,7 @@ export const harnesses: HarnessProfile[] = [
     sources: [
       {
         url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/mcp.md",
-        note: "Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload. Re-checked 2026-10-03.",
+        note: "Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload. Re-checked 2026-10-03. Re-checked 2026-10-05: docs confirm locations, `pi mcp add --url`, /mcp for auth and /reload, but `pi mcp login` is not documented there (oauthLogin left unchanged, unconfirmed from the shell).",
       },
       {
         url: "https://github.com/earendil-works/pi/releases",
