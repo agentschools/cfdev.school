@@ -7,6 +7,7 @@
 // zeke/preview-deployments-skill's resource-strategies reference).
 
 import { spawn } from "node:child_process";
+import { previewPaths, updateBody } from "./preview-links.mjs";
 
 const appName = "cloudflare-dev-school";
 const workersSubdomain = "ziki";
@@ -59,6 +60,30 @@ async function deploy() {
     await createDeploymentStatus(deployment.id, "failure", "Preview deployment failed.");
     throw error;
   }
+
+  // The preview is live, so a failure here shouldn't fail the deployment.
+  try {
+    await updatePullRequestLinks();
+  } catch (error) {
+    console.error("Failed to update preview links in the PR body:", error);
+  }
+}
+
+async function updatePullRequestLinks() {
+  const files = [];
+  for (let page = 1; ; page++) {
+    const batch = await githubApi(`/repos/${repo}/pulls/${prNumber}/files?per_page=100&page=${page}`);
+    files.push(...batch);
+    if (batch.length < 100) break;
+  }
+
+  const urls = previewPaths(files).map((path) => `${environmentUrl}${path}`);
+  const pull = await githubApi(`/repos/${repo}/pulls/${prNumber}`);
+  const body = updateBody(pull.body, urls);
+  if (body === pull.body) return;
+
+  await githubApi(`/repos/${repo}/pulls/${prNumber}`, { method: "PATCH", body: { body } });
+  console.log(`Preview links:\n${urls.join("\n")}`);
 }
 
 async function destroy() {
