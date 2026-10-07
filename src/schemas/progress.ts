@@ -5,7 +5,7 @@ import { studentIdSchema } from "./student";
 
 /**
  * Per-student progress through courses (see #73 and #75). Source of truth for
- * the `exercise_completions` and `course_completions` D1 tables
+ * the `course_exercise_completions` and `course_completions` D1 tables
  * (migrations/0008_course_progress.sql) and GET|PUT|DELETE
  * /api/progress/{studentId}.
  *

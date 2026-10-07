@@ -41,7 +41,7 @@ function rowToCompletion(row: ExerciseCompletionRow): ExerciseCompletion {
 /** Every built-in course and exercise, in order, with the student's completions filled in. */
 async function loadProgress(studentId: string, fallbackUpdatedAt: string, courses: BuiltInCourse[]): Promise<Progress> {
   const [{ results: completionRows }, { results: courseRows }] = await Promise.all([
-    env.DB.prepare("SELECT * FROM exercise_completions WHERE student_id = ? ORDER BY completed_at ASC")
+    env.DB.prepare("SELECT * FROM course_exercise_completions WHERE student_id = ? ORDER BY completed_at ASC")
       .bind(studentId)
       .all<ExerciseCompletionRow>(),
     env.DB.prepare("SELECT * FROM course_completions WHERE student_id = ?").bind(studentId).all<CourseCompletionRow>(),
@@ -112,7 +112,7 @@ export const DELETE: APIRoute = async ({ params }) => {
   if (!student) return studentNotFound();
 
   await env.DB.batch([
-    env.DB.prepare("DELETE FROM exercise_completions WHERE student_id = ?").bind(studentId),
+    env.DB.prepare("DELETE FROM course_exercise_completions WHERE student_id = ?").bind(studentId),
     env.DB.prepare("DELETE FROM course_completions WHERE student_id = ?").bind(studentId),
   ]);
 
@@ -147,12 +147,12 @@ export const PUT: APIRoute = async ({ params, request, url }) => {
 
   await env.DB.batch([
     env.DB.prepare(
-      `INSERT INTO exercise_completions (student_id, course_id, exercise_slug, harness, exercise_url, model, summary, completed_at)
+      `INSERT INTO course_exercise_completions (student_id, course_id, exercise_slug, harness, exercise_url, model, summary, completed_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(student_id, course_id, exercise_slug, harness) DO UPDATE SET
          exercise_url = excluded.exercise_url,
-         model = COALESCE(excluded.model, exercise_completions.model),
-         summary = COALESCE(excluded.summary, exercise_completions.summary),
+         model = COALESCE(excluded.model, course_exercise_completions.model),
+         summary = COALESCE(excluded.summary, course_exercise_completions.summary),
          completed_at = excluded.completed_at`,
     ).bind(studentId, course.name, body.exercise, body.harness, exerciseUrl, body.model ?? null, body.summary ?? null, completedAt),
     // Records the course as complete the first time every one of its current
@@ -161,7 +161,7 @@ export const PUT: APIRoute = async ({ params, request, url }) => {
       `INSERT OR IGNORE INTO course_completions (student_id, course_id, completed_at)
        SELECT ?, ?, ?
        WHERE (
-         SELECT COUNT(DISTINCT exercise_slug) FROM exercise_completions
+         SELECT COUNT(DISTINCT exercise_slug) FROM course_exercise_completions
          WHERE student_id = ? AND course_id = ? AND exercise_slug IN (${slugs.map(() => "?").join(", ")})
        ) = ?`,
     ).bind(studentId, course.name, completedAt, studentId, course.name, ...slugs, slugs.length),

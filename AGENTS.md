@@ -54,6 +54,7 @@ Zod-schema-first (see `plan.agent.md`'s "ship types, not docs" section):
 
 - `src/schemas/*.ts` are the source of truth for API request/response shapes and D1 table shapes. `src/schemas/student.ts` and `src/schemas/interview.ts` share a `studentIdSchema` piece, reuse it rather than re-declaring the ID regex.
 - `migrations/*.sql` are hand-written D1 migrations kept in sync with the schemas by hand (there's no schema-to-SQL generator in use). Apply with `wrangler d1 migrations apply cloudflare-dev-school --local` (dev) or `--remote` (production/preview); this also runs automatically as part of `npm run deploy` and `scripts/preview-env.mjs`.
+- PR previews apply migrations to the production D1 database as soon as the PR is opened (see "CI/CD"), while production still runs `main`. So a migration must not break the code on `main`: add new tables or columns, and drop old ones in a later PR, once nothing on `main` reads them. `exercise_completions` and `lesson_completions` are such leftovers, unused since #75 and due to be dropped in #76's migration.
 - `src/lib/openapi.ts` builds the OpenAPI document with `zod-openapi`'s `createDocument`, reusing the same schemas. Served at `/api/openapi.json` via `src/pages/api/openapi.json.ts`.
 - API routes live under `src/pages/api/*.ts` as Astro endpoints (`export const POST/GET: APIRoute = ...`), reading bindings via `import { env } from "cloudflare:workers"` (typed in `src/env.d.ts`), the same pattern OpenCode School uses. Astro's built-in CSRF check rejects same-origin-looking `POST` requests without a matching `Origin` header (e.g. plain `curl -X POST`); this is expected, real browser `fetch()` calls send `Origin` automatically. Add `export const prerender = false;` to every API route, they must run per-request, not at build time.
 
@@ -117,7 +118,7 @@ Exercise completion is done by the student's agent (`PUT /api/progress/{studentI
 
 `/disenroll` (`src/pages/disenroll.astro`, client logic in `src/lib/disenroll-client.ts`) copies OpenCode School's disenroll page layout: two options, not one.
 
-- **Reset progress**: `DELETE /api/progress/{studentId}` (same file as the other progress routes) deletes the student's rows from `exercise_completions` and `course_completions` but keeps the `students` and `interview_answers` rows. This is a real server-side delete, unlike everything else on this page.
+- **Reset progress**: `DELETE /api/progress/{studentId}` (same file as the other progress routes) deletes the student's rows from `course_exercise_completions` and `course_completions` but keeps the `students` and `interview_answers` rows. This is a real server-side delete, unlike everything else on this page.
 - **Disenroll completely**: purely client-side, clears the `cfDevSchool.student` localStorage key and redirects home. It never calls the server; per this app's no-accounts model there's no student data to delete server-side on request, only progress (handled by the option above).
 
 The page shows an enroll nudge instead of the two options for logged-out visitors. The sidebar (`CurriculumSidebar.astro`) only shows the "Account" section (containing the Disenroll link) once enrolled, `curriculum-sidebar-client.ts` toggles it both on load and reactively on the `cfDevSchool:enrolled` event, so it appears immediately after a fresh enrollment click without a reload.

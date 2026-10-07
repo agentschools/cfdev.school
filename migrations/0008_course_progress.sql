@@ -1,12 +1,12 @@
 -- Schema source of truth: src/schemas/progress.ts
--- Progress is keyed by course and exercise (see #73 and #75), replacing the
--- separate exercise and lesson completion tables. Existing rows are dropped,
--- which is acceptable pre-launch, there are no real users yet.
-DROP TABLE exercise_completions;
-DROP TABLE lesson_completions;
+-- Progress is keyed by course and exercise (see #73 and #75). These tables
+-- replace exercise_completions and lesson_completions, which are left in
+-- place so PR previews (which share this database with production) don't
+-- break the code still running on main. They're dropped in a later
+-- migration (see #76).
 
 -- One row per harness that completed an exercise (#52).
-CREATE TABLE exercise_completions (
+CREATE TABLE course_exercise_completions (
   student_id TEXT NOT NULL REFERENCES students(id),
   course_id TEXT NOT NULL,
   exercise_slug TEXT NOT NULL,
