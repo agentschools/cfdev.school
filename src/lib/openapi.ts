@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createDocument } from "zod-openapi";
 import { harnessProfileSchema } from "../data/harnesses";
 import { courseSchema } from "../schemas/course";
-import { interviewAnswersSchema, interviewSchema } from "../schemas/interview";
+import { interviewsSchema, saveInterviewSchema } from "../schemas/interview";
 import { markExerciseCompleteSchema, progressSchema } from "../schemas/progress";
 import { studentIdSchema, studentSchema } from "../schemas/student";
 
@@ -17,7 +17,7 @@ export const openApiDocument = createDocument({
     title: "Cloudflare Dev School API",
     version: "0.1.0",
     description:
-      "Public, versioned API for Cloudflare Dev School: enrollment, interview, courses, harness profiles, and progress. No authentication required.",
+      "Public, versioned API for Cloudflare Dev School: enrollment, interviews, courses, harness profiles, and progress. No authentication required.",
   },
   paths: {
     "/api/students": {
@@ -35,40 +35,43 @@ export const openApiDocument = createDocument({
         },
       },
     },
-    "/api/students/{id}/interview": {
+    "/api/students/{id}/interviews": {
       get: {
-        summary: "Get a student's interview answers",
+        summary: "Get a student's interviews",
         description:
-          "Returns the student's AI agent experience, platforms used before, learning goals, OS, and quiz opt-in preference. Agent experience and platforms only inform tone and depth of explanation, they never skip exercises or branch logic in v1.",
+          "Returns every interview the student has done, one per course in catalog order, each a list of question-and-answer pairs plus a one-sentence summary. Read them all before starting any course: Agent setup's is the baseline (quiz preference, OS, AI agent experience). Answers only inform tone and depth of explanation, they never skip exercises.",
         requestParams: { path: z.object({ id: studentIdSchema }) },
         responses: {
           "200": {
-            description: "Interview answers.",
+            description: "The student's interviews. Empty until the first one is saved.",
             content: {
-              "application/json": { schema: interviewSchema },
+              "application/json": { schema: interviewsSchema },
             },
           },
           "404": {
-            description: "The student hasn't been interviewed yet.",
+            description: "No student exists with that ID.",
           },
         },
       },
       put: {
-        summary: "Submit or update a student's interview answers",
+        summary: "Save a course's interview",
         description:
-          "Partial update: send only the fields you're setting. Safe to call repeatedly, e.g. once per interview question, or later just to change quizOptIn. quizOptIn defaults to true on first creation.",
+          "Replaces the student's interview for one course: send every response, not just the ones that changed, each with the question's text as asked. Pushes the new summary to the student's open tabs along with their progress. Unknown courses are rejected.",
         requestParams: { path: z.object({ id: studentIdSchema }) },
         requestBody: {
           content: {
-            "application/json": { schema: interviewAnswersSchema },
+            "application/json": { schema: saveInterviewSchema },
           },
         },
         responses: {
           "200": {
-            description: "Interview answers after the update.",
+            description: "All of the student's interviews after the update.",
             content: {
-              "application/json": { schema: interviewSchema },
+              "application/json": { schema: interviewsSchema },
             },
+          },
+          "400": {
+            description: "Invalid body (e.g. an unknown course or a missing summary).",
           },
           "404": {
             description: "No student exists with that ID.",
@@ -114,7 +117,7 @@ export const openApiDocument = createDocument({
       get: {
         summary: "Get a student's progress",
         description:
-          "Returns every built-in course and exercise, in order, with the student's completions: one per harness that completed an exercise, and a completedAt on each course the student has finished.",
+          "Returns every built-in course and exercise, in order, with the student's completions: one per harness that completed an exercise, a completedAt on each course the student has finished, and each course's interview summary.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         responses: {
           "200": {
@@ -131,7 +134,7 @@ export const openApiDocument = createDocument({
       put: {
         summary: "Mark an exercise complete",
         description:
-          "Idempotent upsert: marks an exercise complete for the student, per harness, so completing it with a second agent adds a second completion. Send the course name and exercise slug as GET /api/courses lists them, your harness ID, and your model ID. Agent setup's interview also takes a one-sentence summary of the student's answers. When every exercise in the course has a completion, the course is marked complete too, once. Unknown courses and exercises are rejected.",
+          "Idempotent upsert: marks an exercise complete for the student, per harness, so completing it with a second agent adds a second completion. Send the course name and exercise slug as GET /api/courses lists them, your harness ID, and your model ID. When every exercise in the course has a completion, the course is marked complete too, once. Unknown courses and exercises are rejected.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         requestBody: {
           content: {
@@ -156,7 +159,7 @@ export const openApiDocument = createDocument({
       delete: {
         summary: "Reset a student's progress",
         description:
-          "Deletes all of the student's exercise and course completions. The student row and interview answers are kept, only their progress is cleared. Used by the 'Reset progress' option on /disenroll.",
+          "Deletes all of the student's exercise and course completions. The student row and interviews are kept, only their progress is cleared. Used by the 'Reset progress' option on /disenroll.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         responses: {
           "200": {

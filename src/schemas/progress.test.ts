@@ -8,8 +8,8 @@ describe("markExerciseCompleteSchema", () => {
     expect(markExerciseCompleteSchema.parse(body)).toEqual(body);
   });
 
-  it("accepts an optional model and summary", () => {
-    const full = { ...body, model: "anthropic/claude-sonnet-4-5", summary: "You're new to Cloudflare." };
+  it("accepts an optional model", () => {
+    const full = { ...body, model: "anthropic/claude-sonnet-4-5" };
     expect(markExerciseCompleteSchema.parse(full)).toEqual(full);
   });
 
@@ -31,8 +31,8 @@ describe("markExerciseCompleteSchema", () => {
     expect(() => markExerciseCompleteSchema.parse({ exerciseSlug: "deploy-first-worker" })).toThrow();
   });
 
-  it("rejects a summary over 280 characters", () => {
-    expect(() => markExerciseCompleteSchema.parse({ ...body, summary: "x".repeat(281) })).toThrow();
+  it("drops a summary, which moved to interviews", () => {
+    expect(markExerciseCompleteSchema.parse({ ...body, summary: "You're new here." })).toEqual(body);
   });
 });
 
@@ -44,6 +44,7 @@ describe("progressSchema", () => {
         {
           name: "agent-setup",
           completedAt: "2026-10-02T12:00:00.000Z",
+          interviewSummary: "You're new here.",
           exercises: [
             {
               slug: "interview",
@@ -52,7 +53,6 @@ describe("progressSchema", () => {
                   harness: "claude-code",
                   completedAt: "2026-10-01T12:00:00.000Z",
                   exerciseUrl: "https://school.example/courses/agent-setup/interview",
-                  summary: "You're new here.",
                 },
               ],
             },

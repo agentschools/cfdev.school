@@ -3,10 +3,10 @@ import type { Progress } from "../schemas/progress";
 
 /**
  * One instance per student (addressed by student ID). Browsers viewing the
- * site hold a hibernatable WebSocket to it; PUT/DELETE /api/progress calls
- * broadcast() after writing to D1, so the sidebar, course pages, and
- * exercise pages update as soon as the student's agent marks something
- * complete.
+ * site hold a hibernatable WebSocket to it; PUT/DELETE /api/progress and
+ * PUT /api/students/{id}/interviews call broadcast() after writing to D1, so
+ * the sidebar, course pages, exercise pages, and homepage update as soon as
+ * the student's agent marks something complete or saves an interview.
  *
  * Hibernation means idle connections don't keep the object (or its billing)
  * awake. The "ping" -> "pong" auto-response answers client keepalives without

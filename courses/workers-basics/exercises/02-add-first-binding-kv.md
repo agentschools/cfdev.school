@@ -5,7 +5,7 @@ agent-instructions: |
 
   This exercise extends the same Worker from "Deploy your first Worker" (deploy-first-worker) — check GET /api/progress/{studentId} first; if that exercise isn't complete yet, help them finish it before starting this one.
 
-  Teach lightly as you go. Adapt depth to their interview answers (agentExperience, platformsUsed): students who haven't deployed anywhere get a brief, two-or-three-sentence explanation of each new concept as it comes up; students who've used another platform get a one-line comparison to what they know; Cloudflare users can skip straight to the mechanics. Don't lecture.
+  Teach lightly as you go. Adapt depth to their interview answers (GET /api/students/{id}/interviews: Agent setup's agent experience and where they've deployed before, plus this course's own): students who haven't deployed anywhere get a brief, two-or-three-sentence explanation of each new concept as it comes up; students who've used another platform get a one-line comparison to what they know; Cloudflare users can skip straight to the mechanics. Don't lecture.
 
   If their Worker from exercise 1 has a `wrangler.jsonc`/`wrangler.json`/`wrangler.toml` instead of a `cloudflare.config.ts` (e.g. it was created with Wrangler), offer to convert it with `cf migrate` first; if they'd rather not, adapt the steps below to Wrangler for that project.
 

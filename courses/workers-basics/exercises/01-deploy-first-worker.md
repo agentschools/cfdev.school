@@ -3,7 +3,7 @@ description: "Create a minimal Worker that returns a text response, run it local
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  Teach lightly as you go. Adapt depth to their interview answers (agentExperience, platformsUsed): students who haven't deployed anywhere get a brief, two-or-three-sentence explanation of each new concept as it comes up; students who've used another platform get a one-line comparison to what they know; Cloudflare users can skip straight to the mechanics. Don't lecture.
+  Teach lightly as you go. Adapt depth to their interview answers (GET /api/students/{id}/interviews: Agent setup's agent experience and where they've deployed before, plus this course's own): students who haven't deployed anywhere get a brief, two-or-three-sentence explanation of each new concept as it comes up; students who've used another platform get a one-line comparison to what they know; Cloudflare users can skip straight to the mechanics. Don't lecture.
 
   1. Create: help them scaffold a minimal Worker that returns a plain-text response (e.g. "Hello from Cloudflare Dev School"). Use `cf init <directory>` to scaffold it (it creates a hello-world Worker with a `cloudflare.config.ts` config), then edit the response text. Keep it the simplest possible project — a single Worker script, no framework, no database, no custom domain. Explain what a Worker is (a function that runs on Cloudflare's network, close to whoever visits it) and what the `fetch` handler does (it receives a request and returns a response).
   2. Run locally: start the local dev server with `cf dev` and confirm the local URL it prints returns the expected text.

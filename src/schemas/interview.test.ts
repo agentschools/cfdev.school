@@ -1,46 +1,41 @@
 import { describe, expect, it } from "vitest";
-import { interviewAnswersSchema, interviewSchema } from "./interview";
+import { interviewsSchema, saveInterviewSchema } from "./interview";
 
-describe("interviewAnswersSchema", () => {
-  it("accepts an empty object (all fields independently optional)", () => {
-    expect(() => interviewAnswersSchema.parse({})).not.toThrow();
+describe("saveInterviewSchema", () => {
+  const body = {
+    course: "agent-setup",
+    responses: [
+      { question: "How much have you used AI coding agents like this one?", answer: "now and then" },
+      { question: "Where have you deployed apps before? (pick any)", answer: ["Vercel or Netlify", "Cloudflare"] },
+    ],
+    summary: "You use AI agents now and then and have deployed on Vercel and Cloudflare.",
+  };
+
+  it("accepts string and array answers", () => {
+    expect(saveInterviewSchema.parse(body)).toEqual(body);
   });
 
-  it("accepts a partial update of just quizOptIn", () => {
-    expect(() => interviewAnswersSchema.parse({ quizOptIn: false })).not.toThrow();
+  it("accepts an interview where every question was skipped", () => {
+    expect(() => saveInterviewSchema.parse({ ...body, responses: [] })).not.toThrow();
   });
 
-  it("rejects an invalid enum value", () => {
-    expect(() => interviewAnswersSchema.parse({ agentExperience: "wizard" })).toThrow();
+  it("requires a summary of at most 280 characters", () => {
+    expect(() => saveInterviewSchema.parse({ course: body.course, responses: body.responses })).toThrow();
+    expect(() => saveInterviewSchema.parse({ ...body, summary: "x".repeat(281) })).toThrow();
+  });
+
+  it("rejects an empty question or answer", () => {
+    expect(() => saveInterviewSchema.parse({ ...body, responses: [{ question: "", answer: "yes" }] })).toThrow();
+    expect(() => saveInterviewSchema.parse({ ...body, responses: [{ question: "Quiz?", answer: "" }] })).toThrow();
+  });
+
+  it("rejects the old field-per-answer shape", () => {
+    expect(() => saveInterviewSchema.parse({ agentExperience: "occasional", quizOptIn: true })).toThrow();
   });
 });
 
-describe("interviewSchema", () => {
-  it("accepts a fully answered interview", () => {
-    expect(() =>
-      interviewSchema.parse({
-        studentId: "curious-hacker-2019",
-        agentExperience: "occasional",
-        platformsUsed: ["Vercel"],
-        learningGoals: "Deploy my side project.",
-        os: "macos",
-        quizOptIn: true,
-        updatedAt: "2026-09-10T12:00:00.000Z",
-      }),
-    ).not.toThrow();
-  });
-
-  it("accepts null for unanswered fields", () => {
-    expect(() =>
-      interviewSchema.parse({
-        studentId: "curious-hacker-2019",
-        agentExperience: null,
-        platformsUsed: null,
-        learningGoals: null,
-        os: null,
-        quizOptIn: true,
-        updatedAt: "2026-09-10T12:00:00.000Z",
-      }),
-    ).not.toThrow();
+describe("interviewsSchema", () => {
+  it("accepts a student with no interviews yet", () => {
+    expect(() => interviewsSchema.parse({ studentId: "curious-hacker-2019", interviews: [] })).not.toThrow();
   });
 });
