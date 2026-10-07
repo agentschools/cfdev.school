@@ -1,14 +1,8 @@
 import { env } from "cloudflare:workers";
 import type { APIRoute } from "astro";
-import {
-  completedExerciseSchema,
-  completedLessonSchema,
-  markProgressSchema,
-  progressSchema,
-  type CompletedExercise,
-  type CompletedLesson,
-  type Progress,
-} from "../../../schemas/progress";
+import { exercisePath } from "../../../data/courses";
+import { type BuiltInCourse, getBuiltInCourses } from "../../../lib/courses";
+import { type ExerciseCompletion, markExerciseCompleteSchema, type Progress, progressSchema } from "../../../schemas/progress";
 
 export const prerender = false;
 
@@ -20,64 +14,57 @@ interface StudentRow {
 }
 
 interface ExerciseCompletionRow {
-  student_id: string;
+  course_id: string;
   exercise_slug: string;
-  completed_at: string;
-  deployed_url: string | null;
-  model: string | null;
-}
-
-interface LessonCompletionRow {
-  student_id: string;
-  lesson_slug: string;
   harness: string;
-  completed_at: string;
+  exercise_url: string;
   model: string | null;
   summary: string | null;
+  completed_at: string;
 }
 
-function rowToCompletedExercise(row: ExerciseCompletionRow): CompletedExercise {
-  return completedExerciseSchema.parse({
-    slug: row.exercise_slug,
-    completedAt: row.completed_at,
-    ...(row.deployed_url ? { deployedUrl: row.deployed_url } : {}),
-    ...(row.model ? { model: row.model } : {}),
-  });
+interface CourseCompletionRow {
+  course_id: string;
+  completed_at: string;
 }
 
-function rowToCompletedLesson(row: LessonCompletionRow): CompletedLesson {
-  return completedLessonSchema.parse({
-    slug: row.lesson_slug,
-    harness: row.harness,
+function rowToCompletion(row: ExerciseCompletionRow): ExerciseCompletion {
+  return {
+    harness: row.harness as ExerciseCompletion["harness"],
     completedAt: row.completed_at,
+    exerciseUrl: row.exercise_url,
     ...(row.model ? { model: row.model } : {}),
     ...(row.summary ? { summary: row.summary } : {}),
-  });
+  };
 }
 
-async function loadProgress(studentId: string, fallbackUpdatedAt: string): Promise<Progress> {
-  const [{ results: exerciseRows }, { results: lessonRows }] = await Promise.all([
-    env.DB.prepare("SELECT * FROM exercise_completions WHERE student_id = ? ORDER BY completed_at ASC")
+/** Every built-in course and exercise, in order, with the student's completions filled in. */
+async function loadProgress(studentId: string, fallbackUpdatedAt: string, courses: BuiltInCourse[]): Promise<Progress> {
+  const [{ results: completionRows }, { results: courseRows }] = await Promise.all([
+    env.DB.prepare("SELECT * FROM course_exercise_completions WHERE student_id = ? ORDER BY completed_at ASC")
       .bind(studentId)
       .all<ExerciseCompletionRow>(),
-    env.DB.prepare("SELECT * FROM lesson_completions WHERE student_id = ? ORDER BY completed_at ASC")
-      .bind(studentId)
-      .all<LessonCompletionRow>(),
+    env.DB.prepare("SELECT * FROM course_completions WHERE student_id = ?").bind(studentId).all<CourseCompletionRow>(),
   ]);
 
-  const completedExercises = (exerciseRows ?? []).map(rowToCompletedExercise);
-  const completedLessons = (lessonRows ?? []).map(rowToCompletedLesson);
-
-  const latest = [...completedExercises, ...completedLessons].reduce<string>(
-    (max, item) => (item.completedAt > max ? item.completedAt : max),
+  const updatedAt = [...completionRows, ...courseRows].reduce(
+    (max, row) => (row.completed_at > max ? row.completed_at : max),
     fallbackUpdatedAt,
   );
 
   return progressSchema.parse({
     studentId,
-    completedExercises,
-    completedLessons,
-    updatedAt: latest,
+    courses: courses.map((course) => ({
+      name: course.name,
+      completedAt: courseRows.find((row) => row.course_id === course.name)?.completed_at,
+      exercises: course.exercises.map((exercise) => ({
+        slug: exercise.slug,
+        completions: completionRows
+          .filter((row) => row.course_id === course.name && row.exercise_slug === exercise.slug)
+          .map(rowToCompletion),
+      })),
+    })),
+    updatedAt,
   });
 }
 
@@ -95,109 +82,92 @@ async function broadcastProgress(progress: Progress): Promise<void> {
   }
 }
 
+async function findStudent(studentId: string): Promise<StudentRow | null> {
+  return env.DB.prepare("SELECT id, created_at FROM students WHERE id = ?").bind(studentId).first<StudentRow>();
+}
+
+function studentNotFound(): Response {
+  return new Response(JSON.stringify({ error: "Student not found" }), { status: 404, headers: jsonHeaders });
+}
+
 export const GET: APIRoute = async ({ params }) => {
   const studentId = params.studentId ?? "";
+  const student = await findStudent(studentId);
+  if (!student) return studentNotFound();
 
-  const student = await env.DB.prepare("SELECT id, created_at FROM students WHERE id = ?")
-    .bind(studentId)
-    .first<StudentRow>();
-
-  if (!student) {
-    return new Response(JSON.stringify({ error: "Student not found" }), {
-      status: 404,
-      headers: jsonHeaders,
-    });
-  }
-
-  const progress = await loadProgress(studentId, student.created_at);
+  const progress = await loadProgress(studentId, student.created_at, await getBuiltInCourses());
   return new Response(JSON.stringify(progress), { headers: jsonHeaders });
 };
 
 /**
- * Resets a student's progress: deletes all exercise/lesson completions, but
- * keeps the student row and interview answers. Used by the "Reset progress"
- * option on /disenroll (see AGENTS.md's "Disenroll" section). "Disenroll
- * completely" is a client-only localStorage clear and doesn't call this.
+ * Resets a student's progress: deletes all exercise and course completions,
+ * but keeps the student row and interview answers. Used by the "Reset
+ * progress" option on /disenroll (see AGENTS.md's "Disenroll" section).
+ * "Disenroll completely" is a client-only localStorage clear and doesn't
+ * call this.
  */
 export const DELETE: APIRoute = async ({ params }) => {
   const studentId = params.studentId ?? "";
+  const student = await findStudent(studentId);
+  if (!student) return studentNotFound();
 
-  const student = await env.DB.prepare("SELECT id, created_at FROM students WHERE id = ?")
-    .bind(studentId)
-    .first<StudentRow>();
-
-  if (!student) {
-    return new Response(JSON.stringify({ error: "Student not found" }), {
-      status: 404,
-      headers: jsonHeaders,
-    });
-  }
-
-  await Promise.all([
-    env.DB.prepare("DELETE FROM exercise_completions WHERE student_id = ?").bind(studentId).run(),
-    env.DB.prepare("DELETE FROM lesson_completions WHERE student_id = ?").bind(studentId).run(),
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM course_exercise_completions WHERE student_id = ?").bind(studentId),
+    env.DB.prepare("DELETE FROM course_completions WHERE student_id = ?").bind(studentId),
   ]);
 
-  const progress = await loadProgress(studentId, student.created_at);
+  const progress = await loadProgress(studentId, student.created_at, await getBuiltInCourses());
   await broadcastProgress(progress);
   return new Response(JSON.stringify(progress), { headers: jsonHeaders });
 };
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = async ({ params, request, url }) => {
   const studentId = params.studentId ?? "";
+  const student = await findStudent(studentId);
+  if (!student) return studentNotFound();
 
-  const student = await env.DB.prepare("SELECT id, created_at FROM students WHERE id = ?")
-    .bind(studentId)
-    .first<StudentRow>();
-
-  if (!student) {
-    return new Response(JSON.stringify({ error: "Student not found" }), {
-      status: 404,
-      headers: jsonHeaders,
-    });
-  }
-
-  const parsed = markProgressSchema.safeParse(await request.json().catch(() => ({})));
+  const parsed = markExerciseCompleteSchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) {
-    return new Response(JSON.stringify({ error: parsed.error.message }), {
+    return new Response(JSON.stringify({ error: parsed.error.message }), { status: 400, headers: jsonHeaders });
+  }
+  const body = parsed.data;
+
+  const courses = await getBuiltInCourses();
+  const course = courses.find((item) => item.name === body.course);
+  if (!course?.exercises.some((exercise) => exercise.slug === body.exercise)) {
+    return new Response(JSON.stringify({ error: `No exercise "${body.exercise}" in a course named "${body.course}"` }), {
       status: 400,
       headers: jsonHeaders,
     });
   }
-  const body = parsed.data;
+
   const completedAt = new Date().toISOString();
+  const exerciseUrl = new URL(exercisePath(course.name, body.exercise), url).toString();
+  const slugs = course.exercises.map((exercise) => exercise.slug);
 
-  if ("exerciseSlug" in body) {
-    const deployedUrl = body.deployedUrl ?? null;
-    const model = body.model ?? null;
+  await env.DB.batch([
+    env.DB.prepare(
+      `INSERT INTO course_exercise_completions (student_id, course_id, exercise_slug, harness, exercise_url, model, summary, completed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(student_id, course_id, exercise_slug, harness) DO UPDATE SET
+         exercise_url = excluded.exercise_url,
+         model = COALESCE(excluded.model, course_exercise_completions.model),
+         summary = COALESCE(excluded.summary, course_exercise_completions.summary),
+         completed_at = excluded.completed_at`,
+    ).bind(studentId, course.name, body.exercise, body.harness, exerciseUrl, body.model ?? null, body.summary ?? null, completedAt),
+    // Records the course as complete the first time every one of its current
+    // exercises has a completion. INSERT OR IGNORE keeps the first date.
+    env.DB.prepare(
+      `INSERT OR IGNORE INTO course_completions (student_id, course_id, completed_at)
+       SELECT ?, ?, ?
+       WHERE (
+         SELECT COUNT(DISTINCT exercise_slug) FROM course_exercise_completions
+         WHERE student_id = ? AND course_id = ? AND exercise_slug IN (${slugs.map(() => "?").join(", ")})
+       ) = ?`,
+    ).bind(studentId, course.name, completedAt, studentId, course.name, ...slugs, slugs.length),
+  ]);
 
-    await env.DB.prepare(
-      `INSERT INTO exercise_completions (student_id, exercise_slug, completed_at, deployed_url, model)
-       VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(student_id, exercise_slug) DO UPDATE SET
-         completed_at = excluded.completed_at,
-         deployed_url = COALESCE(excluded.deployed_url, exercise_completions.deployed_url),
-         model = COALESCE(excluded.model, exercise_completions.model)`,
-    )
-      .bind(studentId, body.exerciseSlug, completedAt, deployedUrl, model)
-      .run();
-  } else {
-    const model = body.model ?? null;
-    const summary = body.summary ?? null;
-
-    await env.DB.prepare(
-      `INSERT INTO lesson_completions (student_id, lesson_slug, harness, completed_at, model, summary)
-       VALUES (?, ?, ?, ?, ?, ?)
-       ON CONFLICT(student_id, lesson_slug, harness) DO UPDATE SET
-         completed_at = excluded.completed_at,
-         model = COALESCE(excluded.model, lesson_completions.model),
-         summary = COALESCE(excluded.summary, lesson_completions.summary)`,
-    )
-      .bind(studentId, body.lessonSlug, body.harness, completedAt, model, summary)
-      .run();
-  }
-
-  const progress = await loadProgress(studentId, student.created_at);
+  const progress = await loadProgress(studentId, student.created_at, courses);
   await broadcastProgress(progress);
   return new Response(JSON.stringify(progress), { headers: jsonHeaders });
 };

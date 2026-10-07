@@ -35,9 +35,4 @@ describe("formatCompletedBanner", () => {
       "You completed this exercise on October 1, 2026 using Claude Code, on October 2, 2026 using Pi, and on October 3, 2026 using an unknown agent.",
     );
   });
-
-  it("leaves out the agent when the completion doesn't record one", () => {
-    const text = formatCompletedBanner([{ completedAt: "2026-10-01T18:00:00.000Z" }], names);
-    expect(text).toBe("You completed this exercise on October 1, 2026.");
-  });
 });
