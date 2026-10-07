@@ -26,8 +26,9 @@ async function fetchProgress(studentId: string): Promise<void> {
 /**
  * Holds one WebSocket per page to the student's ProgressHub Durable Object
  * (src/durable-objects/progress-hub.ts), which pushes the full Progress
- * whenever the student's agent PUTs /api/progress. Fetches over HTTP on every
- * (re)connect so nothing missed while disconnected is lost.
+ * whenever the student's agent PUTs /api/progress or saves an interview.
+ * Fetches over HTTP on every (re)connect so nothing missed while disconnected
+ * is lost.
  */
 function connect(studentId: string): void {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";

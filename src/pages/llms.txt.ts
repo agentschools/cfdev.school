@@ -24,11 +24,11 @@ Download the OpenAPI schema to see the full, current API surface: GET /api/opena
 Currently available:
 
 - POST /api/students: enrolls a new student. No request body. Returns \`{ "id": "...", "createdAt": "..." }\`. Only call this if you don't already have a student ID from the prompt that referred you here.
-- GET /api/students/{id}/interview: fetch a student's answers to the Agent setup interview. 404 if they haven't been interviewed yet.
-- PUT /api/students/{id}/interview: submit or update a student's answers to the Agent setup interview. Send only the fields you're setting, it's a partial update and safe to call more than once (e.g. once per question, or later just to change \`quizOptIn\`).
+- GET /api/students/{id}/interviews: fetch every interview the student has done, one per course, each a list of question-and-answer pairs plus a one-sentence summary. Empty until the first one. See "Interviews" below.
+- PUT /api/students/{id}/interviews: save one course's interview, replacing what's stored for that course. See "Interviews" below.
 - GET /api/harnesses/{harnessId}: fetch researched facts about your own harness: global instructions file location, how to add an MCP server, where skills install and whether they need a restart, subscription billing policy, and models. Each profile has a \`lastVerified\` date and \`sources\`.
 - GET /api/courses: list the built-in courses in order, each with its exercises in order. Every course and exercise has a \`markdownUrl\` for its raw Markdown.
-- GET /api/progress/{studentId}: fetch which exercises the student has completed.
+- GET /api/progress/{studentId}: fetch which exercises the student has completed, and each course's interview summary.
 - PUT /api/progress/{studentId}: mark an exercise complete. See "Marking exercises complete" below.
 
 ## Your harness
@@ -41,23 +41,31 @@ List the built-in courses with GET /api/courses. Each course is a list of exerci
 
 Once a student gives you their student ID (from the handoff prompt), check GET /api/progress/{studentId} to see what's already done, then work through the course's incomplete exercises in order. If the prompt names a specific course or exercise, start there.
 
-For each exercise: fetch its \`markdownUrl\`. It's Markdown with YAML frontmatter: follow its \`agent-instructions\` frontmatter (if it has one) and its body to teach the exercise conversationally. Then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete before moving on. Never quiz on an interview. A course's own \`markdownUrl\` is its COURSE.md, which introduces the course.
-
-Agent setup's interview always comes first for a new student: it asks a few short questions, all at once, about their AI agent experience, platforms they've deployed to before, learning goals, and quiz preference, auto-detects their OS, and stores the answers via PUT /api/students/{id}/interview. Use those answers (GET /api/students/{id}/interview) to adjust tone and depth in every later exercise of every course, and only quiz the student if \`quizOptIn\` is true. Students can change any answer at any time just by telling you (e.g. "turn off quizzes"): when they do, PUT just that field, then mark Agent setup's interview complete again (with your \`harness\`) with an updated \`summary\` so the student's homepage shows the change, and adjust from then on.
-
-A course that doesn't write its own interview gets Dev School's default one, which tells you to write a few questions of your own from the course's content. Workers basics is one of these. Its answers aren't saved yet, but mark it complete like any other exercise.
+For each exercise: fetch its \`markdownUrl\`. It's Markdown with YAML frontmatter: follow its \`agent-instructions\` frontmatter (if it has one) and its body to teach the exercise conversationally. Then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete before moving on. A course's own \`markdownUrl\` is its COURSE.md, which introduces the course.
 
 If the student asks to redo an exercise they've already completed (the prompt says so, e.g. because they're trying the course with a second agent), go through it fully again rather than skipping it, then mark it complete with your own \`harness\`. The student's exercise page lists each agent they completed it with.
 
 Don't invent exercise content that isn't in the exercise's Markdown, and don't invent courses, exercises, or endpoints that aren't listed here.
+
+## Interviews
+
+Every course starts with an interview, so you can pitch the course to the student. Agent setup's comes first for a new student, and it's the baseline for every course: their quiz preference, OS, and AI agent experience, plus where they've deployed before and what they want to build. Before starting any course, read all of the student's interviews with GET /api/students/{id}/interviews. Use them to adjust tone, depth, and comparisons in every exercise, never to skip exercises, and only quiz the student if they said yes to quizzes in Agent setup's interview (or haven't answered yet).
+
+To run a course's interview, follow its exercise's Markdown:
+
+- Use the course's own interview if it has one. If it doesn't, its interview is Dev School's default, which has you write 2 to 4 short questions from the course's content. Workers basics is one of these.
+- Never ask more than 4 questions, and never quiz on an interview. Don't ask again what another interview on file already answers.
+- Ask them all at once, and leave out any the student skips.
+- Save the answers with PUT /api/students/{id}/interviews: \`{ "course": "<course name>", "responses": [{ "question": "...", "answer": "..." }], "summary": "..." }\`. Each response has the question's text as you asked it, and an \`answer\` that's a string, or an array of strings for a question that allows several choices. Things you detect without asking, like the student's OS, go in as pairs too. \`summary\` is one sentence (max 280 characters) addressed to the student, summarizing their answers. Agent setup's is shown on their homepage.
+- Then mark the interview exercise complete like any other.
+
+PUT replaces the course's whole interview, so always send every response, not just the ones that changed. Students can change any answer at any time just by telling you (e.g. "turn off quizzes"): when they do, PUT that course's interview again with the answer changed and an updated \`summary\`, and adjust from then on. The student's homepage picks up the new summary right away.
 
 ## Marking exercises complete
 
 Use PUT /api/progress/{studentId} with \`{ "course": "<course name>", "exercise": "<exercise slug>", "harness": "<your harness id>", "model": "<your model id>" }\`, using the names and slugs GET /api/courses lists, e.g. \`{ "course": "agent-setup", "exercise": "models", "harness": "claude-code", "model": "anthropic/claude-sonnet-4-5" }\`. Always include \`model\`.
 
 Completions are tracked per agent, since some exercises set up agent-specific files, so a student can complete each exercise once with every agent they use. It's an idempotent upsert. When every exercise in a course has a completion, the course is marked complete too; GET /api/progress/{studentId} shows a \`completedAt\` on it.
-
-Agent setup's interview also takes \`summary\`: one sentence (max 280 characters), addressed to the student, summarizing their saved answers; it's shown on their homepage. Other exercises don't need one, and a later PUT without \`summary\` keeps the previous one.
 
 Check GET /api/progress/{studentId} first if the student might already have completed an exercise.
 

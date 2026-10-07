@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { harnessProfileSchema } from "../data/harnesses";
 import { courseNameSchema, exerciseSlugSchema } from "./course";
+import { interviewSummarySchema } from "./interview";
 import { studentIdSchema } from "./student";
 
 /**
@@ -14,6 +15,10 @@ import { studentIdSchema } from "./student";
  * Instructions or Skills change agent-specific files. A course is complete
  * once each of its exercises has at least one completion. That's recorded
  * when it first happens and kept even if the course gains exercises later.
+ *
+ * Each course also carries its interview summary (src/schemas/interview.ts),
+ * so saving an interview updates open tabs over the same progress broadcast.
+ * `course_exercise_completions.summary` is unused since #76.
  */
 
 const harnessSchema = harnessProfileSchema.shape.id.meta({
@@ -27,12 +32,6 @@ const modelSchema = z.string().min(1).meta({
   example: "anthropic/claude-sonnet-4-5",
 });
 
-const summarySchema = z.string().min(1).max(280).meta({
-  description:
-    "Only for Agent setup's interview: one sentence, written by the agent for the student, summarizing their saved answers. Shown on the homepage.",
-  example: "You're new to AI agents, haven't deployed anything before, are on macOS, want to build a link shortener, and opted into quizzes.",
-});
-
 export const exerciseCompletionSchema = z.object({
   harness: harnessSchema,
   completedAt: z.iso.datetime().meta({
@@ -40,7 +39,6 @@ export const exerciseCompletionSchema = z.object({
   }),
   exerciseUrl: z.url().meta({ description: "The exercise's page when it was completed." }),
   model: modelSchema.optional(),
-  summary: summarySchema.optional(),
 });
 
 export const exerciseProgressSchema = z.object({
@@ -55,6 +53,10 @@ export const courseProgressSchema = z.object({
   completedAt: z.iso.datetime().optional().meta({
     description:
       "When every exercise in the course first had a completion. Kept even if the course gains exercises later, which then show up with no completions.",
+  }),
+  interviewSummary: interviewSummarySchema.optional().meta({
+    description:
+      "The summary saved with the student's interview for this course (PUT /api/students/{id}/interviews), once there is one.",
   }),
   exercises: z.array(exerciseProgressSchema).meta({ description: "Every exercise in the course, in order." }),
 });
@@ -74,7 +76,6 @@ export const markExerciseCompleteSchema = z.object({
   exercise: exerciseSlugSchema.meta({ description: "The exercise's slug, as GET /api/courses lists it." }),
   harness: harnessSchema,
   model: modelSchema.optional(),
-  summary: summarySchema.optional(),
 });
 
 export type ExerciseCompletion = z.infer<typeof exerciseCompletionSchema>;

@@ -11,8 +11,9 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("Cloudflare Dev School");
     expect(text).toContain("POST /api/students");
     expect(text).toContain("GET /api/openapi.json");
-    expect(text).toContain("GET /api/students/{id}/interview");
-    expect(text).toContain("PUT /api/students/{id}/interview");
+    expect(text).toContain("GET /api/students/{id}/interviews");
+    expect(text).toContain("PUT /api/students/{id}/interviews");
+    expect(text).not.toMatch(/\/api\/students\/\{id\}\/interview\b/);
     expect(text).toContain("GET /api/harnesses/{harnessId}");
     expect(text).toContain("GET /api/courses");
     expect(text).toContain("GET /api/progress/{studentId}");

@@ -82,8 +82,21 @@ describe("GET /api/progress/{studentId}", () => {
     ]);
     for (const item of progress.courses) {
       expect(item.completedAt).toBeUndefined();
+      expect(item.interviewSummary).toBeUndefined();
       for (const ex of item.exercises) expect(ex.completions).toEqual([]);
     }
+  });
+
+  it("includes each course's interview summary", async () => {
+    await state.db
+      .prepare("INSERT INTO interviews (student_id, course_id, responses, summary, updated_at) VALUES (?, ?, ?, ?, ?)")
+      .bind(STUDENT, "workers-basics", "[]", "You've never used KV.", "2026-10-01T12:00:00.000Z")
+      .run();
+
+    const { GET } = await import("./[studentId]");
+    const progress = (await (await GET(context(STUDENT))).json()) as Progress;
+    expect(course(progress, "workers-basics")?.interviewSummary).toBe("You've never used KV.");
+    expect(course(progress, "agent-setup")?.interviewSummary).toBeUndefined();
   });
 });
 
@@ -137,14 +150,10 @@ describe("PUT /api/progress/{studentId}", () => {
     expect(completions.find((item) => item.harness === "claude-code")?.model).toBe("openai/gpt-5");
   });
 
-  it("stores a summary and keeps it when a later PUT omits it", async () => {
-    const interview = { course: "agent-setup", exercise: "interview", harness: "claude-code" };
-    await put(STUDENT, { ...interview, summary: "Quizzes on." });
-    expect(exercise((await put(STUDENT, interview)).progress, "agent-setup", "interview")?.completions[0].summary).toBe(
-      "Quizzes on.",
-    );
-    const replaced = (await put(STUDENT, { ...interview, summary: "Quizzes off." })).progress;
-    expect(exercise(replaced, "agent-setup", "interview")?.completions[0].summary).toBe("Quizzes off.");
+  it("ignores a summary, which moved to interviews", async () => {
+    const { progress } = await put(STUDENT, { course: "agent-setup", exercise: "interview", harness: "claude-code", summary: "Hi." });
+    expect(exercise(progress, "agent-setup", "interview")?.completions[0]).not.toHaveProperty("summary");
+    expect(course(progress, "agent-setup")?.interviewSummary).toBeUndefined();
   });
 
   it("marks a course complete once every exercise has a completion, from any harness", async () => {
@@ -186,10 +195,15 @@ describe("DELETE /api/progress/{studentId}", () => {
     expect((await DELETE(context("no-such-student-0000"))).status).toBe(404);
   });
 
-  it("clears exercise and course completions but keeps the student", async () => {
+  it("clears exercise and course completions but keeps the student and interviews", async () => {
     await put(STUDENT, models);
     await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "claude-code" });
     await put(STUDENT, { course: "workers-basics", exercise: "deploy-first-worker", harness: "claude-code" });
+
+    await state.db
+      .prepare("INSERT INTO interviews (student_id, course_id, responses, summary, updated_at) VALUES (?, ?, ?, ?, ?)")
+      .bind(STUDENT, "agent-setup", "[]", "You skipped every question.", "2026-10-01T12:00:00.000Z")
+      .run();
 
     const { DELETE, GET } = await import("./[studentId]");
     const progress = (await (await DELETE(context(STUDENT))).json()) as Progress;
@@ -197,6 +211,7 @@ describe("DELETE /api/progress/{studentId}", () => {
       expect(item.completedAt).toBeUndefined();
       for (const ex of item.exercises) expect(ex.completions).toEqual([]);
     }
+    expect(course(progress, "agent-setup")?.interviewSummary).toBe("You skipped every question.");
     expect((await GET(context(STUDENT))).status).toBe(200);
     expect(state.broadcasts.at(-1)?.progress).toEqual(progress);
   });

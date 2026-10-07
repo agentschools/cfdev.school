@@ -6,9 +6,9 @@ agent-instructions: |
   student only waits on you once. Keep every question to one short line
   with short answer choices, so the student can answer quickly.
 
-  Before asking anything, GET /api/students/{id}/interview. If the student
-  already has answers on file (a 404 means they don't), only ask the
-  questions they haven't answered yet, and show them what's on file.
+  Before asking anything, GET /api/students/{id}/interviews. If Agent
+  setup's interview is already on file, show the student what's there and
+  only ask the questions it doesn't answer yet.
 
   How to ask:
 
@@ -36,17 +36,13 @@ agent-instructions: |
   without pushing):
 
   1. "How much have you used AI coding agents like this one?" Choices:
-     this is my first time / now and then / daily. Store as
-     `agentExperience`: "new", "occasional", or "daily".
+     this is my first time / now and then / daily.
   2. "Where have you deployed apps before? (pick any)" Choices, multiple
      allowed: nowhere yet / Vercel or Netlify / AWS, Google Cloud, or
-     Azure / Cloudflare. Store as `platformsUsed`, an array of the
-     platform names they picked or typed (e.g. `["Vercel", "AWS"]`), or
-     `[]` for nowhere yet.
+     Azure / Cloudflare.
   3. "What do you want to build or learn?" Free text, one line is plenty.
-     Store as `learningGoals` in their words, lightly trimmed.
   4. "Want a short quiz at the end of each exercise? (recommended,
-     skippable anytime)" Choices: yes / no. Store as `quizOptIn`.
+     skippable anytime)" Choices: yes / no.
 
   Use the first two answers only to adjust your tone, depth, and
   comparisons in later exercises (e.g. explain a Worker by comparison to a
@@ -56,8 +52,7 @@ agent-instructions: |
   Don't ask about things you can check yourself:
 
   - Detect their operating system (e.g. run `uname`, or check an OS
-    environment variable), store it as `os` ("macos", "linux", "windows",
-    or "other"), and mention what you found.
+    environment variable) and mention what you found.
   - Check whether Node.js (`node --version`) and the `cf` CLI
     (`cf --version`) are installed, whether `cf auth whoami` reports them
     as logged in, and whether they already have a global instructions file
@@ -65,26 +60,44 @@ agent-instructions: |
     setup exercises that follow. Don't store these, and don't install or
     change anything yet.
 
-  Store the answers with PUT /api/students/{id}/interview. It's a partial
-  update, so send only the fields you're setting; one call with all of
-  them is fine.
+  Store the answers with PUT /api/students/{id}/interviews, with
+  `"course": "agent-setup"`. Each response's `question` is the question's
+  text exactly as written above, so later agents recognize it, and its
+  `answer` is the choice the student picked, an array of the choices they
+  picked (or typed) for question 2, or their own words for question 3,
+  lightly trimmed. Leave out questions they skipped. Store the OS you
+  detected as a pair too, with the question "Which operating system are
+  you on?" and an answer like "macOS", "Linux", or "Windows". Include a
+  `summary`: one sentence addressed to the student covering their
+  answers. Their homepage shows it to confirm the answers were saved. For
+  example:
+
+  ```json
+  {
+    "course": "agent-setup",
+    "responses": [
+      { "question": "How much have you used AI coding agents like this one?", "answer": "this is my first time" },
+      { "question": "Where have you deployed apps before? (pick any)", "answer": ["nowhere yet"] },
+      { "question": "What do you want to build or learn?", "answer": "a link shortener" },
+      { "question": "Want a short quiz at the end of each exercise? (recommended, skippable anytime)", "answer": "yes" },
+      { "question": "Which operating system are you on?", "answer": "macOS" }
+    ],
+    "summary": "You're new to AI agents, haven't deployed anything before, are on macOS, want to build a link shortener, and opted into quizzes."
+  }
+  ```
 
   Then, in two or three sentences: summarize what you'll do with their
   answers (how you'll pitch explanations, whether you'll quiz them), and
   tell them plainly that they can change any of it at any time just by
   telling you, e.g. "turn off quizzes" or "I use AI agents more than I
   said". Whenever a student asks to change an answer, in this exercise or
-  any later one, PUT just that field, then re-send this exercise's
-  completion (below, same `harness`) with an updated `summary`, and adjust
-  from then on.
+  any later one, PUT this interview again with that answer changed and an
+  updated `summary`, and adjust from then on. PUT replaces the whole
+  interview, so send every response, not just the one that changed.
 
   Finally, mark this exercise complete with PUT /api/progress/{studentId}
-  as /llms.txt describes, including a `summary`: one sentence addressed
-  to the student covering their saved answers, e.g. "You're new to AI
-  agents, haven't deployed anything before, are on macOS, want to build a
-  link shortener, and opted into quizzes." Their homepage shows it to
-  confirm the answers were saved. Then move on to the next exercise,
-  "models". There's no quiz for this exercise.
+  as /llms.txt describes. Then move on to the next exercise, "models".
+  There's no quiz for this exercise.
 ---
 
 # Interview
@@ -102,6 +115,7 @@ This is saved with your student ID so your agent can pick up where you left off 
 - What you want to build or learn, in your own words
 - Whether you want a short quiz at the end of each exercise
 - Your operating system, which your agent detects by itself so it can give you the right commands
+- A one-sentence summary of your answers, written by your agent and shown on the homepage
 - Which exercises you've completed
 - Which agent you used for each exercise, like Claude Code or Codex
 - Which model your agent was running, when it reports one
