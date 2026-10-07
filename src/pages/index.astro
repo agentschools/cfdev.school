@@ -239,9 +239,25 @@ const catalog = catalogCourses(courses);
     display: flex;
     align-items: center;
     gap: 4rem;
+    /* Wide enough for the copy and the card side by side at laptop widths;
+       on wider screens the pair stays together, centered, instead of
+       drifting to opposite edges. */
+    max-width: 76rem;
+    margin: 0 auto;
     padding: 5.5rem 4rem;
     /* The celebration layer extends past the card; don't let it add a horizontal scrollbar on phones. */
     overflow-x: clip;
+  }
+
+  /* Big screens: center the hero vertically too, keeping the copy and the
+     card top-aligned with each other. Laptop-height screens keep it at the top. */
+  @media (min-width: 1181px) and (min-height: 1000px) {
+    .hero {
+      flex-wrap: wrap;
+      align-content: center;
+      min-height: 100svh;
+      box-sizing: border-box;
+    }
   }
 
   .hero-copy {
