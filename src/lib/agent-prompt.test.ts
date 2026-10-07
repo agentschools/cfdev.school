@@ -1,41 +1,43 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildPrompt } from "./agent-prompt";
 
+const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
+
 beforeEach(() => {
   vi.stubGlobal("window", { location: { origin: "https://cloudflare-dev-school.ziki.workers.dev" } });
 });
 
 describe("buildPrompt", () => {
-  it("embeds the student's id, points at the Interview by default, and fetches llms.txt", () => {
-    const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
-
-    const prompt = buildPrompt(student);
-
-    expect(prompt).toBe(
+  it("embeds the student's id, points at Agent setup's interview by default, and fetches llms.txt", () => {
+    expect(buildPrompt(student)).toBe(
       [
         "I'm enrolled in Cloudflare Dev School as curious-hacker-2019",
         "",
-        'Let\'s work on the "Interview" lesson together!',
+        'Let\'s work on the "Interview" exercise from the "Agent setup" course together!',
         "",
         "Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.",
       ].join("\n"),
     );
   });
 
-  it("names the exercise when given an exercise context", () => {
-    const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
+  it("names the exercise and its course", () => {
+    const prompt = buildPrompt(student, { courseTitle: "Workers basics", exerciseTitle: "Deploy your first Worker" });
 
-    const prompt = buildPrompt(student, { kind: "exercise", title: "Deploy your first Worker" });
-
-    expect(prompt).toContain('Let\'s work on the "Deploy your first Worker" exercise together!');
+    expect(prompt).toContain('Let\'s work on the "Deploy your first Worker" exercise from the "Workers basics" course together!');
     expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
   });
 
-  it("asks to redo a lesson the student already completed", () => {
-    const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
+  it("names just the course when there's no exercise", () => {
+    expect(buildPrompt(student, { courseTitle: "Workers basics" })).toContain(
+      'Let\'s work on the "Workers basics" course together!',
+    );
+  });
 
-    const prompt = buildPrompt(student, { kind: "lesson", title: "Models", redo: true });
+  it("asks to redo an exercise the student already completed", () => {
+    const prompt = buildPrompt(student, { courseTitle: "Agent setup", exerciseTitle: "Models", redo: true });
 
-    expect(prompt).toContain('Let\'s redo the "Models" lesson together, even though I\'ve already completed it.');
+    expect(prompt).toContain(
+      'Let\'s redo the "Models" exercise from the "Agent setup" course together, even though I\'ve already completed it.',
+    );
   });
 });

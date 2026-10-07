@@ -19,16 +19,12 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
   for (const { filename, status, patch } of files) {
     if (status === "removed" || /\.test\.[cm]?[jt]s$/.test(filename)) continue;
 
-    if (/^src\/content\/lessons\/[^/]+\.md$/.test(filename)) {
-      const slug = frontmatter(readFile(filename), "lessonSlug");
-      if (slug) add(`/lessons/${slug}`, `/api/lessons/${slug}`);
-    } else if (/^src\/content\/exercises\/[^/]+\.md$/.test(filename)) {
-      const slug = frontmatter(readFile(filename), "exerciseSlug");
-      if (slug) add(`/exercises/${slug}`);
-    } else if (filename === "src/data/exercises.ts") {
-      const slugs = changedEntries(readFile(filename), patch, /^ {2}slug: "([^"]+)"/);
-      slugs.forEach((slug) => add(`/exercises/${slug}`, `/api/exercises/${slug}`));
-      if (slugs.length === 0) add("/exercises");
+    const courseFile = filename.match(/^courses\/([^/]+)\/(COURSE\.md|exercises\/([^/]+)\.md)$/);
+    if (courseFile) {
+      const [, course, file, exerciseFile] = courseFile;
+      // Same slug rule as src/lib/course-format.ts: no leading number prefix.
+      const page = exerciseFile ? `/courses/${course}/${exerciseFile.replace(/^\d+[-_]/, "")}` : `/courses/${course}`;
+      add(page, `/courses/${course}/${file}`);
     } else if (filename === "src/data/harnesses.ts") {
       changedEntries(readFile(filename), patch, /^ {4}id: "([^"]+)"/).forEach((id) =>
         add(`/api/harnesses/${id}`),
@@ -46,13 +42,22 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       add("/");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {
       add("/disenroll");
-    } else if (filename === "src/pages/exercises/index.astro") {
-      add("/exercises");
-    } else if (filename === "src/pages/lessons/[slug].astro" || filename === "src/lib/lesson-client.ts") {
-      add("/lessons/interview");
-    } else if (filename === "src/pages/exercises/[slug].astro" || filename === "src/lib/exercise-client.ts") {
-      const first = readFile("src/data/exercises.ts").match(/^ {2}slug: "([^"]+)"/m);
-      add(first ? `/exercises/${first[1]}` : "/exercises");
+    } else if (
+      filename === "src/data/courses.ts" ||
+      filename === "src/pages/courses/index.astro" ||
+      filename === "src/content/default-interview.md"
+    ) {
+      add("/courses");
+    } else if (
+      filename === "src/lib/courses.ts" ||
+      filename === "src/lib/course-format.ts" ||
+      filename === "src/pages/api/courses.ts"
+    ) {
+      add("/api/courses");
+    } else if (filename === "src/pages/courses/[name]/index.astro" || filename === "src/lib/course-client.ts") {
+      add("/courses/agent-setup");
+    } else if (filename === "src/pages/courses/[name]/[exercise].astro" || filename === "src/lib/exercise-client.ts") {
+      add("/courses/agent-setup/interview");
     }
   }
 
@@ -70,10 +75,6 @@ export function updateBody(body, urls) {
   const rest = (body || "").replace(pattern, "\n\n").trim();
   const list = urls.map((url) => `- ${url}`).join("\n");
   return `${rest ? `${rest}\n\n` : ""}${START}\n${list}\n${END}\n`;
-}
-
-function frontmatter(source, key) {
-  return source.match(new RegExp(`^${key}:\\s*["']?([^"'\\s]+)`, "m"))?.[1];
 }
 
 /**

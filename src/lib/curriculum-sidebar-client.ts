@@ -1,18 +1,17 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
+import { exerciseCompletions } from "./course-progress";
 import { subscribeToProgress } from "./progress-client";
 import type { Progress } from "../schemas/progress";
 
+/**
+ * Shows the completion check on every `[data-course][data-exercise]` item on
+ * the page: the sidebar's, and any exercise list in the page itself (e.g. a
+ * course page), so those don't need their own progress subscription.
+ */
 function renderChecks(progress: Progress): void {
-  const completedLessons = new Set(progress.completedLessons.map((lesson) => lesson.slug as string));
-  const completedExercises = new Set(progress.completedExercises.map((exercise) => exercise.slug as string));
-
-  for (const check of document.querySelectorAll<HTMLElement>("[data-lesson-slug] .check")) {
-    const slug = check.closest<HTMLElement>("[data-lesson-slug]")?.dataset.lessonSlug ?? "";
-    check.hidden = !completedLessons.has(slug);
-  }
-  for (const check of document.querySelectorAll<HTMLElement>("[data-exercise-slug] .check")) {
-    const slug = check.closest<HTMLElement>("[data-exercise-slug]")?.dataset.exerciseSlug ?? "";
-    check.hidden = !completedExercises.has(slug);
+  for (const check of document.querySelectorAll<HTMLElement>("[data-course][data-exercise] .check")) {
+    const item = check.closest<HTMLElement>("[data-course][data-exercise]")!;
+    check.hidden = exerciseCompletions(progress, item.dataset.course!, item.dataset.exercise!).length === 0;
   }
 }
 

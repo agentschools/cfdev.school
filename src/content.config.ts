@@ -1,36 +1,38 @@
 import { glob } from "astro/loaders";
-import { defineCollection, z } from "astro:content";
-import { exerciseSlugSchema } from "./schemas/exercise";
+import { defineCollection } from "astro:content";
+import { courseFrontmatterSchema, exerciseFrontmatterSchema } from "./schemas/course";
 
 /**
- * One entry per lesson, e.g. `models.md`. Lessons are written for any agent;
- * harness-specific facts (file paths, commands, billing) live in
- * src/data/harnesses.ts, served to agents by GET /api/harnesses/{id}.
+ * Built-in courses, one `courses/<name>/COURSE.md` each (see #73). The entry
+ * ID is the course's directory name. Ordering and titles are applied by
+ * src/lib/courses.ts, not here.
  */
-const lessons = defineCollection({
-  loader: glob({ pattern: "*.md", base: "src/content/lessons" }),
-  schema: z.object({
-    lessonSlug: z.string(),
-    title: z.string(),
-    description: z.string(),
-    order: z.number(),
-    quiz: z.boolean().default(true),
-    /** Instructions the agent follows to teach this lesson, not shown to the student directly. */
-    agentInstructions: z.string(),
+const courses = defineCollection({
+  loader: glob({
+    base: "courses",
+    pattern: "*/COURSE.md",
+    generateId: ({ entry }) => entry.split("/")[0],
   }),
+  schema: courseFrontmatterSchema,
 });
 
 /**
- * Short student-facing page prose for each exercise (intro, what you'll build,
- * prerequisites). Title/description/order and the agent-facing walkthrough live
- * in src/data/exercises.ts — this collection only holds what the /exercises/{slug}
- * page renders.
+ * Exercises of the built-in courses, `courses/<name>/exercises/<file>.md`.
+ * The entry ID is `<name>/<file without .md>`, e.g. "agent-setup/01-models".
  */
 const exercises = defineCollection({
-  loader: glob({ pattern: "*.md", base: "src/content/exercises" }),
-  schema: z.object({
-    exerciseSlug: exerciseSlugSchema,
+  loader: glob({
+    base: "courses",
+    pattern: "*/exercises/*.md",
+    generateId: ({ entry }) => entry.replace("/exercises/", "/").replace(/\.md$/, ""),
   }),
+  schema: exerciseFrontmatterSchema,
 });
 
-export const collections = { lessons, exercises };
+/** The interview a course gets when it doesn't write its own. */
+const defaultInterview = defineCollection({
+  loader: glob({ base: "src/content", pattern: "default-interview.md" }),
+  schema: exerciseFrontmatterSchema,
+});
+
+export const collections = { courses, exercises, defaultInterview };

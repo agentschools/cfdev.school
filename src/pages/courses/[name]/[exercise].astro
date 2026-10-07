@@ -1,0 +1,351 @@
+---
+import { render } from "astro:content";
+import AgentPrompt from "../../../components/AgentPrompt.astro";
+import Layout from "../../../layouts/Layout.astro";
+import { COURSE_ORDER, coursePath, exercisePath } from "../../../data/courses";
+import { harnesses } from "../../../data/harnesses";
+import { getBuiltInCourses } from "../../../lib/courses";
+
+export const prerender = false;
+
+const { name, exercise: slug } = Astro.params;
+const courses = await getBuiltInCourses();
+const course = courses.find((item) => item.name === name);
+const index = course ? course.exercises.findIndex((item) => item.slug === slug) : -1;
+const exercise = course && index >= 0 ? course.exercises[index] : undefined;
+
+if (!course || !exercise) {
+  Astro.response.status = 404;
+}
+
+const Content = exercise ? (await render(exercise.entry)).Content : null;
+
+// Where the "next" button points once this exercise is complete: the next
+// exercise in this course, then the next course, then the course catalog.
+const nextExercise = course?.exercises[index + 1];
+const nextCourse = courses[COURSE_ORDER.indexOf(name as (typeof COURSE_ORDER)[number]) + 1];
+const next = nextExercise
+  ? {
+      url: exercisePath(course!.name, nextExercise.slug),
+      label: `Next exercise: ${nextExercise.title} →`,
+      shortLabel: `Next: ${nextExercise.title} →`,
+    }
+  : nextCourse
+    ? {
+        url: coursePath(nextCourse.name),
+        label: `Next course: ${nextCourse.title} →`,
+        shortLabel: `Next: ${nextCourse.title} →`,
+      }
+    : { url: "/courses", label: "All courses →", shortLabel: "All courses →" };
+
+// How the completed banner names each agent ("...using Claude Code").
+const harnessNames = Object.fromEntries(
+  harnesses.map((harness) => [harness.id, harness.id === "generic" ? "an unknown agent" : harness.name]),
+);
+
+const title = exercise?.title ?? "Exercise not found";
+---
+
+<Layout title={`${title} — Cloudflare Dev School`} description={exercise?.description ?? "Exercise not found."}>
+  <div class="page">
+    {
+      !course || !exercise || !Content ? (
+        <main class="content">
+          <p>This exercise doesn't exist.</p>
+        </main>
+      ) : (
+        <main
+          class="content"
+          data-exercise-page
+          data-course-name={course.name}
+          data-course-title={course.title}
+          data-exercise-slug={exercise.slug}
+          data-exercise-title={exercise.title}
+        >
+          <header class="header">
+            <p class="eyebrow">
+              <a href={coursePath(course.name)}>{course.title}</a> · Exercise {String(index).padStart(2, "0")}
+            </p>
+            <h1>{title}</h1>
+            {exercise.description && <p class="description">{exercise.description}</p>}
+          </header>
+
+          <div
+            id="exercise-completed-banner"
+            class="completed-banner"
+            data-harness-names={JSON.stringify(harnessNames)}
+            hidden
+          >
+            <div class="completed-body">
+              <span id="exercise-completed-text">You completed this exercise!</span>
+              <button id="exercise-redo" class="completed-redo" type="button">Redo this exercise</button>
+            </div>
+            <a class="completed-next" href={next.url}>{next.shortLabel}</a>
+          </div>
+
+          <div id="exercise-enroll-nudge" class="enroll-nudge" hidden>
+            <a href="/">Enroll for free</a> to track your progress through the course.
+          </div>
+
+          <AgentPrompt />
+
+          <div class="prose">
+            <Content />
+          </div>
+
+          <div id="exercise-next" class="exercise-next" hidden>
+            <p id="exercise-next-pending" class="exercise-next-pending">
+              Complete this exercise in your agent to continue.
+            </p>
+            <a id="exercise-next-link" class="exercise-next-link" href={next.url} hidden>
+              {next.label}
+            </a>
+          </div>
+        </main>
+      )
+    }
+  </div>
+</Layout>
+
+<script>
+  import { initExercisePage } from "../../../lib/exercise-client";
+  import { initCodeCopyButtons } from "../../../lib/code-copy-client";
+  initExercisePage();
+  initCodeCopyButtons();
+</script>
+
+<style>
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2.5rem 0 5rem;
+    max-width: 42rem;
+  }
+
+  .header {
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    color: var(--muted-fg);
+  }
+
+  .eyebrow a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .eyebrow a:hover {
+    color: var(--fg);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 0.75rem;
+  }
+
+  .description {
+    color: var(--muted-fg);
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .completed-banner {
+    margin: 0 0 1.5rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.6rem;
+    background: color-mix(in oklch, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+  }
+
+  .completed-banner[hidden] {
+    display: none;
+  }
+
+  .completed-body {
+    flex: 1 1 18rem;
+  }
+
+  .completed-next {
+    flex-shrink: 0;
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.45rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .completed-next:hover {
+    filter: brightness(1.05);
+  }
+
+  .completed-redo {
+    display: block;
+    margin: 0.3rem 0 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted-fg);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 400;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    cursor: pointer;
+  }
+
+  .completed-redo:hover {
+    color: var(--fg);
+  }
+
+  .completed-redo[hidden] {
+    display: none;
+  }
+
+  .enroll-nudge {
+    margin: 0 0 2rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    color: var(--muted-fg);
+    font-size: 0.95rem;
+  }
+
+  .enroll-nudge a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .exercise-next {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .exercise-next-pending {
+    margin: 0;
+    text-align: center;
+    color: var(--muted-fg);
+    font-size: 0.9rem;
+  }
+
+  .exercise-next-link {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    border-radius: 0.6rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .exercise-next-link:hover {
+    filter: brightness(1.05);
+  }
+
+  .exercise-next [hidden] {
+    display: none;
+  }
+
+  .prose {
+    line-height: 1.7;
+  }
+
+  .prose :global(h2) {
+    font-size: 1.35rem;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .prose :global(p) {
+    margin: 0 0 1rem;
+  }
+
+  .prose :global(ul) {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+  }
+
+  .prose :global(a) {
+    color: var(--accent);
+  }
+
+  .prose :global(pre) {
+    margin: 0 0 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card-bg);
+    color: var(--fg);
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .prose :global(pre code) {
+    font-size: inherit;
+  }
+
+  .prose :global(code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    margin: 0 0 1rem;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    padding: 0.6rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .prose :global(th) {
+    font-weight: 600;
+    color: var(--muted-fg);
+  }
+
+  .prose :global(:is(th, td):first-child) {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .prose :global(table) {
+      display: block;
+      overflow-x: auto;
+    }
+
+    .prose :global(td code) {
+      white-space: nowrap;
+    }
+  }
+
+</style>

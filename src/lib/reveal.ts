@@ -4,7 +4,7 @@ const EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 /**
  * Shows or hides `el` (via its `hidden` attribute) with a height + fade +
  * slide animation, so content that appears on an already-open page (e.g. when
- * the student's agent marks a lesson complete over the live progress socket)
+ * the student's agent marks an exercise complete over the live progress socket)
  * eases in instead of popping. No-op when `el` is already in the requested
  * state, so it's safe to call on every progress update. Skips the animation
  * for prefers-reduced-motion.

@@ -1,7 +1,6 @@
 ---
-import { getCollection } from "astro:content";
-import { LESSON_OUTLINE } from "../data/curriculum";
-import { listExercises } from "../data/exercises";
+import { coursePath, exercisePath } from "../data/courses";
+import { getBuiltInCourses } from "../lib/courses";
 
 interface Props {
   showBrand?: boolean;
@@ -9,11 +8,7 @@ interface Props {
 
 const { showBrand = true } = Astro.props;
 
-const existingLessonSlugs = new Set((await getCollection("lessons")).map((entry) => entry.data.lessonSlug));
-const existingExerciseSlugs = new Set(
-  (await getCollection("exercises")).map((entry) => entry.data.exerciseSlug),
-);
-const exercises = listExercises();
+const courses = await getBuiltInCourses();
 const currentPath = Astro.url.pathname.replace(/\/$/, "");
 ---
 
@@ -36,70 +31,45 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     )
   }
 
-  <p class="section-label">Lessons</p>
-  <ol class="item-list">
-    {
-      LESSON_OUTLINE.map((lesson, index) => {
-        const available = existingLessonSlugs.has(lesson.slug);
-        // Zero-based: the Interview is lesson "00.", Models is "01.", etc.
-        const num = String(index).padStart(2, "0");
-        return (
-          <li data-lesson-slug={lesson.slug}>
-            {available ? (
-              <a
-                href={`/lessons/${lesson.slug}`}
-                aria-current={currentPath === `/lessons/${lesson.slug}` ? "page" : undefined}
-              >
-                <span>
-                  <span class="index">{num}.</span> {lesson.title}
-                </span>
-                <span class="check" hidden aria-label="Completed">
-                  ✓
-                </span>
-              </a>
-            ) : (
-              <span class="pending">
-                <span>
-                  <span class="index">{num}.</span> {lesson.title}
-                </span>
-              </span>
-            )}
-          </li>
-        );
-      })
-    }
-  </ol>
+  {
+    courses.map((course) => (
+      <>
+        <a
+          class="section-label section-label-link"
+          href={coursePath(course.name)}
+          aria-current={currentPath === coursePath(course.name) ? "page" : undefined}
+        >
+          {course.title}
+        </a>
+        <ol class="item-list">
+          {course.exercises.map((exercise, index) => {
+            const href = exercisePath(course.name, exercise.slug);
+            return (
+              <li data-course={course.name} data-exercise={exercise.slug}>
+                <a href={href} aria-current={currentPath === href ? "page" : undefined}>
+                  <span>
+                    {/* Zero-based, like the exercise files: the interview is "00." */}
+                    <span class="index">{String(index).padStart(2, "0")}.</span> {exercise.title}
+                  </span>
+                  <span class="check" hidden aria-label="Completed">
+                    ✓
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ol>
+      </>
+    ))
+  }
 
-  <a class="section-label section-label-link" href="/exercises">Exercises</a>
-  <ol class="item-list">
-    {
-      exercises.map((exercise) => {
-        const available = existingExerciseSlugs.has(exercise.slug);
-        return (
-          <li data-exercise-slug={exercise.slug}>
-            {available ? (
-              <a
-                href={`/exercises/${exercise.slug}`}
-                aria-current={currentPath === `/exercises/${exercise.slug}` ? "page" : undefined}
-              >
-                <span>{exercise.title}</span>
-                <span class="check" hidden aria-label="Completed">
-                  ✓
-                </span>
-              </a>
-            ) : (
-              <span class="pending">
-                {exercise.title}
-                <span class="check" hidden aria-label="Completed">
-                  ✓
-                </span>
-              </span>
-            )}
-          </li>
-        );
-      })
-    }
-  </ol>
+  <a
+    class="section-label section-label-link"
+    href="/courses"
+    aria-current={currentPath === "/courses" ? "page" : undefined}
+  >
+    All courses
+  </a>
 
   <div id="account-section" hidden>
     <p class="section-label">Account</p>
@@ -145,7 +115,8 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     color: color-mix(in oklch, var(--fg) 45%, transparent);
   }
 
-  .curriculum-sidebar > p.section-label:first-of-type {
+  .brand + .section-label,
+  .curriculum-sidebar > .section-label:first-child {
     margin-top: 0;
   }
 
@@ -154,7 +125,8 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     text-decoration: none;
   }
 
-  a.section-label-link:hover {
+  a.section-label-link:hover,
+  a.section-label-link[aria-current="page"] {
     color: var(--fg);
   }
 
@@ -167,8 +139,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     gap: 0.1rem;
   }
 
-  .item-list a,
-  .item-list .pending {
+  .item-list a {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -196,10 +167,6 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
 
   .item-list a[aria-current="page"] .index {
     color: color-mix(in oklch, var(--accent) 70%, transparent);
-  }
-
-  .item-list .pending {
-    opacity: 0.55;
   }
 
   .index {

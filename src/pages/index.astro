@@ -2,7 +2,9 @@
 import AgentPrompt from "../components/AgentPrompt.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
+import { coursePath, exercisePath, REQUIRED_COURSE } from "../data/courses";
 import { harnesses } from "../data/harnesses";
+import { getBuiltInCourses } from "../lib/courses";
 
 // Rendered size (px) per mark, tuned by eye so the monochrome silhouettes read
 // at the same visual weight. Falls back to a square for any harness added later.
@@ -15,6 +17,25 @@ const iconSize: Record<string, [number, number]> = {
   copilot: [44, 36],
 };
 const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harness.icon);
+
+// Where the "Next" button goes once the interview is done: the first
+// unfinished exercise in Agent setup, or the course after it.
+const courses = await getBuiltInCourses();
+const setupIndex = courses.findIndex((course) => course.name === REQUIRED_COURSE);
+const setup = courses[setupIndex];
+const afterSetup = courses[setupIndex + 1];
+const nextSteps = {
+  course: setup.name,
+  exercises: setup.exercises.map((exercise) => ({
+    slug: exercise.slug,
+    title: exercise.title,
+    url: exercisePath(setup.name, exercise.slug),
+  })),
+  fallback: afterSetup
+    ? { title: afterSetup.title, url: coursePath(afterSetup.name) }
+    : { title: "Courses", url: "/courses" },
+};
+const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
 ---
 
 <Layout
@@ -34,13 +55,20 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
         <p class="fine-print">Free forever. No account required.</p>
       </div>
       <AgentPrompt />
-      <!-- Same treatment as the lesson pages' completed banner. -->
+      <!-- Same treatment as the exercise pages' completed banner. -->
       <section id="interview-complete" class="interview-complete" aria-live="polite" hidden>
         <div class="interview-complete-body">
           <p class="interview-complete-label">Interview complete</p>
           <p id="interview-complete-summary" class="interview-complete-summary"></p>
         </div>
-        <a id="interview-complete-next" class="interview-complete-next" href="/lessons/models">Next: Models →</a>
+        <a
+          id="interview-complete-next"
+          class="interview-complete-next"
+          href={firstAfterInterview.url}
+          data-next-steps={JSON.stringify(nextSteps)}
+        >
+          Next: {firstAfterInterview.title} →
+        </a>
       </section>
     </div>
 
@@ -75,7 +103,7 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
   import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "../lib/enroll-client";
   import { subscribeToProgress } from "../lib/progress-client";
   import { setVisible } from "../lib/reveal";
-  import { LESSON_OUTLINE } from "../data/curriculum";
+  import { exerciseCompletions } from "../lib/course-progress";
   import type { Progress } from "../schemas/progress";
   import { initHarnessTooltips } from "../lib/harness-tooltip-client";
 
@@ -93,23 +121,31 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
     const nextLink = document.getElementById("interview-complete-next") as HTMLAnchorElement | null;
     if (!promptSection || !promptText || !copyButton || !copyConfirm || !complete || !summary || !nextLink) return;
 
-    // Until the Interview is complete, show its prompt. Once the student's
-    // agent marks it complete (often while this tab is open, pushed over the
-    // progress socket), swap the prompt for the agent's summary of their
-    // answers and a button to the first lesson they haven't finished yet.
+    const nextSteps = JSON.parse(nextLink.dataset.nextSteps!) as {
+      course: string;
+      exercises: { slug: string; title: string; url: string }[];
+      fallback: { title: string; url: string };
+    };
+
+    // Until Agent setup's interview is complete, show its prompt. Once the
+    // student's agent marks it complete (often while this tab is open, pushed
+    // over the progress socket), swap the prompt for the agent's summary of
+    // their answers and a button to the first exercise they haven't finished.
     let progressReceived = false;
     function renderProgress(progress: Progress): void {
       progressReceived = true;
-      const done = new Set(progress.completedLessons.map((lesson) => lesson.slug));
-      // Newest Interview completion: there's one per agent the student used.
+      // Newest interview completion: there's one per agent the student used.
       const interview = progress.completedLessons
         .filter((lesson) => lesson.slug === "interview")
         .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
       if (interview) {
         summary!.textContent = interview.summary ?? "Your interview answers are saved.";
-        const next = LESSON_OUTLINE.find((lesson) => !done.has(lesson.slug));
-        nextLink!.href = next ? `/lessons/${next.slug}` : "/exercises";
-        nextLink!.textContent = next ? `Next: ${next.title} →` : "Next: Exercises →";
+        const next =
+          nextSteps.exercises.find(
+            (exercise) => exerciseCompletions(progress, nextSteps.course, exercise.slug).length === 0,
+          ) ?? nextSteps.fallback;
+        nextLink!.href = next.url;
+        nextLink!.textContent = `Next: ${next.title} →`;
       }
       setVisible(promptSection!, !interview);
       setVisible(complete!, Boolean(interview));

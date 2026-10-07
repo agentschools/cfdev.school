@@ -16,17 +16,8 @@ describe("openApiDocument", () => {
     expect(path?.put?.requestBody).toBeDefined();
   });
 
-  it("documents GET /api/exercises and GET /api/exercises/{slug}", () => {
-    expect(openApiDocument.paths?.["/api/exercises"]?.get?.responses?.["200"]).toBeDefined();
-    const bySlug = openApiDocument.paths?.["/api/exercises/{slug}"];
-    expect(bySlug?.get?.responses?.["200"]).toBeDefined();
-    expect(bySlug?.get?.responses?.["404"]).toBeDefined();
-  });
-
-  it("documents GET /api/lessons/{slug}", () => {
-    const operation = openApiDocument.paths?.["/api/lessons/{slug}"]?.get;
-    expect(operation?.responses?.["200"]).toBeDefined();
-    expect(operation?.responses?.["404"]).toBeDefined();
+  it("documents GET /api/courses", () => {
+    expect(openApiDocument.paths?.["/api/courses"]?.get?.responses?.["200"]).toBeDefined();
   });
 
   it("documents GET /api/harnesses/{id}", () => {

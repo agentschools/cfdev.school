@@ -27,14 +27,16 @@ async function main() {
   const llmsTxt = await fetchText("/llms.txt");
   assert(llmsTxt.includes("PUT /api/students/{id}/interview"), "llms.txt doesn't document PUT interview endpoint");
   assert(llmsTxt.includes("GET /api/students/{id}/interview"), "llms.txt doesn't document GET interview endpoint");
-  assert(llmsTxt.includes('"interview"'), "llms.txt doesn't list the interview lesson");
-  log("Fetched /llms.txt and confirmed it documents the interview endpoints and lesson");
+  assert(llmsTxt.includes("GET /api/courses"), "llms.txt doesn't document GET /api/courses");
+  log("Fetched /llms.txt and confirmed it documents the interview and course endpoints");
 
-  // Step 2b: the interview is a lesson; fetch its agentInstructions.
-  const lesson = await request("GET", "/api/lessons/interview");
-  assert(lesson.slug === "interview", `expected the interview lesson, got ${lesson.slug}`);
-  assert(lesson.agentInstructions.includes("/api/students/{id}/interview"), "interview lesson doesn't point at the interview API");
-  log("Fetched the interview lesson's agentInstructions");
+  // Step 2b: the interview is Agent setup's first exercise; fetch its Markdown.
+  const courses = await request("GET", "/api/courses");
+  const interviewExercise = courses.find((c) => c.name === "agent-setup")?.exercises[0];
+  assert(interviewExercise?.slug === "interview", `expected Agent setup's interview, got ${interviewExercise?.slug}`);
+  const markdown = await fetchText(new URL(interviewExercise.markdownUrl).pathname);
+  assert(markdown.includes("/api/students/{id}/interview"), "the interview exercise doesn't point at the interview API");
+  log("Fetched the interview exercise's Markdown");
 
   // Step 3: a fresh student has no interview yet.
   const notFound = await requestRaw("GET", `/api/students/${student.id}/interview`);
@@ -66,7 +68,7 @@ async function main() {
   assert(optedOut.agentExperience === "occasional", "changing quizOptIn clobbered agentExperience");
   log("Changed quizOptIn alone without disturbing the rest of the interview");
 
-  // Step 7: mark the interview lesson complete, as its agentInstructions say.
+  // Step 7: mark the interview exercise complete, as its agent-instructions say.
   const summary = "You use AI agents now and then, have deployed on Vercel and AWS, are on macOS, and opted out of quizzes.";
   const progress = await request("PUT", `/api/progress/${student.id}`, {
     lessonSlug: "interview",
@@ -75,9 +77,9 @@ async function main() {
     summary,
   });
   const completion = progress.completedLessons.find((item) => item.slug === "interview");
-  assert(completion, "interview lesson wasn't marked complete");
+  assert(completion, "interview exercise wasn't marked complete");
   assert(completion.summary === summary, "interview completion didn't keep its summary");
-  log("Marked the interview lesson complete with a summary");
+  log("Marked the interview exercise complete with a summary");
 
   log("✅ Fake-agent interview run passed");
 }

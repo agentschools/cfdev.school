@@ -3,18 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { harnesses } from "../data/harnesses";
 import Index from "./index.astro";
 
-// The global CurriculumSidebar (rendered by Layout) reads the "lessons" content
-// collection to decide which lessons are linkable yet. See AGENTS.md's
-// "Testing Astro components" note.
-vi.mock("astro:content", () => ({
-  getCollection: async () => [
-    { data: { lessonSlug: "models" } },
-    { data: { lessonSlug: "instructions" } },
-    { data: { lessonSlug: "cli" } },
-    { data: { lessonSlug: "skills" } },
-    { data: { lessonSlug: "tools" } },
-  ],
-}));
+// The homepage and the global CurriculumSidebar (rendered by Layout) read the
+// course content collections. See AGENTS.md's "Testing Astro components" note.
+vi.mock("astro:content", async () => (await import("../test/fake-content")).fakeAstroContent);
 
 describe("homepage", () => {
   it("renders the headline, blurb, enroll CTA, and a monochrome logo for every harness", async () => {
@@ -45,15 +36,21 @@ describe("homepage", () => {
     expect(html.match(/data-enroll-trigger/g)).toHaveLength(1);
   });
 
-  it("renders the sidebar with available lessons linked and unshipped ones as pending", async () => {
+  it("renders the sidebar with every built-in course's exercises linked", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
-    expect(html).toContain('href="/lessons/models"');
-    expect(html).toContain('href="/lessons/instructions"');
-    expect(html).toContain('href="/lessons/cli"');
-    expect(html).toContain('href="/lessons/skills"');
-    expect(html).toContain('href="/lessons/tools"');
+    expect(html).toContain('href="/courses/agent-setup/models"');
+    expect(html).toContain('href="/courses/agent-setup/instructions"');
+    expect(html).toContain('href="/courses/workers-basics/deploy-first-worker"');
+  });
+
+  it("points the post-interview Next button at Agent setup's second exercise", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Index);
+
+    expect(html).toMatch(/id="interview-complete-next"[^>]*href="\/courses\/agent-setup\/models"/);
+    expect(html).toMatch(/Next: Models →/);
   });
 
   it("does not render the old anchor-nav header or in-page outline", async () => {

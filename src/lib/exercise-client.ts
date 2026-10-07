@@ -1,124 +1,114 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
-import { getExercise, listExercises } from "../data/exercises";
-import type { Progress } from "../schemas/progress";
 import { buildPrompt } from "./agent-prompt";
+import { type ExerciseCompletion, exerciseCompletions } from "./course-progress";
 import { subscribeToProgress } from "./progress-client";
+import { setVisible } from "./reveal";
+import type { Progress } from "../schemas/progress";
 
-function formatCompletedBanner(completedAt: string | undefined): string {
-  if (!completedAt) return "You completed this exercise!";
-  const date = new Date(completedAt).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  return `You completed this exercise on ${date}.`;
+/**
+ * "You completed this exercise on October 1, 2026 using Claude Code and on
+ * November 1, 2026 using OpenAI Codex." One clause per completion (they're
+ * per agent, see #52), oldest first. `harnessNames` maps harness IDs to how
+ * the sentence should name them; a completion without a harness gets no
+ * "using ...".
+ */
+export function formatCompletedBanner(
+  completions: readonly ExerciseCompletion[],
+  harnessNames: Readonly<Record<string, string>>,
+): string {
+  const clauses = [...completions]
+    .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+    .map((completion) => {
+      const date = new Date(completion.completedAt).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+      if (!completion.harness) return `on ${date}`;
+      return `on ${date} using ${harnessNames[completion.harness] ?? completion.harness}`;
+    });
+  return `You completed this exercise ${new Intl.ListFormat("en-US", { type: "conjunction" }).format(clauses)}.`;
 }
 
 /**
- * Exercise detail page (/exercises/{slug}). Mirrors lesson-client.ts: derives
- * the slug from the URL and looks the exercise up in the catalog, so no
- * define:vars handoff is needed. Requires the student to be enrolled to show
- * the prompt and the mark-complete action; unenrolled visitors get the nudge.
+ * Exercise page (/courses/{course}/{exercise}). Enrolled students get a
+ * prompt to paste into their agent; the agent marks the exercise complete via
+ * PUT /api/progress, and the live progress subscription flips this page to
+ * its completed state (banner naming each agent that completed it + next
+ * button, with the prompt tucked behind a "Redo this exercise" button),
+ * animated, without a reload. There's no manual mark-complete button:
+ * completion is the agent's call.
  */
 export function initExercisePage(): void {
-  const slug = window.location.pathname.split("/").filter(Boolean).pop();
-  const exercise = slug ? getExercise(slug) : undefined;
-  if (!exercise) return;
-
-  const all = listExercises();
-  const index = all.findIndex((item) => item.slug === exercise.slug);
-  const next = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
-  const nextUrl = next ? `/exercises/${next.slug}` : null;
-  const nextTitle = next?.title ?? null;
-
+  const page = document.querySelector<HTMLElement>("[data-exercise-page]");
   const enrollNudge = document.getElementById("exercise-enroll-nudge");
   const promptSection = document.getElementById("agent-prompt");
   const promptText = document.getElementById("agent-prompt-text");
-  const copyButton = document.getElementById("agent-prompt-copy") as HTMLButtonElement | null;
+  const copyButton = document.getElementById("agent-prompt-copy");
   const copyConfirm = document.getElementById("agent-prompt-confirm");
   const banner = document.getElementById("exercise-completed-banner");
   const bannerText = document.getElementById("exercise-completed-text");
-  const action = document.getElementById("exercise-action");
-  const actionBtn = document.getElementById("exercise-action-btn") as HTMLButtonElement | null;
-  const actionLabel = document.getElementById("exercise-action-label");
-
-  if (!promptSection || !promptText || !copyButton || !copyConfirm || !action || !actionBtn || !actionLabel) {
+  const redoButton = document.getElementById("exercise-redo");
+  const next = document.getElementById("exercise-next");
+  const nextPending = document.getElementById("exercise-next-pending");
+  const nextLink = document.getElementById("exercise-next-link");
+  if (
+    !page ||
+    !promptSection ||
+    !promptText ||
+    !copyButton ||
+    !copyConfirm ||
+    !banner ||
+    !bannerText ||
+    !redoButton ||
+    !next ||
+    !nextPending ||
+    !nextLink
+  ) {
     return;
   }
 
-  let currentStudent: CachedStudent | null = null;
-  let alreadyComplete = false;
+  const { courseName, courseTitle, exerciseSlug, exerciseTitle } = page.dataset as Record<string, string>;
+  const harnessNames = JSON.parse(banner.dataset.harnessNames ?? "{}") as Record<string, string>;
+  let student: CachedStudent | null = null;
+  let progressReceived = false;
+  // A completed exercise hides its prompt until the student asks to redo it
+  // (e.g. to set up a second agent); after that it stays open.
+  let redoRequested = false;
 
-  function fillPrompt(student: CachedStudent): void {
-    promptText!.textContent = buildPrompt(student, { kind: "exercise", title: exercise.title });
-    promptSection!.hidden = false;
-    copyConfirm!.hidden = true;
+  function renderProgress(progress: Progress): void {
+    progressReceived = true;
+    const completions = exerciseCompletions(progress, courseName, exerciseSlug);
+    const complete = completions.length > 0;
+    if (complete) bannerText!.textContent = formatCompletedBanner(completions, harnessNames);
+    // Once complete, the prompt asks the agent to redo the exercise.
+    promptText!.textContent = buildPrompt(student!, { courseTitle, exerciseTitle, redo: complete });
+    setVisible(promptSection!, !complete || redoRequested);
+    setVisible(redoButton!, !redoRequested);
+    setVisible(banner!, complete);
+    setVisible(nextPending!, !complete);
+    setVisible(nextLink!, complete);
   }
 
-  function showCompleted(completedAt?: string): void {
-    alreadyComplete = true;
-    if (banner && bannerText) {
-      bannerText.textContent = formatCompletedBanner(completedAt);
-      banner.hidden = false;
-    }
-    if (nextUrl && nextTitle) {
-      actionLabel.textContent = `Next exercise: ${nextTitle} →`;
-      actionBtn.disabled = false;
-      actionBtn.onclick = () => {
-        window.location.href = nextUrl;
-      };
-    } else {
-      actionLabel.textContent = "Exercise complete!";
-      actionBtn.disabled = true;
-      actionBtn.onclick = null;
-    }
-  }
-
-  async function markComplete(): Promise<void> {
-    if (!currentStudent || alreadyComplete) return;
-    actionBtn.disabled = true;
-    const original = actionLabel.textContent;
-    actionLabel.textContent = "Saving...";
-    try {
-      const response = await fetch(`/api/progress/${currentStudent.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exerciseSlug: exercise.slug }),
-      });
-      if (!response.ok) {
-        actionBtn.disabled = false;
-        actionLabel.textContent = original;
-        return;
-      }
-      if (nextUrl) {
-        window.location.href = nextUrl;
-        return;
-      }
-      const progress = (await response.json()) as Progress;
-      const completion = progress.completedExercises.find((item) => item.slug === exercise.slug);
-      showCompleted(completion?.completedAt);
-    } catch (error) {
-      console.error("Failed to mark exercise complete", error);
-      actionBtn.disabled = false;
-      actionLabel.textContent = original;
-    }
-  }
-
-  function onEnrolled(student: CachedStudent): void {
-    currentStudent = student;
+  function onEnrolled(enrolled: CachedStudent): void {
+    student = enrolled;
     if (enrollNudge) enrollNudge.hidden = true;
-    fillPrompt(student);
-    action.hidden = false;
-    actionBtn.onclick = () => {
-      void markComplete();
-    };
-
-    // Live: flips to the completed state as soon as the agent marks it done.
-    subscribeToProgress(student.id, (progress) => {
-      const completion = progress.completedExercises.find((item) => item.slug === exercise.slug);
-      if (completion && !alreadyComplete) showCompleted(completion.completedAt);
-    });
+    promptText!.textContent = buildPrompt(enrolled, { courseTitle, exerciseTitle });
+    copyConfirm!.hidden = true;
+    next!.hidden = false;
+    subscribeToProgress(enrolled.id, renderProgress);
+    // If progress can't load (e.g. a cached ID the server doesn't know),
+    // fall back to showing the prompt rather than nothing.
+    setTimeout(() => {
+      if (!progressReceived) setVisible(promptSection!, true);
+    }, 1500);
   }
+
+  redoButton.addEventListener("click", () => {
+    redoRequested = true;
+    setVisible(redoButton, false);
+    setVisible(promptSection, true);
+  });
 
   copyButton.addEventListener("click", async () => {
     try {
@@ -129,10 +119,8 @@ export function initExercisePage(): void {
     }
   });
 
-  // initEnrollment() runs globally from Layout.astro before page scripts in
-  // practice, so an already-cached student's ENROLLED_EVENT may fire before
-  // this listener attaches — check readCachedStudent() directly as a fallback
-  // (same pattern as src/pages/index.astro's initAgentPrompt()).
+  // initEnrollment() may dispatch ENROLLED_EVENT before this listener
+  // attaches, so check the cached student directly too.
   document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => {
     onEnrolled(event.detail);
   }) as EventListener);
@@ -143,25 +131,4 @@ export function initExercisePage(): void {
   } else if (enrollNudge) {
     enrollNudge.hidden = false;
   }
-}
-
-/** Exercises index (/exercises): reveals ✓ marks for completed exercises. */
-export function initExercisesIndex(): void {
-  const student = readCachedStudent();
-  if (!student) return;
-
-  fetch(`/api/progress/${student.id}`)
-    .then((response) => (response.ok ? response.json() : null))
-    .then((progress: Progress | null) => {
-      if (!progress) return;
-      for (const exercise of progress.completedExercises) {
-        // querySelectorAll: the sidebar carries the same [data-exercise-slug]
-        // .check markup earlier in the DOM, so a single querySelector would
-        // only ever un-hide the sidebar's.
-        document
-          .querySelectorAll(`[data-exercise-slug="${exercise.slug}"] .check`)
-          .forEach((item) => ((item as HTMLElement).hidden = false));
-      }
-    })
-    .catch((error) => console.error("Failed to fetch progress for exercises index", error));
 }
