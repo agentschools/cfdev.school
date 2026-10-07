@@ -53,6 +53,14 @@ describe("homepage", () => {
     expect(html).toMatch(/Next: Models →/);
   });
 
+  it("renders a hidden courses-in-progress summary that links to /profile", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Index);
+
+    expect(html).toMatch(/id="course-summary"[^>]*hidden/);
+    expect(html).toContain('href="/profile"');
+  });
+
   it("does not render the old anchor-nav header or in-page outline", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
