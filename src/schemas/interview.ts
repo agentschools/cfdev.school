@@ -5,7 +5,7 @@ import { studentIdSchema } from "./student";
  * The interview the agent conducts right after the student pastes the
  * handoff prompt (see plan.agent.md's Interview section): AI agent
  * experience, platforms used before, and learning goals shape tone and
- * depth of explanation only, never which lessons run or how the database
+ * depth of explanation only, never which exercises run or how the database
  * branches, per v1 scope. Quiz opt-in is a standalone preference the
  * student can change any time, not just during the interview.
  *
@@ -20,7 +20,7 @@ export const agentExperienceSchema = z
 
 export const platformsUsedSchema = z.array(z.string().min(1)).meta({
   description:
-    "Hosting or cloud platforms the student has deployed to before, in their own words. Empty means none. Used only to inform tone, depth, and comparisons, never to skip lessons or branch logic in v1.",
+    "Hosting or cloud platforms the student has deployed to before, in their own words. Empty means none. Used only to inform tone, depth, and comparisons, never to skip exercises or branch logic in v1.",
   example: ["Vercel", "AWS"],
 });
 
@@ -38,7 +38,7 @@ export const interviewAnswersSchema = z.object({
   }),
   os: osSchema.optional(),
   quizOptIn: z.boolean().optional().meta({
-    description: "Whether the student wants to be quizzed at the end of each lesson. Defaults to true.",
+    description: "Whether the student wants to be quizzed at the end of each exercise. Defaults to true.",
   }),
 });
 

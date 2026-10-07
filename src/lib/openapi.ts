@@ -1,18 +1,10 @@
 import { z } from "zod";
 import { createDocument } from "zod-openapi";
 import { harnessProfileSchema } from "../data/harnesses";
-import { exerciseSchema, exerciseSlugSchema } from "../schemas/exercise";
+import { courseSchema } from "../schemas/course";
 import { interviewAnswersSchema, interviewSchema } from "../schemas/interview";
 import { markProgressSchema, progressSchema } from "../schemas/progress";
 import { studentIdSchema, studentSchema } from "../schemas/student";
-
-const lessonContentSchema = z.object({
-  slug: z.string(),
-  title: z.string(),
-  description: z.string(),
-  quiz: z.boolean(),
-  agentInstructions: z.string(),
-});
 
 /**
  * OpenAPI spec for the Cloudflare Dev School public API, derived from the
@@ -25,7 +17,7 @@ export const openApiDocument = createDocument({
     title: "Cloudflare Dev School API",
     version: "0.1.0",
     description:
-      "Public, versioned API for Cloudflare Dev School: enrollment, interview, lessons, harness profiles, exercises, and progress. No authentication required.",
+      "Public, versioned API for Cloudflare Dev School: enrollment, interview, courses, harness profiles, and progress. No authentication required.",
   },
   paths: {
     "/api/students": {
@@ -47,7 +39,7 @@ export const openApiDocument = createDocument({
       get: {
         summary: "Get a student's interview answers",
         description:
-          "Returns the student's AI agent experience, platforms used before, learning goals, OS, and quiz opt-in preference. Agent experience and platforms only inform tone and depth of explanation, they never skip lessons or branch logic in v1.",
+          "Returns the student's AI agent experience, platforms used before, learning goals, OS, and quiz opt-in preference. Agent experience and platforms only inform tone and depth of explanation, they never skip exercises or branch logic in v1.",
         requestParams: { path: z.object({ id: studentIdSchema }) },
         responses: {
           "200": {
@@ -84,54 +76,17 @@ export const openApiDocument = createDocument({
         },
       },
     },
-    "/api/exercises": {
+    "/api/courses": {
       get: {
-        summary: "List all exercises",
+        summary: "List built-in courses",
         description:
-          "Returns every exercise in the catalog, sorted by order, including student-facing content and agent instructions.",
+          "Returns the built-in courses in order, each with its exercises in order (the interview is always first). To teach an exercise, fetch its markdownUrl and follow the Markdown: its agent-instructions frontmatter, if any, and its body. Fetch GET /api/harnesses/{id} for facts specific to your harness.",
         responses: {
           "200": {
-            description: "Array of exercises.",
+            description: "Array of courses.",
             content: {
-              "application/json": { schema: z.array(exerciseSchema) },
+              "application/json": { schema: z.array(courseSchema) },
             },
-          },
-        },
-      },
-    },
-    "/api/exercises/{slug}": {
-      get: {
-        summary: "Get a single exercise",
-        description: "Returns one exercise by slug, including content and agent instructions.",
-        requestParams: { path: z.object({ slug: exerciseSlugSchema }) },
-        responses: {
-          "200": {
-            description: "Exercise found.",
-            content: {
-              "application/json": { schema: exerciseSchema },
-            },
-          },
-          "404": {
-            description: "No exercise exists with that slug.",
-          },
-        },
-      },
-    },
-    "/api/lessons/{slug}": {
-      get: {
-        summary: "Get lesson content",
-        description:
-          "Returns the agent instructions and description for a lesson. Lessons are written for any agent; fetch GET /api/harnesses/{id} for facts specific to yours.",
-        requestParams: { path: z.object({ slug: z.string() }) },
-        responses: {
-          "200": {
-            description: "Lesson content.",
-            content: {
-              "application/json": { schema: lessonContentSchema },
-            },
-          },
-          "404": {
-            description: "No lesson exists with that slug.",
           },
         },
       },

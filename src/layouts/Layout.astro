@@ -137,6 +137,11 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
     flex: 1;
   }
 
+  /* Course and exercise Markdown starts with its `# Title`, which the page already shows in its header. */
+  .prose > h1:first-child {
+    display: none;
+  }
+
   .code-block {
     position: relative;
     margin: 0 0 1rem;

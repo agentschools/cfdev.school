@@ -24,7 +24,7 @@ export function initDisenrollPage(): void {
   }
 
   resetBtn?.addEventListener("click", async () => {
-    if (!window.confirm("Reset all your lesson and exercise progress? This can't be undone.")) return;
+    if (!window.confirm("Reset all your course progress? This can't be undone.")) return;
 
     resetBtn.disabled = true;
     const originalLabel = resetBtn.textContent;

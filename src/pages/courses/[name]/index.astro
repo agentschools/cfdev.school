@@ -1,0 +1,211 @@
+---
+import { render } from "astro:content";
+import AgentPrompt from "../../../components/AgentPrompt.astro";
+import Layout from "../../../layouts/Layout.astro";
+import { exercisePath } from "../../../data/courses";
+import { getBuiltInCourse } from "../../../lib/courses";
+
+export const prerender = false;
+
+const course = await getBuiltInCourse(Astro.params.name ?? "");
+
+if (!course) {
+  Astro.response.status = 404;
+}
+
+const Content = course ? (await render(course.entry)).Content : null;
+const title = course?.title ?? "Course not found";
+---
+
+<Layout title={`${title} — Cloudflare Dev School`} description={course?.description ?? "Course not found."}>
+  <div class="page">
+    {
+      !course || !Content ? (
+        <main class="content">
+          <p>This course doesn't exist.</p>
+        </main>
+      ) : (
+        <main class="content" data-course-page data-course-title={course.title}>
+          <header class="header">
+            <p class="eyebrow">
+              <a href="/courses">Courses</a>
+            </p>
+            <h1>{title}</h1>
+            <p class="description">{course.description}</p>
+          </header>
+
+          <div id="course-enroll-nudge" class="enroll-nudge" hidden>
+            <a href="/">Enroll for free</a> to track your progress through the course.
+          </div>
+
+          <AgentPrompt />
+
+          <div class="prose">
+            <Content />
+          </div>
+
+          <h2 class="exercises-heading">Exercises</h2>
+          <ol class="exercise-list">
+            {course.exercises.map((exercise, index) => (
+              <li data-course={course.name} data-exercise={exercise.slug}>
+                <a href={exercisePath(course.name, exercise.slug)}>
+                  <span class="order">Exercise {String(index).padStart(2, "0")}</span>
+                  <span class="title-row">
+                    <span class="title">{exercise.title}</span>
+                    <span class="check" hidden aria-label="Completed">
+                      ✓
+                    </span>
+                  </span>
+                  {exercise.description && <span class="exercise-description">{exercise.description}</span>}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </main>
+      )
+    }
+  </div>
+</Layout>
+
+<script>
+  import { initCoursePage } from "../../../lib/course-client";
+  initCoursePage();
+</script>
+
+<style>
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2.5rem 0 5rem;
+    max-width: 42rem;
+  }
+
+  .header {
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    color: var(--muted-fg);
+  }
+
+  .eyebrow a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .eyebrow a:hover {
+    color: var(--fg);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 0.75rem;
+  }
+
+  .description {
+    color: var(--muted-fg);
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .enroll-nudge {
+    margin: 0 0 2rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    color: var(--muted-fg);
+    font-size: 0.95rem;
+  }
+
+  .enroll-nudge a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .prose {
+    line-height: 1.7;
+  }
+
+  .prose :global(p) {
+    margin: 0 0 1rem;
+  }
+
+  .prose :global(a) {
+    color: var(--accent);
+  }
+
+  .exercises-heading {
+    font-size: 1.35rem;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .exercise-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .exercise-list a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card-bg);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .exercise-list a:hover {
+    border-color: var(--accent);
+  }
+
+  .order {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    color: var(--muted-fg);
+    text-transform: uppercase;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .title {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .check {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .check[hidden] {
+    display: none;
+  }
+
+  .exercise-description {
+    color: var(--muted-fg);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+</style>

@@ -3,11 +3,11 @@ import { z } from "zod";
 /**
  * Structured research data on the AI agent harnesses Cloudflare Dev School
  * supports. Feeds the homepage "Works with" grid and GET /api/harnesses/{id},
- * which agents fetch for harness-specific facts while teaching lessons.
+ * which agents fetch for harness-specific facts while teaching exercises.
  *
  * A living data source, re-verified daily by
  * .github/workflows/refresh-harnesses.yml (which opens a PR for review) and by
- * hand when a lesson touches it. Prices, billing policy, and CLI flags shift
+ * hand when an exercise touches it. Prices, billing policy, and CLI flags shift
  * often. Each harness carries its own `lastVerified` date and a `sources`
  * list. See AGENTS.md for the freshness process.
  */

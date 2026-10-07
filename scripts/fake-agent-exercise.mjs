@@ -18,27 +18,24 @@ async function main() {
   log(`Enrolled as ${student.id}`);
 
   const llmsTxt = await fetchText("/llms.txt");
-  assert(llmsTxt.includes("GET /api/exercises"), "llms.txt doesn't document GET /api/exercises");
+  assert(llmsTxt.includes("GET /api/courses"), "llms.txt doesn't document GET /api/courses");
   assert(llmsTxt.includes("PUT /api/progress/{studentId}"), "llms.txt doesn't document PUT progress");
   assert(llmsTxt.includes("deploy-first-worker"), "llms.txt doesn't mention deploy-first-worker");
   log("Fetched /llms.txt and confirmed it documents exercise + progress endpoints");
 
-  const exercises = await request("GET", "/api/exercises");
-  assert(Array.isArray(exercises) && exercises.length >= 1, "expected at least one exercise");
-  assert(
-    exercises.some((e) => e.slug === "deploy-first-worker"),
-    "deploy-first-worker missing from list",
-  );
-  log(`Listed ${exercises.length} exercise(s)`);
+  const courses = await request("GET", "/api/courses");
+  assert(courses[0]?.name === "agent-setup", "Agent setup should be the first course");
+  const course = courses.find((c) => c.name === "workers-basics");
+  assert(course, "workers-basics missing from /api/courses");
+  assert(course.exercises[0]?.slug === "interview", "a course's first exercise should be its interview");
+  const exercise = course.exercises.find((e) => e.slug === "deploy-first-worker");
+  assert(exercise, "deploy-first-worker missing from workers-basics");
+  log(`Listed ${courses.length} course(s); workers-basics has ${course.exercises.length} exercise(s)`);
 
-  const exercise = await request("GET", "/api/exercises/deploy-first-worker");
-  assert(exercise.slug === "deploy-first-worker", "slug mismatch on detail");
-  assert(typeof exercise.content === "string" && exercise.content.length > 0, "content missing");
-  assert(
-    typeof exercise.agentInstructions === "string" && exercise.agentInstructions.includes("PUT"),
-    "agentInstructions should mention marking complete via PUT",
-  );
-  log("Fetched deploy-first-worker content + agentInstructions");
+  const markdown = await fetchText(new URL(exercise.markdownUrl).pathname);
+  assert(/^---\n[\s\S]*agent-instructions:/.test(markdown), "exercise Markdown should have agent-instructions frontmatter");
+  assert(markdown.includes("PUT /api/progress/{studentId}"), "agent-instructions should mention marking complete via PUT");
+  log("Fetched deploy-first-worker's raw Markdown");
 
   const emptyProgress = await request("GET", `/api/progress/${student.id}`);
   assert(emptyProgress.studentId === student.id, "progress studentId mismatch");

@@ -13,14 +13,17 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("GET /api/openapi.json");
     expect(text).toContain("GET /api/students/{id}/interview");
     expect(text).toContain("PUT /api/students/{id}/interview");
-    expect(text).toContain("GET /api/lessons/{slug}");
     expect(text).toContain("GET /api/harnesses/{harnessId}");
-    expect(text).toContain("GET /api/exercises");
-    expect(text).toContain("GET /api/exercises/{slug}");
+    expect(text).toContain("GET /api/courses");
     expect(text).toContain("GET /api/progress/{studentId}");
     expect(text).toContain("PUT /api/progress/{studentId}");
-    expect(text).toContain("deploy-first-worker");
-    expect(text).toContain("add-first-binding-kv");
-    expect(text).toContain("Exercise 2");
+  });
+
+  it("points agents at the course list instead of hardcoding exercise order", async () => {
+    const text = await (await GET({} as APIContext)).text();
+    expect(text).toContain("markdownUrl");
+    expect(text).toContain("agent-setup");
+    expect(text).not.toContain("/api/lessons");
+    expect(text).not.toContain("/api/exercises");
   });
 });

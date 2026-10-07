@@ -6,7 +6,7 @@ const CHECK_ICON =
 const RESET_MS = 2000;
 
 /**
- * Wraps every <pre> inside `.prose` (lesson and exercise content, including
+ * Wraps every <pre> inside `.prose` (course and exercise content, including
  * one-line commands) in a container with an icon-only copy button on the right.
  * After a click the button briefly shows a check and "Copied".
  */

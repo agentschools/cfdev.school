@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { harnessProfileSchema } from "../data/harnesses";
-import { exerciseSlugSchema } from "./exercise";
 import { studentIdSchema } from "./student";
 
 /**
@@ -13,6 +12,16 @@ import { studentIdSchema } from "./student";
  * lesson once per agent, since lessons like Instructions or Skills change
  * agent-specific files. Exercises aren't agent-specific and stay one per student.
  */
+
+// Progress is still keyed by the slugs from before courses (#73): Agent
+// setup's exercises are stored as lessons, Workers basics' as exercises. #75
+// keys it by course and exercise instead.
+const exerciseSlugSchema = z
+  .union([z.literal("deploy-first-worker"), z.literal("add-first-binding-kv")])
+  .meta({
+    description: "Stable slug for a Workers basics exercise.",
+    example: "deploy-first-worker",
+  });
 
 export const lessonSlugSchema = z
   .union([
