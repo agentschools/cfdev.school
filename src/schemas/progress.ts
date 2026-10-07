@@ -18,7 +18,6 @@ import { studentIdSchema } from "./student";
  *
  * Each course also carries its interview summary (src/schemas/interview.ts),
  * so saving an interview updates open tabs over the same progress broadcast.
- * `course_exercise_completions.summary` is unused since #76.
  */
 
 const harnessSchema = harnessProfileSchema.shape.id.meta({
