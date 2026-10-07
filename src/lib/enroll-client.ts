@@ -1,7 +1,7 @@
 // Cipher-reveal + confetti animation adapted from opencodeschool/opencode.school's
 // src/pages/index.astro and src/styles/main.css
-// (https://github.com/opencodeschool/opencode.school), reused per
-// plan.agent.md's "copy OpenCode School's enrollment flow wholesale".
+// (https://github.com/opencodeschool/opencode.school). This app copies
+// OpenCode School's enrollment flow wholesale.
 //
 // Copyright (c) 2026 Cloudflare, Inc.
 // Licensed under the Apache 2.0 license found in the LICENSE file or at:

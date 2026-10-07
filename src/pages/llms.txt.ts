@@ -3,8 +3,8 @@ import type { APIRoute } from "astro";
 export const prerender = true;
 
 // Closely follows opencodeschool/opencode.school's llms.txt format and tone
-// (https://opencode.school/llms.txt), per plan.agent.md's instruction to
-// copy OpenCode School's structure wholesale. API paths are relative to
+// (https://opencode.school/llms.txt): this app copies OpenCode School's
+// structure wholesale. API paths are relative to
 // whatever origin this file was fetched from (production, a PR preview, or
 // local dev all serve different origins), so don't hardcode a domain here.
 const body = `# Cloudflare Dev School
