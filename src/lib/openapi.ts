@@ -3,7 +3,7 @@ import { createDocument } from "zod-openapi";
 import { harnessProfileSchema } from "../data/harnesses";
 import { courseSchema } from "../schemas/course";
 import { interviewAnswersSchema, interviewSchema } from "../schemas/interview";
-import { markProgressSchema, progressSchema } from "../schemas/progress";
+import { markExerciseCompleteSchema, progressSchema } from "../schemas/progress";
 import { studentIdSchema, studentSchema } from "../schemas/student";
 
 /**
@@ -114,7 +114,7 @@ export const openApiDocument = createDocument({
       get: {
         summary: "Get a student's progress",
         description:
-          "Returns which exercises and lessons the student has completed. Empty completedExercises/completedLessons means nothing is complete yet in that category.",
+          "Returns every built-in course and exercise, in order, with the student's completions: one per harness that completed an exercise, and a completedAt on each course the student has finished.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         responses: {
           "200": {
@@ -129,13 +129,13 @@ export const openApiDocument = createDocument({
         },
       },
       put: {
-        summary: "Mark an exercise or lesson complete",
+        summary: "Mark an exercise complete",
         description:
-          "Idempotent upsert: marks the given exercise or lesson complete for the student. Send exactly one of exerciseSlug or lessonSlug. Exercises may optionally include deployedUrl (the public Worker URL you verified); both may optionally include model (your current model ID). Lessons require harness (your harness ID); the interview lesson also takes a one-sentence summary of the student's answers; lesson completions are kept per harness, so completing a lesson with a second agent adds a second completion. Unknown slugs are rejected.",
+          "Idempotent upsert: marks an exercise complete for the student, per harness, so completing it with a second agent adds a second completion. Send the course name and exercise slug as GET /api/courses lists them, your harness ID, and your model ID. Agent setup's interview also takes a one-sentence summary of the student's answers. When every exercise in the course has a completion, the course is marked complete too, once. Unknown courses and exercises are rejected.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         requestBody: {
           content: {
-            "application/json": { schema: markProgressSchema },
+            "application/json": { schema: markExerciseCompleteSchema },
           },
         },
         responses: {
@@ -146,7 +146,7 @@ export const openApiDocument = createDocument({
             },
           },
           "400": {
-            description: "Invalid body (e.g. unknown exercise/lesson slug or bad deployedUrl).",
+            description: "Invalid body (e.g. an unknown course or exercise, or a missing harness).",
           },
           "404": {
             description: "No student exists with that ID.",
@@ -156,11 +156,11 @@ export const openApiDocument = createDocument({
       delete: {
         summary: "Reset a student's progress",
         description:
-          "Deletes all of the student's exercise and lesson completions. The student row and interview answers are kept, only their progress is cleared. Used by the 'Reset progress' option on /disenroll.",
+          "Deletes all of the student's exercise and course completions. The student row and interview answers are kept, only their progress is cleared. Used by the 'Reset progress' option on /disenroll.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         responses: {
           "200": {
-            description: "Progress after the reset (both arrays empty).",
+            description: "Progress after the reset, with no completions.",
             content: {
               "application/json": { schema: progressSchema },
             },

@@ -1,19 +1,18 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { buildPrompt } from "./agent-prompt";
-import { type ExerciseCompletion, exerciseCompletions } from "./course-progress";
+import { exerciseCompletions } from "./course-progress";
 import { subscribeToProgress } from "./progress-client";
 import { setVisible } from "./reveal";
-import type { Progress } from "../schemas/progress";
+import type { ExerciseCompletion, Progress } from "../schemas/progress";
 
 /**
  * "You completed this exercise on October 1, 2026 using Claude Code and on
  * November 1, 2026 using OpenAI Codex." One clause per completion (they're
  * per agent, see #52), oldest first. `harnessNames` maps harness IDs to how
- * the sentence should name them; a completion without a harness gets no
- * "using ...".
+ * the sentence should name them.
  */
 export function formatCompletedBanner(
-  completions: readonly ExerciseCompletion[],
+  completions: readonly Pick<ExerciseCompletion, "harness" | "completedAt">[],
   harnessNames: Readonly<Record<string, string>>,
 ): string {
   const clauses = [...completions]
@@ -24,7 +23,6 @@ export function formatCompletedBanner(
         day: "numeric",
         year: "numeric",
       });
-      if (!completion.harness) return `on ${date}`;
       return `on ${date} using ${harnessNames[completion.harness] ?? completion.harness}`;
     });
   return `You completed this exercise ${new Intl.ListFormat("en-US", { type: "conjunction" }).format(clauses)}.`;

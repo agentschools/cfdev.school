@@ -45,7 +45,7 @@ For each exercise: fetch its \`markdownUrl\`. It's Markdown with YAML frontmatte
 
 Agent setup's interview always comes first for a new student: it asks a few short questions, all at once, about their AI agent experience, platforms they've deployed to before, learning goals, and quiz preference, auto-detects their OS, and stores the answers via PUT /api/students/{id}/interview. Use those answers (GET /api/students/{id}/interview) to adjust tone and depth in every later exercise of every course, and only quiz the student if \`quizOptIn\` is true. Students can change any answer at any time just by telling you (e.g. "turn off quizzes"): when they do, PUT just that field, then mark Agent setup's interview complete again (with your \`harness\`) with an updated \`summary\` so the student's homepage shows the change, and adjust from then on.
 
-A course that doesn't write its own interview gets Dev School's default one, which tells you to write a few questions of your own from the course's content. Workers basics is one of these. Its answers aren't saved yet, and it can't be marked complete yet: just move on to the next exercise afterward.
+A course that doesn't write its own interview gets Dev School's default one, which tells you to write a few questions of your own from the course's content. Workers basics is one of these. Its answers aren't saved yet, but mark it complete like any other exercise.
 
 If the student asks to redo an exercise they've already completed (the prompt says so, e.g. because they're trying the course with a second agent), go through it fully again rather than skipping it, then mark it complete with your own \`harness\`. The student's exercise page lists each agent they completed it with.
 
@@ -53,12 +53,13 @@ Don't invent exercise content that isn't in the exercise's Markdown, and don't i
 
 ## Marking exercises complete
 
-Use PUT /api/progress/{studentId}. For now, the request body depends on the course:
+Use PUT /api/progress/{studentId} with \`{ "course": "<course name>", "exercise": "<exercise slug>", "harness": "<your harness id>", "model": "<your model id>" }\`, using the names and slugs GET /api/courses lists, e.g. \`{ "course": "agent-setup", "exercise": "models", "harness": "claude-code", "model": "anthropic/claude-sonnet-4-5" }\`. Always include \`model\`.
 
-- Agent setup: \`{ "lessonSlug": "<exercise slug>", "harness": "<your harness id>" }\`. Completions are tracked per agent, since these exercises set up agent-specific files, so a student can complete each one once with every agent they use. The interview (\`"lessonSlug": "interview"\`) also takes \`summary\`: one sentence (max 280 characters), addressed to the student, summarizing their saved answers; it's shown on their homepage. Other exercises don't need one, and a later PUT without \`summary\` keeps the previous one.
-- Workers basics: \`{ "exerciseSlug": "<exercise slug>" }\`, for "deploy-first-worker" and "add-first-binding-kv".
+Completions are tracked per agent, since some exercises set up agent-specific files, so a student can complete each exercise once with every agent they use. It's an idempotent upsert. When every exercise in a course has a completion, the course is marked complete too; GET /api/progress/{studentId} shows a \`completedAt\` on it.
 
-Always include \`model\` (your current model ID, e.g. \`anthropic/claude-sonnet-4-5\`) too. Both are idempotent upserts. Check GET /api/progress/{studentId} first if the student might already have completed an exercise.
+Agent setup's interview also takes \`summary\`: one sentence (max 280 characters), addressed to the student, summarizing their saved answers; it's shown on their homepage. Other exercises don't need one, and a later PUT without \`summary\` keeps the previous one.
+
+Check GET /api/progress/{studentId} first if the student might already have completed an exercise.
 
 ## Status
 

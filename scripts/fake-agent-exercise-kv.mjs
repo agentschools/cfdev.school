@@ -23,8 +23,7 @@ async function main() {
   const llmsTxt = await fetchText("/llms.txt");
   assert(llmsTxt.includes("GET /api/courses"), "llms.txt doesn't document GET /api/courses");
   assert(llmsTxt.includes("PUT /api/progress/{studentId}"), "llms.txt doesn't document PUT progress");
-  assert(llmsTxt.includes("add-first-binding-kv"), "llms.txt doesn't mention add-first-binding-kv");
-  log("Fetched /llms.txt and confirmed it documents the KV exercise");
+  log("Fetched /llms.txt and confirmed it documents the course and progress endpoints");
 
   const courses = await request("GET", "/api/courses");
   assert(courses[0]?.name === "agent-setup", "Agent setup should be the first course");
@@ -40,50 +39,34 @@ async function main() {
   assert(markdown.includes("PUT /api/progress/{studentId}"), "agent-instructions should mention marking complete via PUT");
   log("Fetched add-first-binding-kv's raw Markdown");
 
+  const workersBasics = (progress) => progress.courses.find((c) => c.name === "workers-basics");
+  const completionsOf = (progress, slug) => workersBasics(progress)?.exercises.find((e) => e.slug === slug)?.completions;
+
   const emptyProgress = await request("GET", `/api/progress/${student.id}`);
   assert(emptyProgress.studentId === student.id, "progress studentId mismatch");
+  assert(completionsOf(emptyProgress, "add-first-binding-kv")?.length === 0, "expected no completions yet");
+  log("GET progress listed add-first-binding-kv with no completions");
+
+  const mark = { course: "workers-basics", exercise: "add-first-binding-kv", harness: "generic", model: "fake-agent/test" };
+  const afterComplete = await request("PUT", `/api/progress/${student.id}`, mark);
+  assert(completionsOf(afterComplete, "add-first-binding-kv").length === 1, "expected one completion");
+  assert(!workersBasics(afterComplete).completedAt, "the course shouldn't be complete yet");
+  log("Marked add-first-binding-kv complete");
+
+  const withCodex = await request("PUT", `/api/progress/${student.id}`, { ...mark, harness: "codex" });
+  assert(completionsOf(withCodex, "add-first-binding-kv").length === 2, "expected one completion per harness");
+  log("Completing it with a second harness added a second completion");
+
+  // Completing the rest of Workers basics (its default interview and
+  // deploy-first-worker) completes the course.
+  await request("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "interview" });
+  const withAll = await request("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "deploy-first-worker" });
   assert(
-    Array.isArray(emptyProgress.completedExercises) && emptyProgress.completedExercises.length === 0,
-    "expected no completions yet",
+    workersBasics(withAll).exercises.every((e) => e.completions.length > 0),
+    "expected every Workers basics exercise to be complete",
   );
-  log("GET progress returned empty completedExercises");
-
-  const afterComplete = await request("PUT", `/api/progress/${student.id}`, {
-    exerciseSlug: "add-first-binding-kv",
-  });
-  assert(afterComplete.completedExercises.length === 1, "expected one completion");
-  assert(afterComplete.completedExercises[0].slug === "add-first-binding-kv", "wrong slug completed");
-  assert(!afterComplete.completedExercises[0].deployedUrl, "deployedUrl should be absent when omitted");
-  log("Marked add-first-binding-kv complete without deployedUrl");
-
-  const withUrl = await request("PUT", `/api/progress/${student.id}`, {
-    exerciseSlug: "add-first-binding-kv",
-    deployedUrl: "https://hello-from-cds.example.workers.dev",
-    model: "fake-agent/test",
-  });
-  assert(withUrl.completedExercises.length === 1, "upsert should not duplicate completions");
-  assert(
-    withUrl.completedExercises[0].deployedUrl === "https://hello-from-cds.example.workers.dev",
-    "deployedUrl not stored",
-  );
-  assert(withUrl.completedExercises[0].model === "fake-agent/test", "model not stored");
-  log("Upserted completion with optional deployedUrl and model");
-
-  const fetched = await request("GET", `/api/progress/${student.id}`);
-  assert(
-    fetched.completedExercises[0].deployedUrl === "https://hello-from-cds.example.workers.dev",
-    "GET progress lost deployedUrl",
-  );
-  log("GET progress returned the updated completion");
-
-  // Completing deploy-first-worker too should result in both completions
-  // coexisting for the same student, proving the two exercises don't clobber
-  // each other in exercise_completions.
-  const withBoth = await request("PUT", `/api/progress/${student.id}`, {
-    exerciseSlug: "deploy-first-worker",
-  });
-  assert(withBoth.completedExercises.length === 2, "expected both exercises completed");
-  log("Completing deploy-first-worker alongside add-first-binding-kv keeps both completions");
+  assert(workersBasics(withAll).completedAt, "Workers basics should be marked complete");
+  log("Completing every Workers basics exercise marked the course complete");
 
   log("✅ Fake-agent exercise-kv run passed");
 }

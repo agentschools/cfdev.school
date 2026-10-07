@@ -1,123 +1,84 @@
 import { z } from "zod";
 import { harnessProfileSchema } from "../data/harnesses";
+import { courseNameSchema, exerciseSlugSchema } from "./course";
 import { studentIdSchema } from "./student";
 
 /**
- * Per-student completion of exercises and lessons (see #14). Source of truth
- * for the `exercise_completions` (migrations/0003_create_exercise_completions.sql)
- * and `lesson_completions` (migrations/0004_create_lesson_completions.sql,
- * reshaped by 0005 and 0006) D1 tables, and GET/PUT /api/progress/{studentId}.
+ * Per-student progress through courses (see #73 and #75). Source of truth for
+ * the `exercise_completions` and `course_completions` D1 tables
+ * (migrations/0008_course_progress.sql) and GET|PUT|DELETE
+ * /api/progress/{studentId}.
  *
- * Lesson completions are per harness (#52): a student can complete the same
- * lesson once per agent, since lessons like Instructions or Skills change
- * agent-specific files. Exercises aren't agent-specific and stay one per student.
+ * Exercise completions are per harness (#52): a student can complete the
+ * same exercise once with each agent they use, since exercises like
+ * Instructions or Skills change agent-specific files. A course is complete
+ * once each of its exercises has at least one completion. That's recorded
+ * when it first happens and kept even if the course gains exercises later.
  */
 
-// Progress is still keyed by the slugs from before courses (#73): Agent
-// setup's exercises are stored as lessons, Workers basics' as exercises. #75
-// keys it by course and exercise instead.
-const exerciseSlugSchema = z
-  .union([z.literal("deploy-first-worker"), z.literal("add-first-binding-kv")])
-  .meta({
-    description: "Stable slug for a Workers basics exercise.",
-    example: "deploy-first-worker",
-  });
-
-export const lessonSlugSchema = z
-  .union([
-    z.literal("interview"),
-    z.literal("models"),
-    z.literal("instructions"),
-    z.literal("cli"),
-    z.literal("skills"),
-    z.literal("tools"),
-  ])
-  .meta({
-    description: "Stable slug for a course lesson.",
-    example: "models",
-  });
-
-export const completedExerciseSchema = z.object({
-  slug: exerciseSlugSchema,
-  completedAt: z.iso.datetime().meta({
-    description: "When this exercise was marked complete, as an ISO 8601 timestamp.",
-  }),
-  deployedUrl: z.string().url().optional().meta({
-    description:
-      "Public URL of the student's deployed Worker, if the agent captured it after verifying the response. Optional — never required for completion.",
-  }),
-  model: z.string().min(1).optional().meta({
-    description: "Model ID the agent was running as when it marked this complete, if known.",
-    example: "anthropic/claude-sonnet-4-5",
-  }),
-});
-
-const lessonSummarySchema = z.string().min(1).max(280).meta({
+const harnessSchema = harnessProfileSchema.shape.id.meta({
   description:
-    "One sentence, written by the agent for the student, summarizing their saved interview answers. Shown on the homepage. Only used by the interview lesson.",
-  example: "You're new to AI agents, haven't deployed anything before, are on macOS, want to build a link shortener, and opted into quizzes.",
-});
-
-const lessonHarnessSchema = harnessProfileSchema.shape.id.meta({
-  description:
-    'Harness (agent) that completed the lesson, the same ID used for GET /api/harnesses/{id}. Use "generic" if yours isn\'t listed.',
+    'Harness (agent) that completed the exercise, the same ID used for GET /api/harnesses/{id}. Use "generic" if yours isn\'t listed.',
   example: "claude-code",
 });
 
-export const completedLessonSchema = z.object({
-  slug: lessonSlugSchema,
-  harness: lessonHarnessSchema,
+const modelSchema = z.string().min(1).meta({
+  description: "Model ID the agent was running as when it marked the exercise complete.",
+  example: "anthropic/claude-sonnet-4-5",
+});
+
+const summarySchema = z.string().min(1).max(280).meta({
+  description:
+    "Only for Agent setup's interview: one sentence, written by the agent for the student, summarizing their saved answers. Shown on the homepage.",
+  example: "You're new to AI agents, haven't deployed anything before, are on macOS, want to build a link shortener, and opted into quizzes.",
+});
+
+export const exerciseCompletionSchema = z.object({
+  harness: harnessSchema,
   completedAt: z.iso.datetime().meta({
-    description: "When this lesson was marked complete, as an ISO 8601 timestamp.",
+    description: "When this harness last marked the exercise complete, as an ISO 8601 timestamp.",
   }),
-  model: z.string().min(1).optional().meta({
-    description: "Model ID the agent was running as when it marked this complete, if known.",
-    example: "anthropic/claude-sonnet-4-5",
+  exerciseUrl: z.url().meta({ description: "The exercise's page when it was completed." }),
+  model: modelSchema.optional(),
+  summary: summarySchema.optional(),
+});
+
+export const exerciseProgressSchema = z.object({
+  slug: exerciseSlugSchema,
+  completions: z.array(exerciseCompletionSchema).meta({
+    description: "One per harness that completed the exercise, oldest first. Empty until it's complete.",
   }),
-  summary: lessonSummarySchema.optional(),
+});
+
+export const courseProgressSchema = z.object({
+  name: courseNameSchema,
+  completedAt: z.iso.datetime().optional().meta({
+    description:
+      "When every exercise in the course first had a completion. Kept even if the course gains exercises later, which then show up with no completions.",
+  }),
+  exercises: z.array(exerciseProgressSchema).meta({ description: "Every exercise in the course, in order." }),
 });
 
 export const progressSchema = z.object({
   studentId: studentIdSchema,
-  completedExercises: z.array(completedExerciseSchema),
-  completedLessons: z.array(completedLessonSchema),
+  courses: z.array(courseProgressSchema).meta({ description: "Every built-in course, in order." }),
   updatedAt: z.iso.datetime().meta({
-    description: "When progress was last updated, as an ISO 8601 timestamp. Equals student createdAt when nothing is complete yet.",
+    description:
+      "When progress was last updated, as an ISO 8601 timestamp. Equals the student's createdAt when nothing is complete yet.",
   }),
 });
 
-/** Body for PUT /api/progress/{studentId} to mark an exercise complete (idempotent upsert). */
+/** Body for PUT /api/progress/{studentId}: marks one exercise complete (idempotent upsert per exercise + harness). */
 export const markExerciseCompleteSchema = z.object({
-  exerciseSlug: exerciseSlugSchema.meta({
-    description: "Slug of the exercise to mark complete. Must match a known exercise.",
-  }),
-  deployedUrl: z.string().url().optional().meta({
-    description: "Optional public URL the agent verified before marking complete.",
-  }),
-  model: z.string().min(1).optional().meta({
-    description: "Optional model ID the agent is running as.",
-  }),
+  course: courseNameSchema.meta({ description: "The course's name, as GET /api/courses lists it." }),
+  exercise: exerciseSlugSchema.meta({ description: "The exercise's slug, as GET /api/courses lists it." }),
+  harness: harnessSchema,
+  model: modelSchema.optional(),
+  summary: summarySchema.optional(),
 });
 
-/** Body for PUT /api/progress/{studentId} to mark a lesson complete (idempotent upsert per lesson + harness). */
-export const markLessonCompleteSchema = z.object({
-  lessonSlug: lessonSlugSchema.meta({
-    description: "Slug of the lesson to mark complete. Must match a known lesson.",
-  }),
-  harness: lessonHarnessSchema,
-  model: z.string().min(1).optional().meta({
-    description: "Optional model ID the agent is running as.",
-  }),
-  summary: lessonSummarySchema.optional(),
-});
-
-/** Body for PUT /api/progress/{studentId}. Marks one exercise or one lesson complete. */
-export const markProgressSchema = z.union([markExerciseCompleteSchema, markLessonCompleteSchema]);
-
-export type LessonSlug = z.infer<typeof lessonSlugSchema>;
-export type CompletedExercise = z.infer<typeof completedExerciseSchema>;
-export type CompletedLesson = z.infer<typeof completedLessonSchema>;
+export type ExerciseCompletion = z.infer<typeof exerciseCompletionSchema>;
+export type ExerciseProgress = z.infer<typeof exerciseProgressSchema>;
+export type CourseProgress = z.infer<typeof courseProgressSchema>;
 export type Progress = z.infer<typeof progressSchema>;
 export type MarkExerciseComplete = z.infer<typeof markExerciseCompleteSchema>;
-export type MarkLessonComplete = z.infer<typeof markLessonCompleteSchema>;
-export type MarkProgress = z.infer<typeof markProgressSchema>;

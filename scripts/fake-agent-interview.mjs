@@ -71,12 +71,15 @@ async function main() {
   // Step 7: mark the interview exercise complete, as its agent-instructions say.
   const summary = "You use AI agents now and then, have deployed on Vercel and AWS, are on macOS, and opted out of quizzes.";
   const progress = await request("PUT", `/api/progress/${student.id}`, {
-    lessonSlug: "interview",
+    course: "agent-setup",
+    exercise: "interview",
     harness: "generic",
     model: "fake-agent",
     summary,
   });
-  const completion = progress.completedLessons.find((item) => item.slug === "interview");
+  const completion = progress.courses
+    .find((c) => c.name === "agent-setup")
+    ?.exercises.find((e) => e.slug === "interview")?.completions[0];
   assert(completion, "interview exercise wasn't marked complete");
   assert(completion.summary === summary, "interview completion didn't keep its summary");
   log("Marked the interview exercise complete with a summary");

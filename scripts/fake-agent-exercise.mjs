@@ -20,8 +20,7 @@ async function main() {
   const llmsTxt = await fetchText("/llms.txt");
   assert(llmsTxt.includes("GET /api/courses"), "llms.txt doesn't document GET /api/courses");
   assert(llmsTxt.includes("PUT /api/progress/{studentId}"), "llms.txt doesn't document PUT progress");
-  assert(llmsTxt.includes("deploy-first-worker"), "llms.txt doesn't mention deploy-first-worker");
-  log("Fetched /llms.txt and confirmed it documents exercise + progress endpoints");
+  log("Fetched /llms.txt and confirmed it documents the course and progress endpoints");
 
   const courses = await request("GET", "/api/courses");
   assert(courses[0]?.name === "agent-setup", "Agent setup should be the first course");
@@ -37,45 +36,35 @@ async function main() {
   assert(markdown.includes("PUT /api/progress/{studentId}"), "agent-instructions should mention marking complete via PUT");
   log("Fetched deploy-first-worker's raw Markdown");
 
+  const completionsOf = (progress, slug) =>
+    progress.courses.find((c) => c.name === "workers-basics")?.exercises.find((e) => e.slug === slug)?.completions;
+
   const emptyProgress = await request("GET", `/api/progress/${student.id}`);
   assert(emptyProgress.studentId === student.id, "progress studentId mismatch");
-  assert(
-    Array.isArray(emptyProgress.completedExercises) && emptyProgress.completedExercises.length === 0,
-    "expected no completions yet",
-  );
-  log("GET progress returned empty completedExercises");
+  assert(completionsOf(emptyProgress, "deploy-first-worker")?.length === 0, "expected no completions yet");
+  log("GET progress listed deploy-first-worker with no completions");
 
-  const afterComplete = await request("PUT", `/api/progress/${student.id}`, {
-    exerciseSlug: "deploy-first-worker",
-  });
-  assert(afterComplete.completedExercises.length === 1, "expected one completion");
-  assert(afterComplete.completedExercises[0].slug === "deploy-first-worker", "wrong slug completed");
-  assert(!afterComplete.completedExercises[0].deployedUrl, "deployedUrl should be absent when omitted");
-  log("Marked deploy-first-worker complete without deployedUrl");
+  const mark = { course: "workers-basics", exercise: "deploy-first-worker", harness: "generic", model: "fake-agent/test" };
+  const afterComplete = await request("PUT", `/api/progress/${student.id}`, mark);
+  const [completion] = completionsOf(afterComplete, "deploy-first-worker");
+  assert(completion?.harness === "generic" && completion.model === "fake-agent/test", "completion lost its harness or model");
+  const expectedUrl = new URL("/courses/workers-basics/deploy-first-worker", baseUrl).toString();
+  assert(completion.exerciseUrl === expectedUrl, `unexpected exerciseUrl: ${completion.exerciseUrl}`);
+  log("Marked deploy-first-worker complete, with its exercise URL");
 
-  const withUrl = await request("PUT", `/api/progress/${student.id}`, {
-    exerciseSlug: "deploy-first-worker",
-    deployedUrl: "https://hello-from-cds.example.workers.dev",
-    model: "fake-agent/test",
-  });
-  assert(withUrl.completedExercises.length === 1, "upsert should not duplicate completions");
-  assert(
-    withUrl.completedExercises[0].deployedUrl === "https://hello-from-cds.example.workers.dev",
-    "deployedUrl not stored",
-  );
-  assert(withUrl.completedExercises[0].model === "fake-agent/test", "model not stored");
-  log("Upserted completion with optional deployedUrl and model");
+  const again = await request("PUT", `/api/progress/${student.id}`, mark);
+  assert(completionsOf(again, "deploy-first-worker").length === 1, "upsert should not duplicate completions");
+  log("Completing it again with the same harness didn't add a completion");
 
   const fetched = await request("GET", `/api/progress/${student.id}`);
-  assert(
-    fetched.completedExercises[0].deployedUrl === "https://hello-from-cds.example.workers.dev",
-    "GET progress lost deployedUrl",
-  );
-  log("GET progress returned the updated completion");
+  assert(completionsOf(fetched, "deploy-first-worker").length === 1, "GET progress lost the completion");
+  log("GET progress returned the completion");
 
-  const badSlug = await requestRaw("PUT", `/api/progress/${student.id}`, { exerciseSlug: "nope" });
-  assert(badSlug.status === 400, `expected 400 for unknown slug, got ${badSlug.status}`);
-  log("Unknown exercise slug was rejected with 400");
+  const badSlug = await requestRaw("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "nope" });
+  assert(badSlug.status === 400, `expected 400 for an unknown exercise, got ${badSlug.status}`);
+  const oldShape = await requestRaw("PUT", `/api/progress/${student.id}`, { exerciseSlug: "deploy-first-worker" });
+  assert(oldShape.status === 400, `expected 400 for the old request shape, got ${oldShape.status}`);
+  log("Unknown exercises and the old request shape were rejected with 400");
 
   log("✅ Fake-agent exercise run passed");
 }

@@ -1,337 +1,214 @@
 import type { APIContext } from "astro";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Progress } from "../../../schemas/progress";
+import { createSqliteD1 } from "../../../test/sqlite-d1";
 
-const students = new Map<string, { id: string; created_at: string }>([
-  ["curious-hacker-2019", { id: "curious-hacker-2019", created_at: "2026-09-10T12:00:00.000Z" }],
-]);
-const exerciseCompletions = new Map<string, Record<string, unknown>>();
-const lessonCompletions = new Map<string, Record<string, unknown>>();
+const state = vi.hoisted(() => ({
+  db: undefined as unknown as D1Database,
+  broadcasts: [] as Array<{ hub: string; progress: Progress }>,
+}));
 
-function completionKey(studentId: string, slug: string) {
-  return `${studentId}::${slug}`;
-}
-
-const db = {
-  prepare: (sql: string) => {
-    if (sql.startsWith("SELECT id, created_at FROM students") || sql.startsWith("SELECT id FROM students")) {
-      return {
-        bind: (id: string) => ({
-          first: async () => students.get(id) ?? null,
-        }),
-      };
-    }
-    if (sql.startsWith("SELECT * FROM exercise_completions WHERE student_id = ? ORDER BY")) {
-      return {
-        bind: (studentId: string) => ({
-          all: async () => ({
-            results: [...exerciseCompletions.values()].filter((row) => row.student_id === studentId),
-          }),
-        }),
-      };
-    }
-    if (sql.startsWith("SELECT * FROM lesson_completions WHERE student_id = ? ORDER BY")) {
-      return {
-        bind: (studentId: string) => ({
-          all: async () => ({
-            results: [...lessonCompletions.values()].filter((row) => row.student_id === studentId),
-          }),
-        }),
-      };
-    }
-    if (sql.startsWith("INSERT INTO exercise_completions")) {
-      return {
-        bind: (
-          studentId: string,
-          exerciseSlug: string,
-          completedAt: string,
-          deployedUrl: string | null,
-          model: string | null,
-        ) => ({
-          run: async () => {
-            exerciseCompletions.set(completionKey(studentId, exerciseSlug), {
-              student_id: studentId,
-              exercise_slug: exerciseSlug,
-              completed_at: completedAt,
-              deployed_url: deployedUrl,
-              model,
-            });
-          },
-        }),
-      };
-    }
-    if (sql.startsWith("INSERT INTO lesson_completions")) {
-      return {
-        bind: (
-          studentId: string,
-          lessonSlug: string,
-          harness: string,
-          completedAt: string,
-          model: string | null,
-          summary: string | null,
-        ) => ({
-          run: async () => {
-            const key = completionKey(studentId, `${lessonSlug}::${harness}`);
-            const existing = lessonCompletions.get(key);
-            lessonCompletions.set(key, {
-              student_id: studentId,
-              lesson_slug: lessonSlug,
-              harness,
-              completed_at: completedAt,
-              model: model ?? existing?.model ?? null,
-              summary: summary ?? existing?.summary ?? null,
-            });
-          },
-        }),
-      };
-    }
-    if (sql.startsWith("DELETE FROM exercise_completions WHERE student_id = ?")) {
-      return {
-        bind: (studentId: string) => ({
-          run: async () => {
-            for (const [key, row] of exerciseCompletions) {
-              if (row.student_id === studentId) exerciseCompletions.delete(key);
-            }
-          },
-        }),
-      };
-    }
-    if (sql.startsWith("DELETE FROM lesson_completions WHERE student_id = ?")) {
-      return {
-        bind: (studentId: string) => ({
-          run: async () => {
-            for (const [key, row] of lessonCompletions) {
-              if (row.student_id === studentId) lessonCompletions.delete(key);
-            }
-          },
-        }),
-      };
-    }
-    throw new Error(`Unexpected SQL in test: ${sql}`);
-  },
-};
-
-const broadcasts: Array<{ hub: string; progress: { completedLessons: unknown[] } }> = [];
-const progressHub = {
-  getByName: (hub: string) => ({
-    broadcast: async (progress: { completedLessons: unknown[] }) => {
-      broadcasts.push({ hub, progress });
+vi.mock("cloudflare:workers", () => ({
+  env: {
+    get DB() {
+      return state.db;
     },
-  }),
-};
+    PROGRESS_HUB: {
+      getByName: (hub: string) => ({
+        broadcast: async (progress: Progress) => {
+          state.broadcasts.push({ hub, progress });
+        },
+      }),
+    },
+  },
+}));
 
-vi.mock("cloudflare:workers", () => ({ env: { DB: db, PROGRESS_HUB: progressHub } }));
+// Two small courses: Agent setup (interview, models, instructions) and
+// Workers basics (the default interview, deploy-first-worker).
+vi.mock("astro:content", async () => (await import("../../../test/fake-content")).fakeAstroContent);
+
+const STUDENT = "curious-hacker-2019";
+
+beforeEach(async () => {
+  state.db = createSqliteD1();
+  state.broadcasts.length = 0;
+  for (const [id, createdAt] of [
+    [STUDENT, "2026-09-10T12:00:00.000Z"],
+    ["another-student-1234", "2026-09-11T00:00:00.000Z"],
+  ]) {
+    await state.db.prepare("INSERT INTO students (id, created_at) VALUES (?, ?)").bind(id, createdAt).run();
+  }
+});
 
 function context(studentId: string, body?: unknown): APIContext {
   return {
     params: { studentId },
+    url: new URL(`https://school.example/api/progress/${studentId}`),
     request: { json: async () => body } as unknown as Request,
   } as unknown as APIContext;
 }
 
-beforeEach(() => {
-  exerciseCompletions.clear();
-  lessonCompletions.clear();
-  broadcasts.length = 0;
-});
+async function put(studentId: string, body: unknown): Promise<{ status: number; progress: Progress }> {
+  const { PUT } = await import("./[studentId]");
+  const response = await PUT(context(studentId, body));
+  return { status: response.status, progress: (await response.json()) as Progress };
+}
+
+function exercise(progress: Progress, course: string, slug: string) {
+  return progress.courses.find((item) => item.name === course)?.exercises.find((item) => item.slug === slug);
+}
+
+function course(progress: Progress, name: string) {
+  return progress.courses.find((item) => item.name === name);
+}
+
+const models = { course: "agent-setup", exercise: "models", harness: "claude-code" };
 
 describe("GET /api/progress/{studentId}", () => {
   it("404s for an unknown student", async () => {
     const { GET } = await import("./[studentId]");
-    const response = await GET(context("no-such-student-0000"));
-    expect(response.status).toBe(404);
+    expect((await GET(context("no-such-student-0000"))).status).toBe(404);
   });
 
-  it("returns empty completedExercises and completedLessons for a new student", async () => {
+  it("lists every course and exercise in order, with no completions, for a new student", async () => {
     const { GET } = await import("./[studentId]");
-    const response = await GET(context("curious-hacker-2019"));
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      studentId: string;
-      completedExercises: unknown[];
-      completedLessons: unknown[];
-      updatedAt: string;
-    };
-    expect(body.studentId).toBe("curious-hacker-2019");
-    expect(body.completedExercises).toEqual([]);
-    expect(body.completedLessons).toEqual([]);
-    expect(body.updatedAt).toBe("2026-09-10T12:00:00.000Z");
+    const progress = (await (await GET(context(STUDENT))).json()) as Progress;
+
+    expect(progress.studentId).toBe(STUDENT);
+    expect(progress.updatedAt).toBe("2026-09-10T12:00:00.000Z");
+    expect(progress.courses.map((item) => [item.name, item.exercises.map((ex) => ex.slug)])).toEqual([
+      ["agent-setup", ["interview", "models", "instructions"]],
+      ["workers-basics", ["interview", "deploy-first-worker"]],
+    ]);
+    for (const item of progress.courses) {
+      expect(item.completedAt).toBeUndefined();
+      for (const ex of item.exercises) expect(ex.completions).toEqual([]);
+    }
   });
 });
 
 describe("PUT /api/progress/{studentId}", () => {
   it("404s for an unknown student", async () => {
-    const { PUT } = await import("./[studentId]");
-    const response = await PUT(context("no-such-student-0000", { exerciseSlug: "deploy-first-worker" }));
-    expect(response.status).toBe(404);
+    expect((await put("no-such-student-0000", models)).status).toBe(404);
   });
 
-  it("400s for an unknown exercise slug", async () => {
-    const { PUT } = await import("./[studentId]");
-    const response = await PUT(context("curious-hacker-2019", { exerciseSlug: "nope" }));
-    expect(response.status).toBe(400);
+  it("400s for an unknown course or exercise, and for the old request shapes", async () => {
+    expect((await put(STUDENT, { ...models, course: "nope" })).status).toBe(400);
+    expect((await put(STUDENT, { ...models, exercise: "nope" })).status).toBe(400);
+    expect((await put(STUDENT, { ...models, course: "workers-basics" })).status).toBe(400);
+    expect((await put(STUDENT, { lessonSlug: "models", harness: "claude-code" })).status).toBe(400);
+    expect((await put(STUDENT, { exerciseSlug: "deploy-first-worker" })).status).toBe(400);
+    expect(state.broadcasts).toHaveLength(0);
   });
 
-  it("400s for an unknown lesson slug", async () => {
-    const { PUT } = await import("./[studentId]");
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "nope", harness: "claude-code" }));
-    expect(response.status).toBe(400);
+  it("400s without a harness", async () => {
+    expect((await put(STUDENT, { course: "agent-setup", exercise: "models" })).status).toBe(400);
   });
 
-  it("marks an exercise complete without deployedUrl", async () => {
-    const { PUT, GET } = await import("./[studentId]");
-    const response = await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      completedExercises: Array<{ slug: string; completedAt: string; deployedUrl?: string }>;
-    };
-    expect(body.completedExercises).toHaveLength(1);
-    expect(body.completedExercises[0]?.slug).toBe("deploy-first-worker");
-    expect(body.completedExercises[0]?.deployedUrl).toBeUndefined();
-    expect(body.completedExercises[0]?.completedAt).toMatch(/^\d{4}-/);
-
-    const fetched = (await (await GET(context("curious-hacker-2019"))).json()) as typeof body;
-    expect(fetched.completedExercises).toEqual(body.completedExercises);
-  });
-
-  it("stores optional deployedUrl and model on upsert", async () => {
-    const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
-
-    const response = await PUT(
-      context("curious-hacker-2019", {
-        exerciseSlug: "deploy-first-worker",
-        deployedUrl: "https://hello.example.workers.dev",
-        model: "anthropic/claude-sonnet-4-5",
-      }),
-    );
-    const body = (await response.json()) as {
-      completedExercises: Array<{ deployedUrl?: string; model?: string }>;
-    };
-    expect(body.completedExercises).toHaveLength(1);
-    expect(body.completedExercises[0]?.deployedUrl).toBe("https://hello.example.workers.dev");
-    expect(body.completedExercises[0]?.model).toBe("anthropic/claude-sonnet-4-5");
-  });
-
-  it("marks a lesson complete", async () => {
-    const { PUT, GET } = await import("./[studentId]");
-    const response = await PUT(
-      context("curious-hacker-2019", {
-        lessonSlug: "models",
+  it("marks an exercise complete with its URL, harness, and model", async () => {
+    const { status, progress } = await put(STUDENT, { ...models, model: "anthropic/claude-sonnet-4-5" });
+    expect(status).toBe(200);
+    expect(exercise(progress, "agent-setup", "models")?.completions).toEqual([
+      {
         harness: "claude-code",
+        completedAt: expect.stringMatching(/^\d{4}-/),
+        exerciseUrl: "https://school.example/courses/agent-setup/models",
         model: "anthropic/claude-sonnet-4-5",
-      }),
+      },
+    ]);
+    expect(progress.updatedAt).toBe(exercise(progress, "agent-setup", "models")?.completions[0].completedAt);
+
+    const { GET } = await import("./[studentId]");
+    expect(await (await GET(context(STUDENT))).json()).toEqual(progress);
+  });
+
+  it("marks a course's default interview complete", async () => {
+    const { progress } = await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "codex" });
+    expect(exercise(progress, "workers-basics", "interview")?.completions).toHaveLength(1);
+    expect(exercise(progress, "agent-setup", "interview")?.completions).toEqual([]);
+  });
+
+  it("keeps one completion per harness, and upserts when the same harness completes it again", async () => {
+    await put(STUDENT, models);
+    await put(STUDENT, { ...models, harness: "codex" });
+    const { progress } = await put(STUDENT, { ...models, model: "openai/gpt-5" });
+    const completions = exercise(progress, "agent-setup", "models")!.completions;
+    expect(completions.map((item) => item.harness).sort()).toEqual(["claude-code", "codex"]);
+    expect(completions.find((item) => item.harness === "claude-code")?.model).toBe("openai/gpt-5");
+  });
+
+  it("stores a summary and keeps it when a later PUT omits it", async () => {
+    const interview = { course: "agent-setup", exercise: "interview", harness: "claude-code" };
+    await put(STUDENT, { ...interview, summary: "Quizzes on." });
+    expect(exercise((await put(STUDENT, interview)).progress, "agent-setup", "interview")?.completions[0].summary).toBe(
+      "Quizzes on.",
     );
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      completedLessons: Array<{ slug: string; completedAt: string; model?: string }>;
-    };
-    expect(body.completedLessons).toHaveLength(1);
-    expect(body.completedLessons[0]?.slug).toBe("models");
-    expect(body.completedLessons[0]?.model).toBe("anthropic/claude-sonnet-4-5");
-
-    const fetched = (await (await GET(context("curious-hacker-2019"))).json()) as typeof body;
-    expect(fetched.completedLessons).toEqual(body.completedLessons);
+    const replaced = (await put(STUDENT, { ...interview, summary: "Quizzes off." })).progress;
+    expect(exercise(replaced, "agent-setup", "interview")?.completions[0].summary).toBe("Quizzes off.");
   });
 
-  it("stores a lesson summary and keeps it when a later PUT omits it", async () => {
-    const { PUT } = await import("./[studentId]");
-    const lesson = { lessonSlug: "interview", harness: "claude-code" };
-    await PUT(context("curious-hacker-2019", { ...lesson, summary: "You're new to Cloudflare." }));
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "interview", harness: "claude-code" }));
-    const body = (await response.json()) as { completedLessons: Array<{ summary?: string }> };
-    expect(body.completedLessons[0]?.summary).toBe("You're new to Cloudflare.");
+  it("marks a course complete once every exercise has a completion, from any harness", async () => {
+    const first = await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "claude-code" });
+    expect(course(first.progress, "workers-basics")?.completedAt).toBeUndefined();
+
+    const last = await put(STUDENT, { course: "workers-basics", exercise: "deploy-first-worker", harness: "codex" });
+    const completedAt = course(last.progress, "workers-basics")?.completedAt;
+    expect(completedAt).toBe(exercise(last.progress, "workers-basics", "deploy-first-worker")?.completions[0].completedAt);
+    expect(course(last.progress, "agent-setup")?.completedAt).toBeUndefined();
   });
 
-  it("replaces a lesson summary when a later PUT sends a new one", async () => {
-    const { PUT } = await import("./[studentId]");
-    const lesson = { lessonSlug: "interview", harness: "claude-code" };
-    await PUT(context("curious-hacker-2019", { ...lesson, summary: "Quizzes on." }));
-    const response = await PUT(context("curious-hacker-2019", { ...lesson, summary: "Quizzes off." }));
-    const body = (await response.json()) as { completedLessons: Array<{ summary?: string }> };
-    expect(body.completedLessons[0]?.summary).toBe("Quizzes off.");
-  });
-
-  it("400s for a lesson without a harness", async () => {
-    const { PUT } = await import("./[studentId]");
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models" }));
-    expect(response.status).toBe(400);
-  });
-
-  it("keeps one completion per harness for the same lesson", async () => {
-    const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "codex" }));
-    const body = (await response.json()) as { completedLessons: Array<{ slug: string; harness: string }> };
-    expect(body.completedLessons.map((item) => item.harness).sort()).toEqual(["claude-code", "codex"]);
-  });
-
-  it("upserts when the same harness completes a lesson again", async () => {
-    const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "pi" }));
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "pi" }));
-    const body = (await response.json()) as { completedLessons: unknown[] };
-    expect(body.completedLessons).toHaveLength(1);
+  it("keeps the course's first completion date when an exercise is completed again", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-10-01T12:00:00.000Z"));
+      await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "claude-code" });
+      await put(STUDENT, { course: "workers-basics", exercise: "deploy-first-worker", harness: "claude-code" });
+      vi.setSystemTime(new Date("2026-10-05T12:00:00.000Z"));
+      const again = await put(STUDENT, { course: "workers-basics", exercise: "deploy-first-worker", harness: "pi" });
+      expect(course(again.progress, "workers-basics")?.completedAt).toBe("2026-10-01T12:00:00.000Z");
+      expect(again.progress.updatedAt).toBe("2026-10-05T12:00:00.000Z");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("broadcasts the new progress to the student's ProgressHub", async () => {
-    const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
-    expect(broadcasts).toHaveLength(1);
-    expect(broadcasts[0]?.hub).toBe("curious-hacker-2019");
-    expect(broadcasts[0]?.progress.completedLessons).toHaveLength(1);
-  });
-
-  it("doesn't broadcast when the request is rejected", async () => {
-    const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { lessonSlug: "nope", harness: "claude-code" }));
-    expect(broadcasts).toHaveLength(0);
-  });
-
-  it("tracks exercises and lessons independently", async () => {
-    const { PUT } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
-    const response = await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
-    const body = (await response.json()) as {
-      completedExercises: unknown[];
-      completedLessons: unknown[];
-    };
-    expect(body.completedExercises).toHaveLength(1);
-    expect(body.completedLessons).toHaveLength(1);
+    await put(STUDENT, models);
+    expect(state.broadcasts).toHaveLength(1);
+    expect(state.broadcasts[0].hub).toBe(STUDENT);
+    expect(exercise(state.broadcasts[0].progress, "agent-setup", "models")?.completions).toHaveLength(1);
   });
 });
 
 describe("DELETE /api/progress/{studentId}", () => {
   it("404s for an unknown student", async () => {
     const { DELETE } = await import("./[studentId]");
-    const response = await DELETE(context("no-such-student-0000"));
-    expect(response.status).toBe(404);
+    expect((await DELETE(context("no-such-student-0000"))).status).toBe(404);
   });
 
-  it("clears completed exercises and lessons but keeps the student", async () => {
-    const { PUT, DELETE, GET } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
-    await PUT(context("curious-hacker-2019", { lessonSlug: "models", harness: "claude-code" }));
+  it("clears exercise and course completions but keeps the student", async () => {
+    await put(STUDENT, models);
+    await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "claude-code" });
+    await put(STUDENT, { course: "workers-basics", exercise: "deploy-first-worker", harness: "claude-code" });
 
-    const response = await DELETE(context("curious-hacker-2019"));
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as { completedExercises: unknown[]; completedLessons: unknown[] };
-    expect(body.completedExercises).toEqual([]);
-    expect(body.completedLessons).toEqual([]);
-
-    const fetched = await GET(context("curious-hacker-2019"));
-    expect(fetched.status).toBe(200);
-    expect(broadcasts.at(-1)?.progress.completedLessons).toEqual([]);
+    const { DELETE, GET } = await import("./[studentId]");
+    const progress = (await (await DELETE(context(STUDENT))).json()) as Progress;
+    for (const item of progress.courses) {
+      expect(item.completedAt).toBeUndefined();
+      for (const ex of item.exercises) expect(ex.completions).toEqual([]);
+    }
+    expect((await GET(context(STUDENT))).status).toBe(200);
+    expect(state.broadcasts.at(-1)?.progress).toEqual(progress);
   });
 
   it("only clears the targeted student's progress", async () => {
-    students.set("another-student-1234", { id: "another-student-1234", created_at: "2026-09-11T00:00:00.000Z" });
-    const { PUT, DELETE, GET } = await import("./[studentId]");
-    await PUT(context("curious-hacker-2019", { exerciseSlug: "deploy-first-worker" }));
-    await PUT(context("another-student-1234", { exerciseSlug: "deploy-first-worker" }));
+    await put(STUDENT, models);
+    await put("another-student-1234", models);
 
-    await DELETE(context("curious-hacker-2019"));
+    const { DELETE, GET } = await import("./[studentId]");
+    await DELETE(context(STUDENT));
 
-    const other = (await (await GET(context("another-student-1234"))).json()) as { completedExercises: unknown[] };
-    expect(other.completedExercises).toHaveLength(1);
+    const other = (await (await GET(context("another-student-1234"))).json()) as Progress;
+    expect(exercise(other, "agent-setup", "models")?.completions).toHaveLength(1);
   });
 });
