@@ -20,7 +20,8 @@ agent-instructions: |
   optional.
 
   Store the answers with PUT /api/students/{id}/interviews, with this
-  course's name as `course`, each question's text as you asked it paired
+  course's name (or its URL, for a course hosted elsewhere) as `course`,
+  each question's text as you asked it paired
   with the student's answer, and a one-sentence `summary` addressed to the
   student, as /llms.txt describes. Leave out questions they skipped. If
   they change an answer later, PUT the whole interview again with it

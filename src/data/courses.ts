@@ -26,3 +26,6 @@ export function courseMarkdownPath(name: string): string {
 export function exerciseMarkdownPath(course: string, file: string): string {
   return `/courses/${course}/exercises/${file}`;
 }
+
+/** Dev School's default interview, raw, for a course hosted elsewhere that doesn't have its own. */
+export const DEFAULT_INTERVIEW_PATH = "/default-interview.md";

@@ -42,11 +42,9 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       add("/");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {
       add("/disenroll");
-    } else if (
-      filename === "src/data/courses.ts" ||
-      filename === "src/pages/courses/index.astro" ||
-      filename === "src/content/default-interview.md"
-    ) {
+    } else if (filename === "src/content/default-interview.md" || filename === "src/pages/default-interview.md.ts") {
+      add("/courses/workers-basics/interview", "/default-interview.md");
+    } else if (filename === "src/data/courses.ts" || filename === "src/pages/courses/index.astro") {
       add("/courses");
     } else if (
       filename === "src/lib/courses.ts" ||

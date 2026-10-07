@@ -64,6 +64,22 @@ function course(progress: Progress, name: string) {
 
 const models = { course: "agent-setup", exercise: "models", harness: "claude-code" };
 
+const repo = "https://github.com/acme/durable-objects";
+
+/** Reports a course hosted elsewhere, the way PUT /api/students/{id}/courses stores it. */
+async function reportExternalCourse(studentId: string): Promise<void> {
+  const exercises = [
+    { slug: "interview", title: "Interview", url: "https://school.example/default-interview.md" },
+    { slug: "first-object", title: "Your first object", url: `${repo}/blob/main/exercises/01-first-object.md` },
+  ];
+  await state.db
+    .prepare(
+      "INSERT INTO external_courses (student_id, course_id, title, exercises, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+    )
+    .bind(studentId, repo, "Durable Objects", JSON.stringify(exercises), "2026-10-01T12:00:00.000Z", "2026-10-01T12:00:00.000Z")
+    .run();
+}
+
 describe("GET /api/progress/{studentId}", () => {
   it("404s for an unknown student", async () => {
     const { GET } = await import("./[studentId]");
@@ -85,6 +101,23 @@ describe("GET /api/progress/{studentId}", () => {
       expect(item.interviewSummary).toBeUndefined();
       for (const ex of item.exercises) expect(ex.completions).toEqual([]);
     }
+    expect(progress.externalCourses).toEqual([]);
+  });
+
+  it("lists reported courses after the built-in ones, with their titles and URLs", async () => {
+    await reportExternalCourse(STUDENT);
+    const { GET } = await import("./[studentId]");
+    const progress = (await (await GET(context(STUDENT))).json()) as Progress;
+    expect(progress.externalCourses).toEqual([
+      {
+        url: repo,
+        title: "Durable Objects",
+        exercises: [
+          { slug: "interview", title: "Interview", url: "https://school.example/default-interview.md", completions: [] },
+          { slug: "first-object", title: "Your first object", url: `${repo}/blob/main/exercises/01-first-object.md`, completions: [] },
+        ],
+      },
+    ]);
   });
 
   it("includes each course's interview summary", async () => {
@@ -112,6 +145,28 @@ describe("PUT /api/progress/{studentId}", () => {
     expect((await put(STUDENT, { lessonSlug: "models", harness: "claude-code" })).status).toBe(400);
     expect((await put(STUDENT, { exerciseSlug: "deploy-first-worker" })).status).toBe(400);
     expect(state.broadcasts).toHaveLength(0);
+  });
+
+  it("completes a reported course's exercises by any form of its URL, with the URL from its manifest", async () => {
+    await reportExternalCourse(STUDENT);
+    await put(STUDENT, { course: `${repo}.git`, exercise: "interview", harness: "claude-code" });
+    const { status, progress } = await put(STUDENT, { course: `${repo}/`, exercise: "first-object", harness: "codex" });
+
+    expect(status).toBe(200);
+    const course = progress.externalCourses[0];
+    expect(course.exercises[1].completions).toEqual([
+      expect.objectContaining({ harness: "codex", exerciseUrl: `${repo}/blob/main/exercises/01-first-object.md` }),
+    ]);
+    expect(course.completedAt).toBe(course.exercises[1].completions[0].completedAt);
+  });
+
+  it("400s for a course that wasn't reported and for an exercise missing from the manifest", async () => {
+    expect((await put(STUDENT, { course: repo, exercise: "interview", harness: "claude-code" })).status).toBe(400);
+    await reportExternalCourse(STUDENT);
+    expect((await put(STUDENT, { course: repo, exercise: "websockets", harness: "claude-code" })).status).toBe(400);
+    expect((await put("another-student-1234", { course: repo, exercise: "interview", harness: "claude-code" })).status).toBe(
+      400,
+    );
   });
 
   it("400s without a harness", async () => {

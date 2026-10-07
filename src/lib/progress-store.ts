@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { type ExerciseCompletion, type Progress, progressSchema } from "../schemas/progress";
 import type { BuiltInCourse } from "./courses";
+import { loadExternalCourses } from "./external-courses";
 
 // Server-side progress reads and broadcasts, shared by the progress and
 // interview routes. Browsers go through src/lib/progress-client.ts instead.
@@ -42,9 +43,13 @@ export async function findStudent(studentId: string): Promise<StudentRow | null>
   return env.DB.prepare("SELECT id, created_at FROM students WHERE id = ?").bind(studentId).first<StudentRow>();
 }
 
-/** Every built-in course and exercise, in order, with the student's completions and interview summaries filled in. */
+/**
+ * Every built-in course and exercise, in order, then the courses the
+ * student's agent reported, with the student's completions and interview
+ * summaries filled in.
+ */
 export async function loadProgress(studentId: string, fallbackUpdatedAt: string, courses: BuiltInCourse[]): Promise<Progress> {
-  const [{ results: completionRows }, { results: courseRows }, { results: interviewRows }] = await Promise.all([
+  const [{ results: completionRows }, { results: courseRows }, { results: interviewRows }, externalCourses] = await Promise.all([
     env.DB.prepare("SELECT * FROM course_exercise_completions WHERE student_id = ? ORDER BY completed_at ASC")
       .bind(studentId)
       .all<ExerciseCompletionRow>(),
@@ -52,7 +57,14 @@ export async function loadProgress(studentId: string, fallbackUpdatedAt: string,
     env.DB.prepare("SELECT course_id, summary FROM interviews WHERE student_id = ?")
       .bind(studentId)
       .all<InterviewSummaryRow>(),
+    loadExternalCourses(studentId),
   ]);
+  const completionsOf = (course: string, slug: string) =>
+    completionRows.filter((row) => row.course_id === course && row.exercise_slug === slug).map(rowToCompletion);
+  const courseFields = (course: string) => ({
+    completedAt: courseRows.find((row) => row.course_id === course)?.completed_at,
+    interviewSummary: interviewRows.find((row) => row.course_id === course)?.summary,
+  });
 
   const updatedAt = [...completionRows, ...courseRows].reduce(
     (max, row) => (row.completed_at > max ? row.completed_at : max),
@@ -63,13 +75,19 @@ export async function loadProgress(studentId: string, fallbackUpdatedAt: string,
     studentId,
     courses: courses.map((course) => ({
       name: course.name,
-      completedAt: courseRows.find((row) => row.course_id === course.name)?.completed_at,
-      interviewSummary: interviewRows.find((row) => row.course_id === course.name)?.summary,
+      ...courseFields(course.name),
       exercises: course.exercises.map((exercise) => ({
         slug: exercise.slug,
-        completions: completionRows
-          .filter((row) => row.course_id === course.name && row.exercise_slug === exercise.slug)
-          .map(rowToCompletion),
+        completions: completionsOf(course.name, exercise.slug),
+      })),
+    })),
+    // Parsing drops each reported course's updatedAt, which progress doesn't expose.
+    externalCourses: externalCourses.map((course) => ({
+      ...course,
+      ...courseFields(course.url),
+      exercises: course.exercises.map((exercise) => ({
+        ...exercise,
+        completions: completionsOf(course.url, exercise.slug),
       })),
     })),
     updatedAt,

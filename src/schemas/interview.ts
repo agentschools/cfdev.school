@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { courseNameSchema } from "./course";
+import { courseRefSchema } from "./course";
 import { studentIdSchema } from "./student";
 
 /**
@@ -37,7 +37,7 @@ export const interviewSummarySchema = z.string().min(1).max(280).meta({
 
 /** Body for PUT /api/students/{id}/interviews: replaces one course's interview. */
 export const saveInterviewSchema = z.object({
-  course: courseNameSchema.meta({ description: "The course's name, as GET /api/courses lists it." }),
+  course: courseRefSchema,
   responses: z.array(interviewResponseSchema).meta({
     description:
       "Every answer, in the order asked, leaving out questions the student skipped. Replaces what's stored, so include answers that didn't change.",
@@ -54,7 +54,8 @@ export const interviewSchema = saveInterviewSchema.extend({
 export const interviewsSchema = z.object({
   studentId: studentIdSchema,
   interviews: z.array(interviewSchema).meta({
-    description: "One per course the student has been interviewed for, in catalog order. Empty until the first interview.",
+    description:
+      "One per course the student has been interviewed for: built-in courses in catalog order, then courses hosted elsewhere, oldest first. Empty until the first interview.",
   }),
 });
 

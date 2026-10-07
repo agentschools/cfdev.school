@@ -18,6 +18,9 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("GET /api/courses");
     expect(text).toContain("GET /api/progress/{studentId}");
     expect(text).toContain("PUT /api/progress/{studentId}");
+    expect(text).toContain("PUT /api/students/{id}/courses");
+    expect(text).toContain("/default-interview.md");
+    expect(text).not.toContain("aren't supported yet");
   });
 
   it("points agents at the course list instead of hardcoding exercise order", async () => {

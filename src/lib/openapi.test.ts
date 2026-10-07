@@ -18,6 +18,14 @@ describe("openApiDocument", () => {
     expect(openApiDocument.paths?.["/api/students/{id}/interview"]).toBeUndefined();
   });
 
+  it("documents PUT /api/students/{id}/courses", () => {
+    const operation = openApiDocument.paths?.["/api/students/{id}/courses"]?.put;
+    expect(operation?.requestBody).toBeDefined();
+    expect(operation?.responses?.["200"]).toBeDefined();
+    expect(operation?.responses?.["400"]).toBeDefined();
+    expect(operation?.responses?.["404"]).toBeDefined();
+  });
+
   it("documents GET /api/courses", () => {
     expect(openApiDocument.paths?.["/api/courses"]?.get?.responses?.["200"]).toBeDefined();
   });

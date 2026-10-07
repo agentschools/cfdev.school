@@ -24,7 +24,20 @@ agent-instructions: |
      - Use .env files for secrets and environment variables locally,
        not .dev.vars.
 
-  3. Mention AGENTS.md: increasingly, agent harnesses treat AGENTS.md as
+  3. Add a short "Cloudflare Dev School" section to the same file, so any
+     future session (in this agent or another) can pick up the student's
+     courses, including courses hosted outside this site:
+
+     ## Cloudflare Dev School
+     - My Cloudflare Dev School student ID is <their student ID>.
+     - For Cloudflare Dev School courses, read <origin>/llms.txt and
+       report progress there.
+
+     Fill in their student ID, and use the origin you fetched /llms.txt
+     from as <origin>. Tell the student what it's for: next time, they
+     can just say "take the course at <url>".
+
+  4. Mention AGENTS.md: increasingly, agent harnesses treat AGENTS.md as
      the de facto standard filename for project-level instructions,
      read directly by Claude Code, Codex, OpenCode, Pi, and others,
      specifically so one file can work across every tool a project uses
@@ -57,6 +70,17 @@ Open (or create) your harness's global instructions file and add a short section
 - Prefer the `cf` CLI or the Cloudflare API over the dashboard when a task can be done either way.
 - Favor Cloudflare Workers over Cloudflare Pages for new static sites.
 - Use `.env` files for secrets and environment variables locally, not `.dev.vars`.
+```
+
+## Remember Dev School
+
+Your agent also adds a short section with your student ID and this site's address, so a future session, in this agent or another, can find your progress. That's what lets you take a course hosted anywhere just by telling your agent "take the course at" and its URL:
+
+```markdown
+## Cloudflare Dev School
+
+- My Cloudflare Dev School student ID is smooth-operator-4629.
+- For Cloudflare Dev School courses, read https://<this site>/llms.txt and report progress there.
 ```
 
 ## AGENTS.md is a cross-tool standard
