@@ -1,0 +1,96 @@
+---
+import { getCollection, render } from "astro:content";
+import AgentPrompt from "../components/AgentPrompt.astro";
+import Layout from "../layouts/Layout.astro";
+
+const [guide] = await getCollection("authorsGuide");
+const { Content } = await render(guide);
+---
+
+<Layout
+  title="Write a course — Cloudflare Dev School"
+  description="Anyone can write a Cloudflare Dev School course and host it anywhere. Copy a prompt into your agent to plan, write, and test one."
+>
+  <div class="page">
+    <main class="content">
+      <header class="header">
+        <p class="eyebrow">For authors</p>
+        <h1>Write a course</h1>
+        <p class="lede">
+          Anyone can write a course for Cloudflare Dev School. Host it as a git repo or a single Markdown file,
+          anywhere you like. Students take it with their own agents, and their progress counts here, wherever the course
+          lives.
+        </p>
+        <p class="lede">Paste this into your agent and it'll help you plan, write, and test one.</p>
+      </header>
+
+      <AgentPrompt />
+
+      <h2 class="format-heading">The course format</h2>
+      <p class="format-intro">
+        The same guide your agent reads, at <a href="/authors.md">/authors.md</a>, for when you'd rather write the
+        course yourself.
+      </p>
+      <div class="prose">
+        <Content />
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { initAuthorsPage } from "../lib/authors-client";
+  import { initCodeCopyButtons } from "../lib/code-copy-client";
+  initAuthorsPage();
+  initCodeCopyButtons();
+</script>
+
+<style>
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2.5rem 0 5rem;
+    max-width: 42rem;
+  }
+
+  .header {
+    margin-bottom: 1.5rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+    color: var(--muted-fg);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 0.75rem;
+  }
+
+  .lede {
+    margin: 0 0 0.75rem;
+    color: var(--muted-fg);
+    font-size: 1.1rem;
+  }
+
+  .format-heading {
+    margin: 2.5rem 0 0.5rem;
+  }
+
+  .format-intro {
+    margin: 0 0 1.5rem;
+    color: var(--muted-fg);
+  }
+
+  .format-intro a {
+    color: var(--accent);
+  }
+</style>

@@ -37,6 +37,8 @@ const courses = await getBuiltInCourses();
           ))
         }
       </ol>
+
+      <p class="authors">Know something worth teaching? <a href="/authors">Write a course</a> and host it anywhere.</p>
     </main>
   </div>
 </Layout>
@@ -112,5 +114,14 @@ const courses = await getBuiltInCourses();
   .count {
     font-size: 0.85rem;
     color: var(--muted-fg);
+  }
+
+  .authors {
+    margin: 2rem 0 0;
+    color: var(--muted-fg);
+  }
+
+  .authors a {
+    color: var(--accent);
   }
 </style>

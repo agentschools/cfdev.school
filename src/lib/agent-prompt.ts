@@ -30,3 +30,12 @@ export function buildPrompt(student: CachedStudent, context?: AgentPromptContext
     `Fetch ${origin}/llms.txt for instructions.`,
   ].join("\n");
 }
+
+/** The prompt on /authors (#79): no student ID, it starts writing a course rather than taking one. */
+export function buildAuthorPrompt(): string {
+  return [
+    "I want to create a course for Cloudflare Dev School.",
+    "",
+    `Read ${window.location.origin}/authors.md, then help me plan and write it.`,
+  ].join("\n");
+}

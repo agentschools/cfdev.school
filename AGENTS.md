@@ -108,6 +108,14 @@ Students can take a course hosted anywhere (#77): a git repo in the built-in for
 
 Verify with `npm run verify:external-course` against `wrangler dev` or a PR preview, with the same caveats as the other verify scripts. It doesn't clone or fetch a real course, it only checks the HTTP contract.
 
+## Authors
+
+`/authors` (`src/pages/authors.astro`, #79) is for people who want to write a course: a pitch, a copyable prompt (`buildAuthorPrompt()` in `src/lib/agent-prompt.ts`, no enrollment needed) that points the author's agent at `/authors.md`, and the format reference. It's linked from the sidebar ("Write a course") and from `/courses`.
+
+- The guide is one file, `src/content/authors.md`, shaped like an exercise: its `agent-instructions` frontmatter is the procedure for the author's agent (ask about the course, outline it, scaffold it, write checkable exercises, check the rules, then test it by taking it as a student), and its body is the format reference. `/authors.md` serves the file raw (`src/pages/authors.md.ts`), and `/authors` renders the body from the `authorsGuide` collection, so the two can't drift.
+- `src/lib/authors-guide.test.ts` checks the guide's stated rules (name and description limits, slug and order examples, the interview slug, links to built-in course files) against the course-format code. When the format changes, update the guide in the same PR.
+- Packaging the guide as an installable `create-course` Agent Skill waits until the repo is open source.
+
 ## Live progress
 
 Exercise completion is done by the student's agent (`PUT /api/progress/{studentId}`), and open browser tabs update without polling or reloads:

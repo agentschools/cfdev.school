@@ -25,6 +25,7 @@ const collections = {
     },
   ],
   defaultInterview: [{ id: "default-interview", body: "\n# Interview\n", data: { description: "About this course." } }],
+  authorsGuide: [{ id: "authors", body: "\n# Writing a course\n", data: { description: "How to write a course." } }],
 };
 
 export const fakeAstroContent = {

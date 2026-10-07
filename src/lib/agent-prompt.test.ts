@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildPrompt } from "./agent-prompt";
+import { buildAuthorPrompt, buildPrompt } from "./agent-prompt";
 
 const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
 
@@ -38,6 +38,18 @@ describe("buildPrompt", () => {
 
     expect(prompt).toContain(
       'Let\'s redo the "Models" exercise from the "Agent setup" course together, even though I\'ve already completed it.',
+    );
+  });
+});
+
+describe("buildAuthorPrompt", () => {
+  it("points the author's agent at this site's authors guide, with no student ID", () => {
+    expect(buildAuthorPrompt()).toBe(
+      [
+        "I want to create a course for Cloudflare Dev School.",
+        "",
+        "Read https://cloudflare-dev-school.ziki.workers.dev/authors.md, then help me plan and write it.",
+      ].join("\n"),
     );
   });
 });
