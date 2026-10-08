@@ -8,11 +8,13 @@ const RESET_MS = 2000;
 /**
  * Wraps every <pre> inside `.prose` (course and exercise content, including
  * one-line commands) in a container with an icon-only copy button on the right.
- * After a click the button briefly shows a check and "Copied".
+ * After a click the button briefly shows a check and "Copied". Blocks fenced
+ * as ```text (diagrams like file trees, nothing to paste) get no button.
  */
 export function initCodeCopyButtons(root: ParentNode = document): void {
   for (const pre of root.querySelectorAll<HTMLPreElement>(".prose pre")) {
     if (pre.parentElement?.classList.contains("code-block")) continue;
+    if (pre.querySelector(":scope > code.language-text")) continue;
 
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";

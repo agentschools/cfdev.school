@@ -139,7 +139,7 @@ Exercise completion is done by the student's agent (`PUT /api/progress/{studentI
 
 ## Code block copy buttons
 
-`src/lib/code-copy-client.ts` (`initCodeCopyButtons`, called from the exercise page script) wraps every `.prose pre` (one-liners included) in `.code-block` and adds an icon-only copy button on the right that flips to a check + "Copied" for 2s. Styles live in the global block in `src/layouts/Layout.astro`.
+`src/lib/code-copy-client.ts` (`initCodeCopyButtons`, called from the exercise page and `/authors` scripts) wraps every `.prose pre` (one-liners included) in `.code-block` and adds an icon-only copy button on the right that flips to a check + "Copied" for 2s. Blocks fenced as ```` ```text ```` (diagrams like file trees) get no button, so fence anything nobody would paste that way. Styles for these and for all rendered Markdown (`.prose`: headings, lists, code blocks, tables) live in the global block in `src/layouts/Layout.astro`, shared by exercise pages, course pages, and `/authors`; don't re-scope them to one page.
 
 ## Disenroll
 
