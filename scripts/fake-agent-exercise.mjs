@@ -27,42 +27,42 @@ async function main() {
   const course = courses.find((c) => c.name === "workers-basics");
   assert(course, "workers-basics missing from /api/courses");
   assert(course.exercises[0]?.slug === "interview", "a course's first exercise should be its interview");
-  const exercise = course.exercises.find((e) => e.slug === "deploy-first-worker");
-  assert(exercise, "deploy-first-worker missing from workers-basics");
+  const exercise = course.exercises.find((e) => e.slug === "deploy-a-worker");
+  assert(exercise, "deploy-a-worker missing from workers-basics");
   log(`Listed ${courses.length} course(s); workers-basics has ${course.exercises.length} exercise(s)`);
 
   const markdown = await fetchText(new URL(exercise.markdownUrl).pathname);
   assert(/^---\n[\s\S]*agent-instructions:/.test(markdown), "exercise Markdown should have agent-instructions frontmatter");
   assert(markdown.includes("PUT /api/progress/{studentId}"), "agent-instructions should mention marking complete via PUT");
-  log("Fetched deploy-first-worker's raw Markdown");
+  log("Fetched deploy-a-worker's raw Markdown");
 
   const completionsOf = (progress, slug) =>
     progress.courses.find((c) => c.name === "workers-basics")?.exercises.find((e) => e.slug === slug)?.completions;
 
   const emptyProgress = await request("GET", `/api/progress/${student.id}`);
   assert(emptyProgress.studentId === student.id, "progress studentId mismatch");
-  assert(completionsOf(emptyProgress, "deploy-first-worker")?.length === 0, "expected no completions yet");
-  log("GET progress listed deploy-first-worker with no completions");
+  assert(completionsOf(emptyProgress, "deploy-a-worker")?.length === 0, "expected no completions yet");
+  log("GET progress listed deploy-a-worker with no completions");
 
-  const mark = { course: "workers-basics", exercise: "deploy-first-worker", harness: "generic", model: "fake-agent/test" };
+  const mark = { course: "workers-basics", exercise: "deploy-a-worker", harness: "generic", model: "fake-agent/test" };
   const afterComplete = await request("PUT", `/api/progress/${student.id}`, mark);
-  const [completion] = completionsOf(afterComplete, "deploy-first-worker");
+  const [completion] = completionsOf(afterComplete, "deploy-a-worker");
   assert(completion?.harness === "generic" && completion.model === "fake-agent/test", "completion lost its harness or model");
-  const expectedUrl = new URL("/courses/workers-basics/deploy-first-worker", baseUrl).toString();
+  const expectedUrl = new URL("/courses/workers-basics/deploy-a-worker", baseUrl).toString();
   assert(completion.exerciseUrl === expectedUrl, `unexpected exerciseUrl: ${completion.exerciseUrl}`);
-  log("Marked deploy-first-worker complete, with its exercise URL");
+  log("Marked deploy-a-worker complete, with its exercise URL");
 
   const again = await request("PUT", `/api/progress/${student.id}`, mark);
-  assert(completionsOf(again, "deploy-first-worker").length === 1, "upsert should not duplicate completions");
+  assert(completionsOf(again, "deploy-a-worker").length === 1, "upsert should not duplicate completions");
   log("Completing it again with the same harness didn't add a completion");
 
   const fetched = await request("GET", `/api/progress/${student.id}`);
-  assert(completionsOf(fetched, "deploy-first-worker").length === 1, "GET progress lost the completion");
+  assert(completionsOf(fetched, "deploy-a-worker").length === 1, "GET progress lost the completion");
   log("GET progress returned the completion");
 
   const badSlug = await requestRaw("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "nope" });
   assert(badSlug.status === 400, `expected 400 for an unknown exercise, got ${badSlug.status}`);
-  const oldShape = await requestRaw("PUT", `/api/progress/${student.id}`, { exerciseSlug: "deploy-first-worker" });
+  const oldShape = await requestRaw("PUT", `/api/progress/${student.id}`, { exerciseSlug: "deploy-a-worker" });
   assert(oldShape.status === 400, `expected 400 for the old request shape, got ${oldShape.status}`);
   log("Unknown exercises and the old request shape were rejected with 400");
 

@@ -26,7 +26,7 @@ describe("compareExerciseFilenames", () => {
 
 describe("titleFromMarkdown", () => {
   it("finds the first # heading", () => {
-    expect(titleFromMarkdown("\n# Deploy your first Worker\n\nBody\n\n## Step 1")).toBe("Deploy your first Worker");
+    expect(titleFromMarkdown("\n# Deploy a Worker\n\nBody\n\n## Step 1")).toBe("Deploy a Worker");
   });
 
   it("ignores # lines inside fenced code blocks", () => {

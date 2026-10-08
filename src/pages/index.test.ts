@@ -42,7 +42,7 @@ describe("homepage", () => {
 
     expect(html).toContain('href="/courses/agent-setup/models"');
     expect(html).toContain('href="/courses/agent-setup/instructions"');
-    expect(html).toContain('href="/courses/workers-basics/deploy-first-worker"');
+    expect(html).toContain('href="/courses/workers-basics/deploy-a-worker"');
   });
 
   it("points the post-interview Next button at Agent setup's second exercise", async () => {

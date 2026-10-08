@@ -17,7 +17,7 @@ agent-instructions: |
   Out of scope for this exercise: frameworks (Astro, Next, Hono apps beyond a trivial handler), D1/R2 bindings, custom domains, and additional exercises. If the student asks, say those come later and stay focused on the basic loop.
 ---
 
-# Deploy your first Worker
+# Deploy a Worker
 
 Time to ship something real. In this exercise you'll create a minimal [Cloudflare Worker](https://developers.cloudflare.com/workers/) that returns plain text, run it on your machine, deploy it to your own account, and open it on the public internet. Your agent will walk you through every step.
 

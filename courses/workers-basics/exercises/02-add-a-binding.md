@@ -3,7 +3,7 @@ description: "Create a Workers KV namespace, bind it to the Worker you already d
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  This exercise extends the same Worker from "Deploy your first Worker" (deploy-first-worker) — check GET /api/progress/{studentId} first; if that exercise isn't complete yet, help them finish it before starting this one.
+  This exercise extends the same Worker from "Deploy a Worker" (deploy-a-worker) — check GET /api/progress/{studentId} first; if that exercise isn't complete yet, help them finish it before starting this one.
 
   Teach lightly as you go. Adapt depth to their interview answers (GET /api/students/{id}/interviews: Agent setup's agent experience and where they've deployed before, plus this course's own): students who haven't deployed anywhere get a brief, two-or-three-sentence explanation of each new concept as it comes up; students who've used another platform get a one-line comparison to what they know; Cloudflare users can skip straight to the mechanics. Don't lecture.
 
@@ -22,9 +22,9 @@ agent-instructions: |
   Out of scope for this exercise: multiple KV namespaces, list operations, TTL/expiration, R2/D1 bindings, Durable Objects, and additional exercises. If the student asks, say those come later and stay focused on this one binding.
 ---
 
-# Add your first binding
+# Add a binding
 
-This exercise extends the Worker you deployed in [Deploy your first Worker](/courses/workers-basics/deploy-first-worker). You'll create a [Workers KV](https://developers.cloudflare.com/kv/) namespace, [bind](https://developers.cloudflare.com/workers/runtime-apis/bindings/) it to that Worker, and read and write a value through it — the first taste of what a Cloudflare binding is and why it matters. Your agent will guide you end to end.
+This exercise extends the Worker you deployed in [Deploy a Worker](/courses/workers-basics/deploy-a-worker). You'll create a [Workers KV](https://developers.cloudflare.com/kv/) namespace, [bind](https://developers.cloudflare.com/workers/runtime-apis/bindings/) it to that Worker, and read and write a value through it — the first taste of what a Cloudflare binding is and why it matters. Your agent will guide you end to end.
 
 ## What you'll build
 
@@ -34,5 +34,5 @@ The same Worker, now with a `KV` binding on `env`. You'll write a value (e.g. vi
 
 Your agent can help you with these.
 
-- You've completed [Deploy your first Worker](/courses/workers-basics/deploy-first-worker) and still have that project on disk.
+- You've completed [Deploy a Worker](/courses/workers-basics/deploy-a-worker) and still have that project on disk.
 - The [`cf` CLI](/courses/agent-setup/cli) authenticated against your Cloudflare account (`cf auth whoami`).

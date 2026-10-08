@@ -25,7 +25,7 @@ vi.mock("cloudflare:workers", () => ({
 }));
 
 // Two small courses: Agent setup (its own interview, models, instructions)
-// and Workers basics (the default interview, deploy-first-worker).
+// and Workers basics (the default interview, deploy-a-worker).
 vi.mock("astro:content", async () => (await import("../../../../test/fake-content")).fakeAstroContent);
 
 const STUDENT = "curious-hacker-2019";

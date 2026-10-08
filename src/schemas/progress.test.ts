@@ -34,7 +34,7 @@ describe("markExerciseCompleteSchema", () => {
 
   it("rejects the old lessonSlug and exerciseSlug shapes", () => {
     expect(() => markExerciseCompleteSchema.parse({ lessonSlug: "models", harness: "claude-code" })).toThrow();
-    expect(() => markExerciseCompleteSchema.parse({ exerciseSlug: "deploy-first-worker" })).toThrow();
+    expect(() => markExerciseCompleteSchema.parse({ exerciseSlug: "deploy-a-worker" })).toThrow();
   });
 
   it("drops a summary, which moved to interviews", () => {
