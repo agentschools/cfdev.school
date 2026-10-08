@@ -21,6 +21,12 @@ describe("markExerciseCompleteSchema", () => {
     expect(() => markExerciseCompleteSchema.parse({ ...body, harness: "notepad" })).toThrow();
   });
 
+  it("accepts an https URL for a course hosted elsewhere", () => {
+    const external = { ...body, course: "https://github.com/acme/durable-objects.git" };
+    expect(markExerciseCompleteSchema.parse(external)).toEqual(external);
+    expect(() => markExerciseCompleteSchema.parse({ ...body, course: "http://github.com/acme/durable-objects" })).toThrow();
+  });
+
   it("rejects names and slugs that break the naming rules", () => {
     expect(() => markExerciseCompleteSchema.parse({ ...body, course: "Agent Setup" })).toThrow();
     expect(() => markExerciseCompleteSchema.parse({ ...body, exercise: "01-models.md" })).toThrow();
@@ -59,6 +65,15 @@ describe("progressSchema", () => {
           ],
         },
         { name: "workers-basics", exercises: [{ slug: "interview", completions: [] }] },
+      ],
+      externalCourses: [
+        {
+          url: "https://github.com/acme/durable-objects",
+          title: "Durable Objects",
+          exercises: [
+            { slug: "interview", title: "Interview", url: "https://school.example/default-interview.md", completions: [] },
+          ],
+        },
       ],
       updatedAt: "2026-10-02T12:00:00.000Z",
     };

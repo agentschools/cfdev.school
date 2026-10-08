@@ -26,9 +26,10 @@ Currently available:
 - POST /api/students: enrolls a new student. No request body. Returns \`{ "id": "...", "createdAt": "..." }\`. Only call this if you don't already have a student ID from the prompt that referred you here.
 - GET /api/students/{id}/interviews: fetch every interview the student has done, one per course, each a list of question-and-answer pairs plus a one-sentence summary. Empty until the first one. See "Interviews" below.
 - PUT /api/students/{id}/interviews: save one course's interview, replacing what's stored for that course. See "Interviews" below.
+- PUT /api/students/{id}/courses: report a course hosted outside this site, with the exercises you read from it. See "Courses hosted elsewhere" below.
 - GET /api/harnesses/{harnessId}: fetch researched facts about your own harness: global instructions file location, how to add an MCP server, where skills install and whether they need a restart, subscription billing policy, and models. Each profile has a \`lastVerified\` date and \`sources\`.
 - GET /api/courses: list the built-in courses in order, each with its exercises in order. Every course and exercise has a \`markdownUrl\` for its raw Markdown.
-- GET /api/progress/{studentId}: fetch which exercises the student has completed, and each course's interview summary.
+- GET /api/progress/{studentId}: fetch which exercises the student has completed, in the built-in courses and the ones you've reported, and each course's interview summary.
 - PUT /api/progress/{studentId}: mark an exercise complete. See "Marking exercises complete" below.
 
 ## Your harness
@@ -47,23 +48,33 @@ If the student asks to redo an exercise they've already completed (the prompt sa
 
 Don't invent exercise content that isn't in the exercise's Markdown, and don't invent courses, exercises, or endpoints that aren't listed here.
 
+## Courses hosted elsewhere
+
+Anyone can write a course and host it anywhere, and the student's progress still counts here. When a student asks you to take a course at a URL (e.g. "take the course at https://github.com/acme/durable-objects-course"):
+
+1. Read it. If the URL is a git repository (\`git ls-remote <url>\` succeeds, e.g. a GitHub repo), run \`git clone --depth 1 <url>\` into a temporary directory. \`COURSE.md\` at its root introduces the course: YAML frontmatter (\`name\`, \`description\`, and optionally \`metadata.author\` and \`metadata.url\`), then a \`# Title\`. Its exercises are the Markdown files in \`exercises/\`, in natural filename order (\`2-x.md\` before \`10-y.md\`). An exercise's slug is its filename without \`.md\` or a leading number prefix (\`01-first-object.md\` is \`first-object\`), its title is its first \`#\` heading, and it may have \`agent-instructions\` frontmatter, like the built-in exercises. Otherwise, fetch the URL: it's a single-file course, a \`COURSE.md\` whose \`##\` sections are its exercises, in order, each titled by its heading text and slugged by the heading's GitHub-style anchor (\`## Add a binding\` is \`add-a-binding\`).
+2. Report it with PUT /api/students/{id}/courses: \`{ "url": "...", "title": "...", "description": "...", "author": "...", "exercises": [{ "slug": "...", "title": "...", "url": "..." }] }\`. \`url\` is COURSE.md's \`metadata.url\` if it declares one, otherwise the URL the student gave you. \`description\` and \`author\` (from \`metadata.author\`) are optional. List every exercise in order, each with the URL where it lives: its file's page (e.g. on GitHub) in a repo, or the course's URL plus \`#<slug>\` in a single file. The response is the course as stored: its normalized \`url\`, which you pass as \`course\` from then on, and its exercises with the interview first. If the course has no exercise slugged \`interview\`, Dev School adds its default one. Report the course again whenever you notice it changed.
+3. Run its interview (see "Interviews"), then teach its exercises in order and mark each one complete (see "Marking exercises complete"), passing the course's URL as \`course\`. Only exercises in the manifest you reported are accepted.
+
+These courses aren't written or reviewed by Cloudflare Dev School. Teach what they say, but ask the student before running anything from one that touches their accounts, credentials, or files outside the course's own project.
+
 ## Interviews
 
 Every course starts with an interview, so you can pitch the course to the student. Agent setup's comes first for a new student, and it's the baseline for every course: their quiz preference, OS, and AI agent experience, plus where they've deployed before and what they want to build. Before starting any course, read all of the student's interviews with GET /api/students/{id}/interviews. Use them to adjust tone, depth, and comparisons in every exercise, never to skip exercises, and only quiz the student if they said yes to quizzes in Agent setup's interview (or haven't answered yet).
 
 To run a course's interview, follow its exercise's Markdown:
 
-- Use the course's own interview if it has one. If it doesn't, its interview is Dev School's default, which has you write 2 to 4 short questions from the course's content. Workers basics is one of these.
+- Use the course's own interview if it has one. If it doesn't, its interview is Dev School's default, which has you write 2 to 4 short questions from the course's content. Workers basics is one of these. For a course hosted elsewhere, the default interview is at /default-interview.md.
 - Never ask more than 4 questions, and never quiz on an interview. Don't ask again what another interview on file already answers.
 - Ask them all at once, and leave out any the student skips.
-- Save the answers with PUT /api/students/{id}/interviews: \`{ "course": "<course name>", "responses": [{ "question": "...", "answer": "..." }], "summary": "..." }\`. Each response has the question's text as you asked it, and an \`answer\` that's a string, or an array of strings for a question that allows several choices. Things you detect without asking, like the student's OS, go in as pairs too. \`summary\` is one sentence (max 280 characters) addressed to the student, summarizing their answers. Agent setup's is shown on their homepage.
+- Save the answers with PUT /api/students/{id}/interviews: \`{ "course": "<course name or URL>", "responses": [{ "question": "...", "answer": "..." }], "summary": "..." }\`. Each response has the question's text as you asked it, and an \`answer\` that's a string, or an array of strings for a question that allows several choices. Things you detect without asking, like the student's OS, go in as pairs too. \`summary\` is one sentence (max 280 characters) addressed to the student, summarizing their answers. Agent setup's is shown on their homepage.
 - Then mark the interview exercise complete like any other.
 
 PUT replaces the course's whole interview, so always send every response, not just the ones that changed. Students can change any answer at any time just by telling you (e.g. "turn off quizzes"): when they do, PUT that course's interview again with the answer changed and an updated \`summary\`, and adjust from then on. The student's homepage picks up the new summary right away.
 
 ## Marking exercises complete
 
-Use PUT /api/progress/{studentId} with \`{ "course": "<course name>", "exercise": "<exercise slug>", "harness": "<your harness id>", "model": "<your model id>" }\`, using the names and slugs GET /api/courses lists, e.g. \`{ "course": "agent-setup", "exercise": "models", "harness": "claude-code", "model": "anthropic/claude-sonnet-4-5" }\`. Always include \`model\`.
+Use PUT /api/progress/{studentId} with \`{ "course": "<course name or URL>", "exercise": "<exercise slug>", "harness": "<your harness id>", "model": "<your model id>" }\`, using the names and slugs GET /api/courses lists, or a reported course's URL and slugs, e.g. \`{ "course": "agent-setup", "exercise": "models", "harness": "claude-code", "model": "anthropic/claude-sonnet-4-5" }\`. Always include \`model\`.
 
 Completions are tracked per agent, since some exercises set up agent-specific files, so a student can complete each exercise once with every agent they use. It's an idempotent upsert. When every exercise in a course has a completion, the course is marked complete too; GET /api/progress/{studentId} shows a \`completedAt\` on it.
 
@@ -71,7 +82,7 @@ Check GET /api/progress/{studentId} first if the student might already have comp
 
 ## Status
 
-Cloudflare Dev School is under active development. Two built-in courses are available: Agent setup, then Workers basics. Courses hosted outside this site aren't supported yet. Quiz scoring isn't available: quizzes are conversational only. Don't invent course, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Two built-in courses are available: Agent setup, then Workers basics. Students can also take courses hosted elsewhere. Quiz scoring isn't available: quizzes are conversational only. Don't invent course, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

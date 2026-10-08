@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createDocument } from "zod-openapi";
 import { harnessProfileSchema } from "../data/harnesses";
-import { courseSchema } from "../schemas/course";
+import { courseSchema, externalCourseSchema, reportCourseSchema } from "../schemas/course";
 import { interviewsSchema, saveInterviewSchema } from "../schemas/interview";
 import { markExerciseCompleteSchema, progressSchema } from "../schemas/progress";
 import { studentIdSchema, studentSchema } from "../schemas/student";
@@ -56,7 +56,7 @@ export const openApiDocument = createDocument({
       put: {
         summary: "Save a course's interview",
         description:
-          "Replaces the student's interview for one course: send every response, not just the ones that changed, each with the question's text as asked. Pushes the new summary to the student's open tabs along with their progress. Unknown courses are rejected.",
+          "Replaces the student's interview for one course: send every response, not just the ones that changed, each with the question's text as asked. Pushes the new summary to the student's open tabs along with their progress. Courses that aren't built in or reported are rejected.",
         requestParams: { path: z.object({ id: studentIdSchema }) },
         requestBody: {
           content: {
@@ -72,6 +72,33 @@ export const openApiDocument = createDocument({
           },
           "400": {
             description: "Invalid body (e.g. an unknown course or a missing summary).",
+          },
+          "404": {
+            description: "No student exists with that ID.",
+          },
+        },
+      },
+    },
+    "/api/students/{id}/courses": {
+      put: {
+        summary: "Report a course hosted elsewhere",
+        description:
+          "Stores the manifest of a course hosted outside this site, as you read it: a git repo with COURSE.md and exercises/, or a single-file COURSE.md whose ## sections are exercises. The server never fetches the course. It normalizes the course's URL into its ID (lowercase host, no trailing slash, .git, query, or fragment) and puts the interview first, adding Dev School's default one if the course doesn't have an exercise slugged interview. Reporting the same course again replaces its manifest. Then pass its URL as `course` to the interview and progress endpoints.",
+        requestParams: { path: z.object({ id: studentIdSchema }) },
+        requestBody: {
+          content: {
+            "application/json": { schema: reportCourseSchema },
+          },
+        },
+        responses: {
+          "200": {
+            description: "The course as stored.",
+            content: {
+              "application/json": { schema: externalCourseSchema },
+            },
+          },
+          "400": {
+            description: "Invalid body (e.g. a URL that isn't https, or duplicate exercise slugs).",
           },
           "404": {
             description: "No student exists with that ID.",
@@ -117,7 +144,7 @@ export const openApiDocument = createDocument({
       get: {
         summary: "Get a student's progress",
         description:
-          "Returns every built-in course and exercise, in order, with the student's completions: one per harness that completed an exercise, a completedAt on each course the student has finished, and each course's interview summary.",
+          "Returns every built-in course and exercise, in order, then the courses hosted elsewhere that the student's agent reported, with the student's completions: one per harness that completed an exercise, a completedAt on each course the student has finished, and each course's interview summary.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         responses: {
           "200": {
@@ -134,7 +161,7 @@ export const openApiDocument = createDocument({
       put: {
         summary: "Mark an exercise complete",
         description:
-          "Idempotent upsert: marks an exercise complete for the student, per harness, so completing it with a second agent adds a second completion. Send the course name and exercise slug as GET /api/courses lists them, your harness ID, and your model ID. When every exercise in the course has a completion, the course is marked complete too, once. Unknown courses and exercises are rejected.",
+          "Idempotent upsert: marks an exercise complete for the student, per harness, so completing it with a second agent adds a second completion. Send the course name and exercise slug as GET /api/courses lists them (or a reported course's URL and slug), your harness ID, and your model ID. When every exercise in the course has a completion, the course is marked complete too, once. Courses that aren't built in or reported, and exercises missing from them, are rejected.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         requestBody: {
           content: {
@@ -159,7 +186,7 @@ export const openApiDocument = createDocument({
       delete: {
         summary: "Reset a student's progress",
         description:
-          "Deletes all of the student's exercise and course completions. The student row and interviews are kept, only their progress is cleared. Used by the 'Reset progress' option on /disenroll.",
+          "Deletes all of the student's exercise and course completions. The student row, interviews, and reported courses are kept, only their progress is cleared. Used by the 'Reset progress' option on /disenroll.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         responses: {
           "200": {

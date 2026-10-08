@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { harnessProfileSchema } from "../data/harnesses";
-import { courseNameSchema, exerciseSlugSchema } from "./course";
+import { courseNameSchema, courseRefSchema, exerciseSlugSchema, externalCourseSchema, externalExerciseSchema } from "./course";
 import { interviewSummarySchema } from "./interview";
 import { studentIdSchema } from "./student";
 
@@ -18,6 +18,9 @@ import { studentIdSchema } from "./student";
  *
  * Each course also carries its interview summary (src/schemas/interview.ts),
  * so saving an interview updates open tabs over the same progress broadcast.
+ * Courses hosted elsewhere (#77) come after the built-in ones, with the
+ * titles and URLs from the manifest the student's agent reported, since the
+ * site never fetches them.
  */
 
 const harnessSchema = harnessProfileSchema.shape.id.meta({
@@ -60,9 +63,22 @@ export const courseProgressSchema = z.object({
   exercises: z.array(exerciseProgressSchema).meta({ description: "Every exercise in the course, in order." }),
 });
 
+export const externalCourseProgressSchema = externalCourseSchema
+  .omit({ exercises: true, updatedAt: true })
+  .extend({
+    completedAt: courseProgressSchema.shape.completedAt,
+    interviewSummary: courseProgressSchema.shape.interviewSummary,
+    exercises: z.array(exerciseProgressSchema.extend(externalExerciseSchema.pick({ title: true, url: true }).shape)).meta({
+      description: "Every exercise in the course's reported manifest, in order.",
+    }),
+  });
+
 export const progressSchema = z.object({
   studentId: studentIdSchema,
   courses: z.array(courseProgressSchema).meta({ description: "Every built-in course, in order." }),
+  externalCourses: z.array(externalCourseProgressSchema).meta({
+    description: "Courses hosted elsewhere that the student's agent reported, oldest first.",
+  }),
   updatedAt: z.iso.datetime().meta({
     description:
       "When progress was last updated, as an ISO 8601 timestamp. Equals the student's createdAt when nothing is complete yet.",
@@ -71,8 +87,10 @@ export const progressSchema = z.object({
 
 /** Body for PUT /api/progress/{studentId}: marks one exercise complete (idempotent upsert per exercise + harness). */
 export const markExerciseCompleteSchema = z.object({
-  course: courseNameSchema.meta({ description: "The course's name, as GET /api/courses lists it." }),
-  exercise: exerciseSlugSchema.meta({ description: "The exercise's slug, as GET /api/courses lists it." }),
+  course: courseRefSchema,
+  exercise: exerciseSlugSchema.meta({
+    description: "The exercise's slug, as GET /api/courses lists it, or as reported for a course hosted elsewhere.",
+  }),
   harness: harnessSchema,
   model: modelSchema.optional(),
 });
@@ -80,5 +98,6 @@ export const markExerciseCompleteSchema = z.object({
 export type ExerciseCompletion = z.infer<typeof exerciseCompletionSchema>;
 export type ExerciseProgress = z.infer<typeof exerciseProgressSchema>;
 export type CourseProgress = z.infer<typeof courseProgressSchema>;
+export type ExternalCourseProgress = z.infer<typeof externalCourseProgressSchema>;
 export type Progress = z.infer<typeof progressSchema>;
 export type MarkExerciseComplete = z.infer<typeof markExerciseCompleteSchema>;

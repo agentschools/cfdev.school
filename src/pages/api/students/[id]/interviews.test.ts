@@ -125,6 +125,24 @@ describe("PUT /api/students/{id}/interviews", () => {
     ]);
   });
 
+  it("stores a reported course's interview under its normalized URL, after the built-in ones", async () => {
+    const repo = "https://github.com/acme/durable-objects";
+    const external = { course: `${repo}.git`, responses: [], summary: "You skipped every question." };
+    expect((await put(STUDENT, external)).status).toBe(400);
+
+    await state.db
+      .prepare(
+        "INSERT INTO external_courses (student_id, course_id, title, exercises, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+      )
+      .bind(STUDENT, repo, "Durable Objects", "[]", "2026-10-01T12:00:00.000Z", "2026-10-01T12:00:00.000Z")
+      .run();
+    await put(STUDENT, external);
+    const { body } = await put(STUDENT, agentSetup);
+
+    expect(body.interviews.map((interview) => interview.course)).toEqual(["agent-setup", repo]);
+    expect(state.broadcasts.at(-1)?.progress.externalCourses[0].interviewSummary).toBe("You skipped every question.");
+  });
+
   it("broadcasts progress with the course's new interview summary", async () => {
     await put(STUDENT, agentSetup);
     await put(STUDENT, { ...agentSetup, summary: "Quizzes off." });
