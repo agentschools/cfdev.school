@@ -75,6 +75,9 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     <p class="section-label">Account</p>
     <ol class="item-list">
       <li>
+        <a href="/profile" aria-current={currentPath === "/profile" ? "page" : undefined}>Profile</a>
+      </li>
+      <li>
         <a href="/disenroll">Disenroll</a>
       </li>
     </ol>

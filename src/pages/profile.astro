@@ -1,0 +1,184 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { coursePath, REQUIRED_COURSE } from "../data/courses";
+import { harnesses } from "../data/harnesses";
+import { catalogCourses, getBuiltInCourses } from "../lib/courses";
+
+const catalog = catalogCourses(await getBuiltInCourses());
+
+// How each completion names the agent that did it ("Claude Code, Oct 1, 2026").
+const harnessNames = Object.fromEntries(
+  harnesses.map((harness) => [harness.id, harness.id === "generic" ? "Unknown agent" : harness.name]),
+);
+---
+
+<Layout
+  title="Profile — Cloudflare Dev School"
+  description="Every course you've started on Cloudflare Dev School, and which agents you completed each exercise with."
+>
+  <div class="page">
+    <main class="content" id="profile" data-catalog={JSON.stringify(catalog)} data-harness-names={JSON.stringify(harnessNames)}>
+      <h1>Profile</h1>
+      <p class="lede">Every course you've started, here or hosted elsewhere, and which agents you completed each exercise with.</p>
+
+      <div id="profile-enroll-nudge" class="enroll-nudge" hidden>
+        <p class="enroll-nudge-title">You're not enrolled</p>
+        <p class="enroll-nudge-body">Enroll to track your progress through every course.</p>
+        <a href="/" class="enroll-nudge-cta">Go home</a>
+      </div>
+
+      <p id="profile-empty" class="empty" hidden>
+        You haven't started a course yet. <a href={coursePath(REQUIRED_COURSE)}>Start with Agent setup</a>.
+      </p>
+
+      <div id="profile-courses"></div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  import { initProfilePage } from "../lib/profile-client";
+  initProfilePage();
+</script>
+
+<style>
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2.5rem 0 5rem;
+    max-width: 42rem;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 0.75rem;
+  }
+
+  .lede {
+    margin: 0 0 2rem;
+    color: var(--muted-fg);
+    font-size: 1.1rem;
+  }
+
+  .empty {
+    color: var(--muted-fg);
+  }
+
+  .empty a {
+    color: var(--accent);
+  }
+
+  .enroll-nudge {
+    margin: 0 0 1.75rem;
+    padding: 1.25rem 1.35rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+  }
+
+  .enroll-nudge-title {
+    margin: 0 0 0.35rem;
+    font-weight: 600;
+  }
+
+  .enroll-nudge-body {
+    margin: 0 0 0.9rem;
+    color: var(--muted-fg);
+    font-size: 0.95rem;
+  }
+
+  .enroll-nudge-cta {
+    display: inline-block;
+    padding: 0.45rem 0.9rem;
+    border-radius: 0.45rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  /* Rendered by src/lib/profile-client.ts, so these need :global(). */
+  #profile-courses :global(.profile-course) {
+    margin: 0 0 1.5rem;
+    padding: 1.25rem 1.35rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+  }
+
+  #profile-courses :global(.profile-course-title) {
+    margin: 0 0 0.25rem;
+    font-size: 1.25rem;
+  }
+
+  #profile-courses :global(.profile-course-title a) {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  #profile-courses :global(.profile-course-title a:hover) {
+    color: var(--accent);
+  }
+
+  #profile-courses :global(.profile-course-host),
+  #profile-courses :global(.profile-course-status) {
+    margin: 0 0 0.25rem;
+    color: var(--muted-fg);
+    font-size: 0.9rem;
+  }
+
+  #profile-courses :global(.profile-exercises) {
+    margin: 0.85rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  #profile-courses :global(.profile-exercise) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.6rem;
+    padding: 0.4rem 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+
+  #profile-courses :global(.profile-exercise-check) {
+    width: 1rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  #profile-courses :global(.profile-exercise-title) {
+    color: var(--muted-fg);
+    text-decoration: none;
+  }
+
+  #profile-courses :global(.is-done .profile-exercise-title) {
+    color: var(--fg);
+  }
+
+  #profile-courses :global(.profile-exercise-title:hover) {
+    color: var(--accent);
+  }
+
+  #profile-courses :global(.profile-exercise-completions) {
+    margin-left: auto;
+    color: var(--muted-fg);
+    font-size: 0.85rem;
+  }
+
+  #profile-courses :global(.profile-exercise-new) {
+    margin-left: auto;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+</style>

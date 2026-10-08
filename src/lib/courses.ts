@@ -1,6 +1,7 @@
 import { type CollectionEntry, getCollection } from "astro:content";
-import { COURSE_ORDER } from "../data/courses";
+import { COURSE_ORDER, coursePath, exercisePath } from "../data/courses";
 import type { CourseFrontmatter } from "../schemas/course";
+import type { CatalogCourse } from "./course-progress";
 import {
   compareExerciseFilenames,
   exerciseSlugFromFilename,
@@ -57,6 +58,20 @@ export async function getBuiltInCourses(): Promise<BuiltInCourse[]> {
       exercises,
     };
   });
+}
+
+/** The built-in courses as client code needs them to show a student's progress (see src/lib/course-progress.ts). */
+export function catalogCourses(courses: readonly BuiltInCourse[]): CatalogCourse[] {
+  return courses.map((course) => ({
+    name: course.name,
+    title: course.title,
+    url: coursePath(course.name),
+    exercises: course.exercises.map((exercise) => ({
+      slug: exercise.slug,
+      title: exercise.title,
+      url: exercisePath(course.name, exercise.slug),
+    })),
+  }));
 }
 
 export async function getBuiltInCourse(name: string): Promise<BuiltInCourse | undefined> {

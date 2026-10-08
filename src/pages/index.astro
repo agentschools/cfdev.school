@@ -4,7 +4,7 @@ import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { coursePath, exercisePath, REQUIRED_COURSE } from "../data/courses";
 import { harnesses } from "../data/harnesses";
-import { getBuiltInCourses } from "../lib/courses";
+import { catalogCourses, getBuiltInCourses } from "../lib/courses";
 
 // Rendered size (px) per mark, tuned by eye so the monochrome silhouettes read
 // at the same visual weight. Falls back to a square for any harness added later.
@@ -36,6 +36,7 @@ const nextSteps = {
     : { title: "Courses", url: "/courses" },
 };
 const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
+const catalog = catalogCourses(courses);
 ---
 
 <Layout
@@ -70,6 +71,11 @@ const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
           Next: {firstAfterInterview.title} →
         </a>
       </section>
+      <section id="course-summary" class="course-summary" data-catalog={JSON.stringify(catalog)} hidden>
+        <p class="course-summary-label">Courses in progress</p>
+        <ul id="course-summary-list" class="course-summary-list"></ul>
+        <a class="course-summary-link" href="/profile">See all your progress →</a>
+      </section>
     </div>
 
     <div class="hero-visual">
@@ -103,7 +109,7 @@ const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
   import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "../lib/enroll-client";
   import { subscribeToProgress } from "../lib/progress-client";
   import { setVisible } from "../lib/reveal";
-  import { exerciseCompletions } from "../lib/course-progress";
+  import { type CatalogCourse, exerciseCompletions, startedCourses } from "../lib/course-progress";
   import type { Progress } from "../schemas/progress";
   import { initHarnessTooltips } from "../lib/harness-tooltip-client";
 
@@ -119,7 +125,22 @@ const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
     const complete = document.getElementById("interview-complete");
     const summary = document.getElementById("interview-complete-summary");
     const nextLink = document.getElementById("interview-complete-next") as HTMLAnchorElement | null;
-    if (!promptSection || !promptText || !copyButton || !copyConfirm || !complete || !summary || !nextLink) return;
+    const courseSummary = document.getElementById("course-summary");
+    const courseSummaryList = document.getElementById("course-summary-list");
+    if (
+      !promptSection ||
+      !promptText ||
+      !copyButton ||
+      !copyConfirm ||
+      !complete ||
+      !summary ||
+      !nextLink ||
+      !courseSummary ||
+      !courseSummaryList
+    ) {
+      return;
+    }
+    const catalog = JSON.parse(courseSummary.dataset.catalog ?? "[]") as CatalogCourse[];
 
     const nextSteps = JSON.parse(nextLink.dataset.nextSteps!) as {
       course: string;
@@ -149,6 +170,36 @@ const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
       }
       setVisible(promptSection!, !interviewComplete);
       setVisible(complete!, interviewComplete);
+      renderCourseSummary(progress);
+    }
+
+    // The courses the student has started but not finished, each linking to
+    // its page (or out, for a course hosted elsewhere), plus a link to
+    // /profile. Titles of courses hosted elsewhere come from the student's
+    // agent, so they only ever go in through textContent.
+    function renderCourseSummary(progress: Progress): void {
+      const started = startedCourses(progress, catalog);
+      const inProgress = started.filter((course) => !course.completedAt);
+      courseSummaryList!.replaceChildren(
+        ...inProgress.map((course) => {
+          const item = document.createElement("li");
+          const link = document.createElement("a");
+          link.href = course.url;
+          link.textContent = course.title;
+          const count = document.createElement("span");
+          count.className = "course-summary-count";
+          count.textContent = `${course.exercises.length - course.remaining} of ${course.exercises.length}`;
+          item.appendChild(link);
+          item.appendChild(count);
+          return item;
+        }),
+      );
+      if (inProgress.length === 0) {
+        const item = document.createElement("li");
+        item.textContent = "You've finished every course you've started.";
+        courseSummaryList!.appendChild(item);
+      }
+      setVisible(courseSummary!, started.length > 0);
     }
 
     function showPrompt(student: CachedStudent): void {
@@ -288,6 +339,47 @@ const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
   }
   .interview-complete-next:hover {
     filter: brightness(1.05);
+  }
+  .course-summary {
+    max-width: 30rem;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+  }
+  .course-summary[hidden] {
+    display: none;
+  }
+  .course-summary-label {
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+  }
+  .course-summary-list {
+    margin: 0 0 0.5rem;
+    padding: 0;
+    list-style: none;
+  }
+  /* The list items are rendered by the script above, so these need :global(). */
+  .course-summary-list :global(li) {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .course-summary-list :global(a) {
+    color: var(--fg);
+    text-decoration: none;
+  }
+  .course-summary-list :global(a:hover) {
+    color: var(--accent);
+  }
+  .course-summary-list :global(.course-summary-count) {
+    color: var(--muted-fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .course-summary-link {
+    color: var(--accent);
+    font-size: 0.9rem;
+    text-decoration: none;
   }
   .fine-print {
     margin: 0;

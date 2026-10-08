@@ -42,6 +42,12 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       add("/");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {
       add("/disenroll");
+    } else if (
+      filename === "src/pages/profile.astro" ||
+      filename === "src/lib/profile-client.ts" ||
+      filename === "src/lib/course-progress.ts"
+    ) {
+      add("/profile");
     } else if (filename === "src/content/default-interview.md" || filename === "src/pages/default-interview.md.ts") {
       add("/courses/workers-basics/interview", "/default-interview.md");
     } else if (filename === "src/data/courses.ts" || filename === "src/pages/courses/index.astro") {
