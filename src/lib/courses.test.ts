@@ -9,7 +9,7 @@ const collections = vi.hoisted(() => ({
     { id: "agent-setup/10-tools", body: "# Tools\n", data: {} },
     { id: "agent-setup/02-models", body: "# Models\n", data: { description: "Pick a model." } },
     { id: "agent-setup/00-interview", body: "# Interview\n", data: {} },
-    { id: "workers-basics/01-deploy-first-worker", body: "# Deploy your first Worker\n", data: {} },
+    { id: "workers-basics/01-deploy-a-worker", body: "# Deploy a Worker\n", data: {} },
   ],
   defaultInterview: [{ id: "default-interview", body: "# Interview\n", data: { description: "Default." } }],
 }));
@@ -44,7 +44,7 @@ describe("getBuiltInCourses", () => {
     const course = await getBuiltInCourse("workers-basics");
     expect(course?.exercises.map((exercise) => [exercise.slug, exercise.file])).toEqual([
       ["interview", "interview.md"],
-      ["deploy-first-worker", "01-deploy-first-worker.md"],
+      ["deploy-a-worker", "01-deploy-a-worker.md"],
     ]);
     expect(course?.exercises[0].entry.id).toBe("default-interview");
   });

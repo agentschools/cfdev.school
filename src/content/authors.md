@@ -147,4 +147,4 @@ An exercise is complete when the student's agent says so, so give the agent some
 The built-in courses use the same format:
 
 - [Agent setup's COURSE.md](/courses/agent-setup/COURSE.md) and [its interview](/courses/agent-setup/exercises/00-interview.md)
-- [Workers basics' COURSE.md](/courses/workers-basics/COURSE.md) and ["Deploy your first Worker"](/courses/workers-basics/exercises/01-deploy-first-worker.md), which checks the deployed URL before completing
+- [Workers basics' COURSE.md](/courses/workers-basics/COURSE.md) and ["Deploy a Worker"](/courses/workers-basics/exercises/01-deploy-a-worker.md), which checks the deployed URL before completing

@@ -15,7 +15,7 @@ describe("CurriculumSidebar", () => {
 
     expect(html.indexOf('href="/courses/agent-setup"')).toBeLessThan(html.indexOf('href="/courses/workers-basics"'));
     expect(html).toContain('href="/courses/agent-setup/models"');
-    expect(html).toContain('href="/courses/workers-basics/deploy-first-worker"');
+    expect(html).toContain('href="/courses/workers-basics/deploy-a-worker"');
     // Workers basics has no interview of its own, so it gets the default one.
     expect(html).toContain('href="/courses/workers-basics/interview"');
     expect(html).toContain('href="/courses"');
@@ -26,7 +26,7 @@ describe("CurriculumSidebar", () => {
 
     expect(html).toMatch(/00\.<\/span>\s*Interview/);
     expect(html).toMatch(/01\.<\/span>\s*Models/);
-    expect(html).toMatch(/01\.<\/span>\s*Deploy your first Worker/);
+    expect(html).toMatch(/01\.<\/span>\s*Deploy a Worker/);
   });
 
   it("marks the current page's item with aria-current", async () => {

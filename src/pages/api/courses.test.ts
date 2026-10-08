@@ -16,7 +16,7 @@ vi.mock("astro:content", () => ({
       exercises: [
         { id: "agent-setup/00-interview", body: "# Interview\n", data: {} },
         { id: "agent-setup/01-models", body: "# Models\n", data: { description: "Pick a model." } },
-        { id: "workers-basics/01-deploy-first-worker", body: "# Deploy your first Worker\n", data: {} },
+        { id: "workers-basics/01-deploy-a-worker", body: "# Deploy a Worker\n", data: {} },
       ],
       defaultInterview: [{ id: "default-interview", body: "# Interview\n", data: {} }],
     })[name],

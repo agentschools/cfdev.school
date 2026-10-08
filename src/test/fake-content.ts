@@ -19,8 +19,8 @@ const collections = {
     { id: "agent-setup/01-models", body: "\n# Models\n", data: { description: "Pick a model." } },
     { id: "agent-setup/02-instructions", body: "\n# Instructions\n", data: { description: "Write instructions." } },
     {
-      id: "workers-basics/01-deploy-first-worker",
-      body: "\n# Deploy your first Worker\n",
+      id: "workers-basics/01-deploy-a-worker",
+      body: "\n# Deploy a Worker\n",
       data: { description: "Deploy a Worker." },
     },
   ],

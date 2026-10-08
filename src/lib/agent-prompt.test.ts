@@ -21,9 +21,9 @@ describe("buildPrompt", () => {
   });
 
   it("names the exercise and its course", () => {
-    const prompt = buildPrompt(student, { courseTitle: "Workers basics", exerciseTitle: "Deploy your first Worker" });
+    const prompt = buildPrompt(student, { courseTitle: "Workers basics", exerciseTitle: "Deploy a Worker" });
 
-    expect(prompt).toContain('Let\'s work on the "Deploy your first Worker" exercise from the "Workers basics" course together!');
+    expect(prompt).toContain('Let\'s work on the "Deploy a Worker" exercise from the "Workers basics" course together!');
     expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
   });
 

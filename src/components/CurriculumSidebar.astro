@@ -47,7 +47,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
             return (
               <li data-course={course.name} data-exercise={exercise.slug}>
                 <a href={href} aria-current={currentPath === href ? "page" : undefined}>
-                  <span>
+                  <span class="title" title={exercise.title}>
                     {/* Zero-based, like the exercise files: the interview is "00." */}
                     <span class="index">{String(index).padStart(2, "0")}.</span> {exercise.title}
                   </span>
@@ -96,7 +96,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
   .curriculum-sidebar {
     display: none;
     flex-shrink: 0;
-    width: 230px;
+    width: 240px;
     padding: 1.75rem 1rem;
     border-right: 1px solid var(--border);
     background: light-dark(#f9f7f6, color-mix(in oklch, var(--fg) 3%, var(--bg)));
@@ -178,6 +178,13 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
 
   .item-list a[aria-current="page"] .index {
     color: color-mix(in oklch, var(--accent) 70%, transparent);
+  }
+
+  .title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .index {

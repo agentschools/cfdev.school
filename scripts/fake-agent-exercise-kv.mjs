@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Scripted "fake agent" that exercises the add-first-binding-kv exercise +
+// Scripted "fake agent" that exercises the add-a-binding exercise +
 // progress HTTP contract documented in /llms.txt against a real running
 // Worker. Sibling to fake-agent-exercise.mjs (kept separate rather than
 // generalizing that script, to keep this addition a small, low-risk diff).
@@ -30,37 +30,37 @@ async function main() {
   const course = courses.find((c) => c.name === "workers-basics");
   assert(course, "workers-basics missing from /api/courses");
   assert(course.exercises[0]?.slug === "interview", "a course's first exercise should be its interview");
-  const exercise = course.exercises.find((e) => e.slug === "add-first-binding-kv");
-  assert(exercise, "add-first-binding-kv missing from workers-basics");
+  const exercise = course.exercises.find((e) => e.slug === "add-a-binding");
+  assert(exercise, "add-a-binding missing from workers-basics");
   log(`Listed ${courses.length} course(s); workers-basics has ${course.exercises.length} exercise(s)`);
 
   const markdown = await fetchText(new URL(exercise.markdownUrl).pathname);
   assert(/^---\n[\s\S]*agent-instructions:/.test(markdown), "exercise Markdown should have agent-instructions frontmatter");
   assert(markdown.includes("PUT /api/progress/{studentId}"), "agent-instructions should mention marking complete via PUT");
-  log("Fetched add-first-binding-kv's raw Markdown");
+  log("Fetched add-a-binding's raw Markdown");
 
   const workersBasics = (progress) => progress.courses.find((c) => c.name === "workers-basics");
   const completionsOf = (progress, slug) => workersBasics(progress)?.exercises.find((e) => e.slug === slug)?.completions;
 
   const emptyProgress = await request("GET", `/api/progress/${student.id}`);
   assert(emptyProgress.studentId === student.id, "progress studentId mismatch");
-  assert(completionsOf(emptyProgress, "add-first-binding-kv")?.length === 0, "expected no completions yet");
-  log("GET progress listed add-first-binding-kv with no completions");
+  assert(completionsOf(emptyProgress, "add-a-binding")?.length === 0, "expected no completions yet");
+  log("GET progress listed add-a-binding with no completions");
 
-  const mark = { course: "workers-basics", exercise: "add-first-binding-kv", harness: "generic", model: "fake-agent/test" };
+  const mark = { course: "workers-basics", exercise: "add-a-binding", harness: "generic", model: "fake-agent/test" };
   const afterComplete = await request("PUT", `/api/progress/${student.id}`, mark);
-  assert(completionsOf(afterComplete, "add-first-binding-kv").length === 1, "expected one completion");
+  assert(completionsOf(afterComplete, "add-a-binding").length === 1, "expected one completion");
   assert(!workersBasics(afterComplete).completedAt, "the course shouldn't be complete yet");
-  log("Marked add-first-binding-kv complete");
+  log("Marked add-a-binding complete");
 
   const withCodex = await request("PUT", `/api/progress/${student.id}`, { ...mark, harness: "codex" });
-  assert(completionsOf(withCodex, "add-first-binding-kv").length === 2, "expected one completion per harness");
+  assert(completionsOf(withCodex, "add-a-binding").length === 2, "expected one completion per harness");
   log("Completing it with a second harness added a second completion");
 
   // Completing the rest of Workers basics (its default interview and
-  // deploy-first-worker) completes the course.
+  // deploy-a-worker) completes the course.
   await request("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "interview" });
-  const withAll = await request("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "deploy-first-worker" });
+  const withAll = await request("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "deploy-a-worker" });
   assert(
     workersBasics(withAll).exercises.every((e) => e.completions.length > 0),
     "expected every Workers basics exercise to be complete",
