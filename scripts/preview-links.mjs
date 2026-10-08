@@ -40,6 +40,13 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       add("/api/openapi.json");
     } else if (filename === "src/pages/index.astro") {
       add("/");
+    } else if (
+      filename === "src/pages/authors.astro" ||
+      filename === "src/lib/authors-client.ts" ||
+      filename === "src/content/authors.md" ||
+      filename === "src/pages/authors.md.ts"
+    ) {
+      add("/authors", "/authors.md");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {
       add("/disenroll");
     } else if (

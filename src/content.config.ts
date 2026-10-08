@@ -35,4 +35,14 @@ const defaultInterview = defineCollection({
   schema: exerciseFrontmatterSchema,
 });
 
-export const collections = { courses, exercises, defaultInterview };
+/**
+ * The guide for course authors (#79), shaped like an exercise: its
+ * `agent-instructions` are the procedure for the author's agent, and its body
+ * is the format reference, rendered on /authors and served raw at /authors.md.
+ */
+const authorsGuide = defineCollection({
+  loader: glob({ base: "src/content", pattern: "authors.md" }),
+  schema: exerciseFrontmatterSchema,
+});
+
+export const collections = { courses, exercises, defaultInterview, authorsGuide };
