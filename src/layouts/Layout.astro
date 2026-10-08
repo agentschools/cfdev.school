@@ -143,6 +143,87 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
     display: none;
   }
 
+  /* Rendered Markdown (exercises, course intros, the authors guide). */
+  .prose {
+    line-height: 1.7;
+  }
+
+  .prose h2 {
+    font-size: 1.35rem;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .prose p {
+    margin: 0 0 1rem;
+  }
+
+  .prose ul {
+    margin: 0 0 1rem;
+    padding-left: 1.25rem;
+  }
+
+  .prose a {
+    color: var(--accent);
+  }
+
+  .prose pre {
+    margin: 0 0 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card-bg);
+    color: var(--fg);
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .prose pre code {
+    font-size: inherit;
+  }
+
+  .prose code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em;
+  }
+
+  .prose table {
+    width: 100%;
+    margin: 0 0 1rem;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .prose th,
+  .prose td {
+    padding: 0.6rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .prose th {
+    font-weight: 600;
+    color: var(--muted-fg);
+  }
+
+  .prose :is(th, td):first-child {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .prose table {
+      display: block;
+      overflow-x: auto;
+    }
+
+    .prose td code {
+      white-space: nowrap;
+    }
+  }
+
   .code-block {
     position: relative;
     margin: 0 0 1rem;
