@@ -8,8 +8,8 @@ import { studentIdSchema, studentSchema } from "../schemas/student";
 
 /**
  * OpenAPI spec for the Cloudflare Dev School public API, derived from the
- * same Zod schemas the API routes validate against (see plan.agent.md's
- * "ship types, not docs" type design approach). Served at /api/openapi.json.
+ * same Zod schemas the API routes validate against ("ship types, not docs",
+ * https://shiptypes.com/). Served at /api/openapi.json.
  */
 export const openApiDocument = createDocument({
   openapi: "3.1.0",

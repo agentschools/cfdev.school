@@ -2,8 +2,9 @@
 
 This repo is Cloudflare Dev School, a web app that teaches people how to build on Cloudflare using their AI-powered agent harness of choice. It's modeled on OpenCode School.
 
-- `plan.human.md`: the original human-written plan.
-- `plan.agent.md`: the agent-refined plan, produced by grilling `plan.human.md`. Where the two disagree, `plan.agent.md` wins.
+- Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
+- No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
+- Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
 - The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships two built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools) and Workers basics ("Deploy your first Worker," then "Add your first binding," which extends that same Worker). See "Courses and exercises".
 
 ## Titles
@@ -13,8 +14,9 @@ Use sentence case for every title and heading: course and exercise titles, page 
 ## Stack
 
 - Astro (`output: 'server'`) deployed as a single Cloudflare Worker via `@astrojs/cloudflare`.
-- D1 (`env.DB`, database `cloudflare-dev-school`) for all app data, no KV for business data (see `plan.agent.md`'s Data storage section). The `SESSION` KV namespace is Astro's own session-API binding, not app data storage, pinned by ID in `wrangler.jsonc` so it isn't re-provisioned per preview.
+- D1 (`env.DB`, database `cloudflare-dev-school`) for all app data, no KV for business data: progress and interviews are relational, and D1 gives batched writes, SQL for debugging, migrations, and foreign keys. The `SESSION` KV namespace is Astro's own session-API binding, not app data storage, pinned by ID in `wrangler.jsonc` so it isn't re-provisioned per preview.
 - `src/worker.ts` is the Worker entry (`main` in `wrangler.jsonc`), wrapping Astro's `@astrojs/cloudflare/handler` so it can also export Durable Object classes. `src/env.d.ts` extends `Cloudflare.Env` for binding types; add new bindings there.
+- Visual reference: the public face of developers.cloudflare.com (logo top left, sidebar nav), in Cloudflare's brand colors. Light and dark mode follow the system preference, and every page has to work on mobile.
 - Deployed to the personal Cloudflare account (`ziki.workers.dev` subdomain) until `cloudflaredevschool.com` is purchased (see issue #20).
 
 ## Commands
@@ -51,7 +53,7 @@ Each harness profile carries its own `lastVerified` date and a `sources` list. T
 
 ## API, schemas, and migrations
 
-Zod-schema-first (see `plan.agent.md`'s "ship types, not docs" section):
+Zod-schema-first ("ship types, not docs", https://shiptypes.com/): schemas are the contract, and TypeScript types and the OpenAPI doc are derived from them.
 
 - `src/schemas/*.ts` are the source of truth for API request/response shapes and D1 table shapes. `src/schemas/student.ts` and `src/schemas/interview.ts` share a `studentIdSchema` piece, reuse it rather than re-declaring the ID regex.
 - `migrations/*.sql` are hand-written D1 migrations kept in sync with the schemas by hand (there's no schema-to-SQL generator in use). Apply with `wrangler d1 migrations apply cloudflare-dev-school --local` (dev) or `--remote` (production/preview); this also runs automatically as part of `npm run deploy` and `scripts/preview-env.mjs`.
@@ -61,7 +63,7 @@ Zod-schema-first (see `plan.agent.md`'s "ship types, not docs" section):
 
 ## Enrollment
 
-`src/lib/student-id.ts` and the cipher-reveal/confetti animation in `src/lib/enroll-client.ts` are adapted from opencodeschool/opencode.school (Apache-2.0), per `plan.agent.md`'s "copy OpenCode School's enrollment flow wholesale." Keep the copyright headers when touching these files. The student ID format (`adjective-noun-1234`) and the two word lists are copied verbatim; don't change them without a reason, exercises and docs may reference the format.
+`src/lib/student-id.ts` and the cipher-reveal/confetti animation in `src/lib/enroll-client.ts` are adapted from opencodeschool/opencode.school (Apache-2.0): this app copies OpenCode School's enrollment flow wholesale. Keep the copyright headers when touching these files. The student ID format (`adjective-noun-1234`) and the two word lists are copied verbatim; don't change them without a reason, exercises and docs may reference the format.
 
 The homepage ID card (`src/components/StudentIdCard.astro`) is always visible, showing a sample ID (`smooth-operator-4629`) until the student enrolls; `enroll-client.ts` then cipher-reveals their real ID over it. Don't re-add `hidden` to the card, the logged-out design depends on the sample.
 
@@ -79,7 +81,7 @@ Agent setup's interview (`courses/agent-setup/exercises/00-interview.md`, never 
 
 `/llms.txt`'s "Interviews" section holds the generic procedure for every course: use the course's own interview or the default one (`src/content/default-interview.md`, 2 to 4 agent-written questions), never more than 4 questions, never quizzed, and read all of the student's interviews before starting any course. Agents mark an interview complete with `PUT /api/progress` like any exercise. The interview PUT also broadcasts progress (see "Live progress"), since each course's `interviewSummary` is part of it.
 
-Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent" per plan.agent.md's tickets: it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). It saves interviews for both courses, re-sends one, and checks the new summary arrives over the progress WebSocket. Run it against `wrangler dev` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
+Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent": it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). It saves interviews for both courses, re-sends one, and checks the new summary arrives over the progress WebSocket. Run it against `wrangler dev` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
 
 ## Courses and exercises
 
@@ -172,6 +174,7 @@ Astro treats every file under `src/pages/` as a route, test files included. That
 
 ## Known accepted risks
 
+- Enrollment is anonymous and unauthenticated, with no rate limiting, so spam enrollments and guessed student IDs are possible. Revisit only if it becomes a real problem.
 - `npm audit` reports high-severity advisories in `sharp`/`libheif`, transitively pulled in by `wrangler`'s dev tooling (`miniflare`/`@cloudflare/vite-plugin`). No fix is available without downgrading `wrangler` to `4.15.2`. This only affects local dev image processing, not the deployed Worker. Re-check `npm audit` when upgrading `wrangler`.
 
 ## Issue tracker
@@ -186,7 +189,7 @@ We're borrowing ideas from Matt Pocock's `mattpocock/skills` (https://github.com
 - **Spec-first**: turn an agreed-upon conversation/plan into a single written decision record (a GitHub issue) before splitting work across sessions.
 - **Ticketing**: break a spec into small, independently demoable tickets, each a vertical slice (schema + API + UI + tests), sized to fit one fresh context window, with explicit blocking dependencies between them.
 
-Apply these ideas freely when turning `plan.agent.md` into GitHub issues, but there's no separate tracker config or skill install to maintain here, just plain GitHub issues.
+Apply these ideas freely when planning work as GitHub issues (#73, split into #74 through #79, is an example), but there's no separate tracker config or skill install to maintain here, just plain GitHub issues.
 
 ## Keep this file current
 
