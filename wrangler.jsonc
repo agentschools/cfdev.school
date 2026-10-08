@@ -5,6 +5,10 @@
   "main": "./src/worker.ts",
   "compatibility_date": "2026-08-31",
   "compatibility_flags": ["nodejs_compat"],
+  // Canonical domain. scripts/preview-env.mjs strips routes so PR previews don't claim it.
+  "routes": [{ "pattern": "cfdev.school", "custom_domain": true }],
+  // Keep the old workers.dev host up: src/worker.ts redirects it to cfdev.school.
+  "workers_dev": true,
   "d1_databases": [
     {
       "binding": "DB",

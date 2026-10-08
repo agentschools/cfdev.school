@@ -7,6 +7,7 @@
 // zeke/preview-deployments-skill's resource-strategies reference).
 
 import { spawn } from "node:child_process";
+import { readFile, writeFile } from "node:fs/promises";
 import { previewPaths, updateBody } from "./preview-links.mjs";
 
 const appName = "cloudflare-dev-school";
@@ -45,6 +46,7 @@ async function deploy() {
     // same D1 database as production, so apply migrations against it here too.
     await wrangler(["d1", "migrations", "apply", "cloudflare-dev-school", "--remote"]);
     await run("npx", ["astro", "build"]);
+    await removeRoutes();
     await wrangler(["deploy", "--name", workerName]);
 
     if (!(await isCurrentPullRequestHead())) {
@@ -67,6 +69,16 @@ async function deploy() {
   } catch (error) {
     console.error("Failed to update preview links in the PR body:", error);
   }
+}
+
+// The built config inherits wrangler.jsonc's cfdev.school custom domain;
+// a preview deploy must not move it off production.
+async function removeRoutes() {
+  const path = "dist/server/wrangler.json";
+  const config = JSON.parse(await readFile(path, "utf8"));
+  delete config.routes;
+  delete config.route;
+  await writeFile(path, JSON.stringify(config));
 }
 
 async function updatePullRequestLinks() {

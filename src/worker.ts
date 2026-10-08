@@ -1,5 +1,6 @@
 import { handle } from "@astrojs/cloudflare/handler";
 import { env as globalEnv } from "cloudflare:workers";
+import { canonicalRedirect } from "./lib/canonical-host";
 import { studentIdSchema } from "./schemas/student";
 
 export { ProgressHub } from "./durable-objects/progress-hub";
@@ -14,6 +15,8 @@ const LIVE_PROGRESS_PATH = /^\/api\/progress\/([^/]+)\/live$/;
  */
 export default {
   async fetch(request, env, ctx) {
+    const redirect = canonicalRedirect(request);
+    if (redirect) return redirect;
     const match = new URL(request.url).pathname.match(LIVE_PROGRESS_PATH);
     if (match && request.headers.get("Upgrade") === "websocket") {
       const studentId = studentIdSchema.safeParse(match[1]);
