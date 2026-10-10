@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 import guide from "../content/authors.md?raw";
-import { courseFrontmatterSchema, courseNameSchema, exerciseSlugSchema } from "../schemas/course";
+import { courseFrontmatterSchema, courseNameSchema, exerciseFrontmatterSchema, exerciseSlugSchema } from "../schemas/course";
 import { compareExerciseFilenames, exerciseSlugFromFilename, INTERVIEW_SLUG } from "./course-format";
 import { rawCourses } from "./course-files";
 
@@ -10,6 +11,8 @@ import { rawCourses } from "./course-files";
 describe("authors guide", () => {
   it("has agent-instructions frontmatter and a body that starts with a # title", () => {
     expect(guide).toMatch(/^---\ndescription: .+\nagent-instructions: \|\n[\s\S]+?\n---\n\n# /);
+    const yaml = guide.match(/^---\n([\s\S]*?)\n---\n/)![1];
+    expect(exerciseFrontmatterSchema.safeParse(parseYaml(yaml)).error).toBeUndefined();
   });
 
   it("uses example names that pass the naming rules, and states the real length limits", () => {

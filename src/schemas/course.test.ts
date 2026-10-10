@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { reportCourseSchema } from "./course";
+import { courseFrontmatterSchema, courseSchema, exerciseFrontmatterSchema, reportCourseSchema } from "./course";
+
+describe("frontmatter schemas", () => {
+  it("reject misspelled or unknown keys", () => {
+    const course = { name: "workers-basics", description: "Deploy a Worker." };
+    expect(courseFrontmatterSchema.parse(course)).toEqual(course);
+    expect(() => courseFrontmatterSchema.parse({ ...course, compatability: "A Cloudflare account." })).toThrow();
+    expect(() => exerciseFrontmatterSchema.parse({ "agent-instruction": "Verify it." })).toThrow();
+  });
+
+  it("don't make the API's course schema strict", () => {
+    const course = {
+      name: "workers-basics",
+      description: "Deploy a Worker.",
+      title: "Workers basics",
+      url: "https://cfdev.school/courses/workers-basics",
+      markdownUrl: "https://cfdev.school/courses/workers-basics/COURSE.md",
+      exercises: [],
+    };
+    expect(courseSchema.parse({ ...course, entry: {} })).toEqual(course);
+  });
+});
 
 describe("reportCourseSchema", () => {
   const body = {

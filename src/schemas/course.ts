@@ -40,8 +40,11 @@ export const courseRefSchema = z.union([courseNameSchema, httpsUrlSchema]).meta(
   example: "agent-setup",
 });
 
-/** `COURSE.md` frontmatter. Same field set as `SKILL.md`. */
-export const courseFrontmatterSchema = z.object({
+/**
+ * `COURSE.md` frontmatter. Same field set as `SKILL.md`. Strict, so a
+ * misspelled key fails the build instead of being silently dropped.
+ */
+export const courseFrontmatterSchema = z.strictObject({
   name: courseNameSchema,
   description: z.string().min(1).max(1024).meta({
     description: "What the course teaches and who it's for.",
@@ -55,8 +58,8 @@ export const courseFrontmatterSchema = z.object({
   }),
 });
 
-/** Exercise file frontmatter. Everything is optional, the body is the exercise. */
-export const exerciseFrontmatterSchema = z.object({
+/** Exercise file frontmatter. Everything is optional, the body is the exercise. Strict, like `courseFrontmatterSchema`. */
+export const exerciseFrontmatterSchema = z.strictObject({
   description: z.string().min(1).optional(),
   "agent-instructions": z.string().min(1).optional(),
 });
@@ -72,7 +75,10 @@ export const courseExerciseSchema = z.object({
   }),
 });
 
-export const courseSchema = courseFrontmatterSchema.extend({
+// Not strict: GET /api/courses parses loaded courses with this to strip what
+// the API doesn't expose.
+export const courseSchema = z.object({
+  ...courseFrontmatterSchema.shape,
   title: z.string().min(1).meta({ description: "The course's first `#` heading." }),
   url: z.url().meta({ description: "The course's page on this site." }),
   markdownUrl: z.url().meta({ description: "The course's raw COURSE.md." }),

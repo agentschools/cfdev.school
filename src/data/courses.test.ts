@@ -1,15 +1,29 @@
 import { describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 import { exerciseSlugFromFilename, INTERVIEW_SLUG, titleFromMarkdown } from "../lib/course-format";
 import { rawCourses } from "../lib/course-files";
-import { courseNameSchema, exerciseSlugSchema } from "../schemas/course";
+import {
+  courseFrontmatterSchema,
+  courseNameSchema,
+  exerciseFrontmatterSchema,
+  exerciseSlugSchema,
+} from "../schemas/course";
 import { COURSE_ORDER, REQUIRED_COURSE } from "./courses";
 
 // Checks the real files in courses/ against the course format (see #73).
-// Frontmatter schemas are enforced by the content collections at build time.
+// The content collections enforce the same frontmatter schemas at build time,
+// but CI doesn't build, so they're parsed here too.
 const courses = rawCourses();
 
+const frontmatterPattern = /^---\n([\s\S]*?)\n---\n/;
+
 function body(markdown: string): string {
-  return markdown.replace(/^---\n[\s\S]*?\n---\n/, "");
+  return markdown.replace(frontmatterPattern, "");
+}
+
+function frontmatter(markdown: string): unknown {
+  const yaml = markdown.match(frontmatterPattern)?.[1];
+  return yaml === undefined ? {} : parseYaml(yaml);
 }
 
 describe("built-in courses", () => {
@@ -24,6 +38,13 @@ describe("built-in courses", () => {
         expect(courseNameSchema.safeParse(course.name).success).toBe(true);
         expect(course.courseMarkdown).toMatch(new RegExp(`^---\\n[\\s\\S]*^name: ${course.name}$`, "m"));
         expect(titleFromMarkdown(body(course.courseMarkdown))).toBeTruthy();
+      });
+
+      it("has valid COURSE.md and exercise frontmatter", () => {
+        expect(courseFrontmatterSchema.safeParse(frontmatter(course.courseMarkdown)).error).toBeUndefined();
+        for (const [file, markdown] of Object.entries(course.exercises)) {
+          expect(exerciseFrontmatterSchema.safeParse(frontmatter(markdown)).error, file).toBeUndefined();
+        }
       });
 
       it("has exercises with valid, unique slugs and a # title each", () => {

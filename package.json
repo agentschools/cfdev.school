@@ -39,6 +39,7 @@
     "typescript-eslint": "8.69.0",
     "vitest": "4.1.11",
     "wrangler": "4.128.0",
+    "yaml": "2.9.1",
     "zod-openapi": "6.0.1"
   }
 }
