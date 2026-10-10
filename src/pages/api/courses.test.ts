@@ -12,6 +12,7 @@ vi.mock("astro:content", () => ({
           body: "# Workers basics\n",
           data: { name: "workers-basics", description: "Ship.", metadata: { author: "Cloudflare Dev School" } },
         },
+        { id: "bindings", body: "# Bindings\n", data: { name: "bindings", description: "Learn bindings." } },
       ],
       exercises: [
         { id: "agent-setup/00-interview", body: "# Interview\n", data: {} },
@@ -31,7 +32,7 @@ describe("GET /api/courses", () => {
     const { GET } = await import("./courses");
     const body = await (await GET(context())).json();
 
-    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "workers-basics"]);
+    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "workers-basics", "bindings"]);
     for (const course of body) expect(courseSchema.parse(course)).toEqual(course);
 
     const [agentSetup, workersBasics] = body;

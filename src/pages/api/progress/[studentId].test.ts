@@ -95,6 +95,7 @@ describe("GET /api/progress/{studentId}", () => {
     expect(progress.courses.map((item) => [item.name, item.exercises.map((ex) => ex.slug)])).toEqual([
       ["agent-setup", ["interview", "models", "instructions"]],
       ["workers-basics", ["interview", "deploy-a-worker"]],
+      ["bindings", ["interview", "live-objects"]],
     ]);
     for (const item of progress.courses) {
       expect(item.completedAt).toBeUndefined();

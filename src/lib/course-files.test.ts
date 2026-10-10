@@ -7,12 +7,18 @@ const defaultInterview = readFileSync("src/content/default-interview.md", "utf8"
 describe("rawCourses", () => {
   it("has every built-in course's files exactly as they are in the repo", () => {
     for (const course of rawCourses()) {
-      expect(course.courseMarkdown).toBe(readFileSync(`courses/${course.name}/COURSE.md`, "utf8"));
+      const dir = course.track ? `courses/${course.track}/${course.name}` : `courses/${course.name}`;
+      expect(course.courseMarkdown).toBe(readFileSync(`${dir}/COURSE.md`, "utf8"));
       for (const [file, markdown] of Object.entries(course.exercises)) {
-        const path = `courses/${course.name}/exercises/${file}`;
+        const path = `${dir}/exercises/${file}`;
         expect(markdown, path).toBe(existsSync(path) ? readFileSync(path, "utf8") : defaultInterview);
       }
     }
+  });
+
+  it("finds a course in a track directory, and leaves the track off one that isn't in one", () => {
+    expect(rawCourses().find((course) => course.name === "bindings")?.track).toBe("fundamentals");
+    expect(rawCourses().find((course) => course.name === "agent-setup")?.track).toBeUndefined();
   });
 
   it("adds the default interview to a course that doesn't write its own", () => {

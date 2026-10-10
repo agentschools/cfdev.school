@@ -39,7 +39,7 @@ export async function getBuiltInCourses(): Promise<BuiltInCourse[]> {
 
   return COURSE_ORDER.map((name) => {
     const entry = courseEntries.find((course) => course.id === name);
-    if (!entry) throw new Error(`src/data/courses.ts lists "${name}", but courses/${name}/COURSE.md doesn't exist`);
+    if (!entry) throw new Error(`src/data/courses.ts lists "${name}", but there's no COURSE.md for it in courses/ or a track directory`);
 
     const files = exerciseEntries
       .filter((exercise) => exercise.id.startsWith(`${name}/`))
