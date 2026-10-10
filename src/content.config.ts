@@ -3,28 +3,30 @@ import { defineCollection } from "astro:content";
 import { courseFrontmatterSchema, exerciseFrontmatterSchema } from "./schemas/course";
 
 /**
- * Built-in courses, one `courses/<name>/COURSE.md` each (see #73). The entry
- * ID is the course's directory name. Ordering and titles are applied by
- * src/lib/courses.ts, not here.
+ * Built-in courses, one `courses/<name>/COURSE.md` each (see #73), or
+ * `courses/<track>/<name>/COURSE.md` for a course in a track (see TRACKS in
+ * src/data/courses.ts). The entry ID is the course's directory name, without
+ * its track. Ordering and titles are applied by src/lib/courses.ts, not here.
  */
 const courses = defineCollection({
   loader: glob({
     base: "courses",
-    pattern: "*/COURSE.md",
-    generateId: ({ entry }) => entry.split("/")[0],
+    pattern: ["*/COURSE.md", "*/*/COURSE.md"],
+    generateId: ({ entry }) => entry.split("/").at(-2)!,
   }),
   schema: courseFrontmatterSchema,
 });
 
 /**
- * Exercises of the built-in courses, `courses/<name>/exercises/<file>.md`.
- * The entry ID is `<name>/<file without .md>`, e.g. "agent-setup/01-models".
+ * Exercises of the built-in courses, `courses/<name>/exercises/<file>.md`
+ * (or `courses/<track>/<name>/...`). The entry ID is
+ * `<name>/<file without .md>`, e.g. "agent-setup/01-models".
  */
 const exercises = defineCollection({
   loader: glob({
     base: "courses",
-    pattern: "*/exercises/*.md",
-    generateId: ({ entry }) => entry.replace("/exercises/", "/").replace(/\.md$/, ""),
+    pattern: ["*/exercises/*.md", "*/*/exercises/*.md"],
+    generateId: ({ entry }) => entry.split("/").slice(-3).join("/").replace("/exercises/", "/").replace(/\.md$/, ""),
   }),
   schema: exerciseFrontmatterSchema,
 });

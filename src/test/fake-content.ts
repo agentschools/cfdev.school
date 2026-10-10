@@ -1,6 +1,6 @@
 /**
  * A fake `astro:content` for page and component tests, which can't load real
- * content collections (see AGENTS.md's "Testing Astro components"). Two small
+ * content collections (see AGENTS.md's "Testing Astro components"). Three small
  * courses shaped like the real ones. Use it with:
  *
  *   vi.mock("astro:content", async () => (await import("<path>/test/fake-content")).fakeAstroContent);
@@ -13,6 +13,7 @@ const collections = {
       body: "\n# Workers basics\n\nIntro.\n",
       data: { name: "workers-basics", description: "Ship your first Worker." },
     },
+    { id: "bindings", body: "\n# Bindings\n\nIntro.\n", data: { name: "bindings", description: "Learn bindings." } },
   ],
   exercises: [
     { id: "agent-setup/00-interview", body: "\n# Interview\n", data: { description: "Tell your agent about you." } },
@@ -23,6 +24,7 @@ const collections = {
       body: "\n# Deploy a Worker\n",
       data: { description: "Deploy a Worker." },
     },
+    { id: "bindings/01-live-objects", body: "\n# Live objects\n", data: { description: "See what a binding is." } },
   ],
   defaultInterview: [{ id: "default-interview", body: "\n# Interview\n", data: { description: "About this course." } }],
   authorsGuide: [{ id: "authors", body: "\n# Writing a course\n", data: { description: "How to write a course." } }],

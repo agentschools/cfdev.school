@@ -19,8 +19,9 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
   for (const { filename, status, patch } of files) {
     if (status === "removed" || /\.test\.[cm]?[jt]s$/.test(filename)) continue;
 
-    const courseFile = filename.match(/^courses\/([^/]+)\/(COURSE\.md|exercises\/([^/]+)\.md)$/);
+    const courseFile = filename.match(/^courses\/(?:[^/]+\/)?([^/]+)\/(COURSE\.md|exercises\/([^/]+)\.md)$/);
     if (courseFile) {
+      // A course in a track (courses/<track>/<name>/) has the same flat URL as one that isn't.
       const [, course, file, exerciseFile] = courseFile;
       // Same slug rule as src/lib/course-format.ts: no leading number prefix.
       const page = exerciseFile ? `/courses/${course}/${exerciseFile.replace(/^\d+[-_]/, "")}` : `/courses/${course}`;

@@ -5,7 +5,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
 - No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
 - Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
-- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships two built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools) and Workers basics ("Deploy a Worker," then "Add a binding," which extends that same Worker). See "Courses and exercises".
+- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), Workers basics ("Deploy a Worker," then "Add a binding," which extends that same Worker), and Bindings (a fundamentals course, see "Bindings course"). See "Courses and exercises".
 
 ## Titles
 
@@ -34,6 +34,15 @@ Use sentence case for every title and heading: course and exercise titles, page 
 ## cf, not Wrangler, in student-facing content
 
 All course, exercise, and `/llms.txt` content tells students' agents to use `cf` (Cloudflare's new CLI, open beta since 2026-09-28, `npm i -g cf`), not Wrangler: `cf init`, `cf dev`, `cf deploy`, `cf auth login`, `cf kv namespaces create`, with bindings declared in `cloudflare.config.ts` via `bindings.*` from `cf/config`. The CLI exercise (`courses/agent-setup/exercises/03-cli.md`) adds Cloudflare's official versioned snippet (`## Cloudflare CLI - cf - v20260928`) to the student's global instructions file; if Cloudflare publishes a newer version of that snippet, update it there. `cf` is new and not in model training data, so verify commands against the installed CLI (`cf --help`, `cf cli search "..."`) before writing them into content. This repo itself still builds and deploys with Wrangler (`wrangler.jsonc`, `scripts/preview-env.mjs`); that's separate from what students are taught.
+
+## Cloudflare docs are canon
+
+developers.cloudflare.com is the source of truth for every Cloudflare fact in this repo: course and exercise content, `/llms.txt`, and anything an agent tells a student about Cloudflare. Fact-check against it, not training data, and link to the relevant page from content where it helps.
+
+- Every page has a Markdown version at `<page URL>index.md`, and https://developers.cloudflare.com/llms.txt indexes them all.
+- For searching across pages, keep a shallow clone of the public docs repo outside this repo (never a submodule or vendored copy): `git clone --depth 1 https://github.com/cloudflare/cloudflare-docs ~/.cache/cloudflare-docs`. Refresh it before a fact-checking session with `git -C ~/.cache/cloudflare-docs fetch --depth 1 origin production && git -C ~/.cache/cloudflare-docs reset --hard FETCH_HEAD`. Pages are in `src/content/docs/<product>/`, shared snippets they render in `src/content/partials/`, the changelog in `src/content/changelog/`, and compatibility flags in `src/content/compatibility-flags/`.
+- `cf` and `cloudflare.config.ts` have their own docs: `src/content/docs/cf/` and `src/content/partials/workers/cloudflare-config.mdx` (rendered at https://developers.cloudflare.com/cf/projects/cloudflare-config/). Most other pages show Wrangler config; `src/content/docs/cf/wrangler/reference.mdx` maps Wrangler settings to `cloudflare.config.ts`.
+- Pages can lag behind each other. When two disagree, the changelog usually settles it (e.g. the Worker Loader binding page still said "closed beta" months after the Dynamic Workers open beta changelog). When the docs and the real CLI or runtime disagree, test it, teach what actually happens, and note the discrepancy in this file.
 
 ## AI harness research data
 
@@ -85,7 +94,7 @@ Verify the interview API end to end with `npm run verify:interview` (a "scripted
 
 ## Courses and exercises
 
-Built-in courses live in `courses/<name>/` at the repo root, in the same format courses hosted elsewhere use (see "Courses hosted elsewhere"), loosely following the Agent Skills spec (https://agentskills.io/specification):
+Built-in courses live in `courses/<name>/` at the repo root, or `courses/<track>/<name>/` for a course in a track (`TRACKS` in `src/data/courses.ts`: `fundamentals` and `projects`; Agent setup stays at the top level). URLs never include the track, so course names must be unique across tracks. The track directory is the only place a track is recorded so far; nothing shows tracks to students yet (the sidebar design is explored in #95). Built-in courses are in the same format courses hosted elsewhere use (see "Courses hosted elsewhere"), loosely following the Agent Skills spec (https://agentskills.io/specification):
 
 - `COURSE.md`: frontmatter `name` (matches the directory), `description`, and optional `license`, `compatibility`, and `metadata` (`author`), then a `# Title` and intro prose. Schemas in `src/schemas/course.ts`. Both frontmatter schemas are strict (`z.strictObject`), so an unknown or misspelled key fails `npm test` and the build instead of being dropped. Courses hosted elsewhere never go through them, the server doesn't read their files.
 - `exercises/NN-slug.md`: ordered by filename (natural sort). The slug is the filename without `.md` or its number prefix, so renumbering to insert an exercise doesn't change slugs. Frontmatter is optional: `description`, and `agent-instructions` (for the agent only, not rendered). The body starts with a `# Title` and is read by both students and agents. An exercise slugged `interview` always comes first; a course without one gets `src/content/default-interview.md`, which tells the agent to write its own questions. The rules live in `src/lib/course-format.ts`.
@@ -93,10 +102,24 @@ Built-in courses live in `courses/<name>/` at the repo root, in the same format 
 - `getBuiltInCourses()` (`src/lib/courses.ts`) loads the `courses`, `exercises`, and `defaultInterview` content collections (`src/content.config.ts`) and applies the ordering rules. The pages, the sidebar, and `GET /api/courses` all go through it.
 - Agents read courses as raw Markdown: `/courses/{name}/COURSE.md` and `/courses/{name}/exercises/{file}` serve the repo files as they are (prerendered from `import.meta.glob` `?raw` imports in `src/lib/course-files.ts`), plus the default interview at `/courses/{name}/exercises/interview.md` for a course without one. `GET /api/courses` lists each course and exercise with its `markdownUrl`.
 - Pages: `/courses` (catalog), `/courses/{name}` (intro, a prompt for the whole course, exercise list), and `/courses/{name}/{exercise}` (see "Live progress"). The sidebar lists every built-in course with its exercises, numbered from `00`. Pages show the content's `# Title` in their own header, so `Layout.astro` hides a `.prose` block's leading `h1` with CSS. Astro 7's default Markdown processor (Sätteri) doesn't run remark plugins, so don't reach for one to strip it.
+- Bindings (`courses/fundamentals/bindings/`) has its own one-question interview and four exercises that build on one Worker: live objects (text, secret, and an ID-less KV binding), a service binding to a second Worker with no public URL, the same code against different resources (remote bindings, `--mode`), and a Dynamic Worker sandbox. See "Bindings course" for the `cf` behavior it relies on.
 - Workers basics' exercises carry their own verification in `agent-instructions`: for "deploy-a-worker" the agent fetches the deployed URL and confirms the expected text before marking it complete; for "add-a-binding" it does a two-step write-then-separate-read round trip against the deployed URL, to prove the binding persists data rather than a single request echoing something back. Both also carry light teaching beats (brief explanations adapted to the interview answers, plus a comprehension check), but completion stays gated on the agent's own verification. "add-a-binding" soft-requires "deploy-a-worker" (the agent checks progress first).
 - Progress is keyed by course and exercise (#75), see "Live progress". `exerciseCompletions()` in `src/lib/course-progress.ts` looks up one exercise's completions in a `Progress` object; client code goes through it.
 
 Verify Workers basics with `npm run verify:exercise` and `npm run verify:exercise-kv` (sibling scripts, not one parameterized script, to keep each diff small), against `wrangler dev` or a PR preview (`BASE_URL=...`). Same caveats as `verify:interview`: real enrollment and completion rows in whatever D1 `BASE_URL` points at, delete them afterward. Neither deploys a Worker or provisions a KV namespace, they only check the HTTP contract.
+
+## Bindings course
+
+Every `cf` command and behavior in `courses/fundamentals/bindings/` was tested against a real account with `cf` v1.0.0-beta.12 (October 2026), and the content was checked against the docs (see "Cloudflare docs are canon"). Re-test before changing these claims, `cf` is in beta:
+
+- `bindings.kv()` with no `id` is created on `cf deploy` (named `<worker>-<binding>`), and later deploys reuse it without an ID in the config. Remote bindings (`dev: { remote: true }`) do need the `id`.
+- A Worker with `bindings.secret()` won't deploy until the secret is set; `cf deploy --secrets-file .env` works for new and existing Workers. Local dev reads `.env`.
+- `JSON.stringify` of a KV binding is `{}`, and RPC methods on a service binding don't show up when enumerated.
+- `bindings.worker({ worker })` takes a name or an imported `defineWorker` config; only the config gives typed RPC methods (documented). Locally, `dev: { remote: true }` on the binding calls the deployed Worker with `ctx.props` delivered. Running the other Worker under a second `cf dev` also works, but `ctx.props` arrived empty that way. The Vite plugin's `auxiliaryWorkers` (the docs' single-command option for multiple Workers) rejects a `cloudflare.config.ts` path. `workersDev: false` makes the Worker's workers.dev URL return a Cloudflare error page (code 1042, though the docs define 1042 as something else, so the course doesn't cite it).
+- `defineConfig` takes a function of `{ mode }`, and `cf deploy --mode staging` with a different Worker name provisions separate resources.
+- `bindings.workerLoader()` and `ctx.exports` work with no extra config at compatibility date 2026-10-01, locally and deployed. Dynamic Workers need Workers Paid once deployed (per the pricing docs; only tested on a paid account), so exercise 04 verifies locally.
+- New deploys can take about 20 to 30 seconds to serve the new version.
+- `cf workers delete` and `cf kv namespaces delete` abort when run non-interactively unless given `--force`.
 
 ## Courses hosted elsewhere
 

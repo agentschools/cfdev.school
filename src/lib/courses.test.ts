@@ -4,6 +4,7 @@ const collections = vi.hoisted(() => ({
   courses: [
     { id: "workers-basics", body: "\n# Workers basics\n", data: { name: "workers-basics", description: "Ship a Worker." } },
     { id: "agent-setup", body: "\n# Agent setup\n", data: { name: "agent-setup", description: "Set up." } },
+    { id: "bindings", body: "\n# Bindings\n", data: { name: "bindings", description: "Learn bindings." } },
   ],
   exercises: [
     { id: "agent-setup/10-tools", body: "# Tools\n", data: {} },
@@ -25,6 +26,7 @@ describe("getBuiltInCourses", () => {
     expect(courses.map((course) => [course.name, course.title])).toEqual([
       ["agent-setup", "Agent setup"],
       ["workers-basics", "Workers basics"],
+      ["bindings", "Bindings"],
     ]);
   });
 

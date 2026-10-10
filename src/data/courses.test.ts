@@ -8,7 +8,7 @@ import {
   exerciseFrontmatterSchema,
   exerciseSlugSchema,
 } from "../schemas/course";
-import { COURSE_ORDER, REQUIRED_COURSE } from "./courses";
+import { COURSE_ORDER, REQUIRED_COURSE, TRACKS } from "./courses";
 
 // Checks the real files in courses/ against the course format (see #73).
 // The content collections enforce the same frontmatter schemas at build time,
@@ -30,6 +30,11 @@ describe("built-in courses", () => {
   it("lists every course directory in COURSE_ORDER, and nothing else", () => {
     expect([...COURSE_ORDER].sort()).toEqual(courses.map((course) => course.name).sort());
     expect(COURSE_ORDER).toContain(REQUIRED_COURSE);
+  });
+
+  it("puts courses either at the top level or in a known track directory", () => {
+    for (const course of courses) if (course.track) expect(TRACKS, course.name).toContain(course.track);
+    expect(courses.find((course) => course.name === REQUIRED_COURSE)?.track).toBeUndefined();
   });
 
   for (const course of courses) {

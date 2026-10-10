@@ -17,6 +17,11 @@ describe("previewPaths", () => {
     expect(paths).toEqual(["/courses/agent-setup/models", "/courses/agent-setup/exercises/01-models.md"]);
   });
 
+  it("leaves the track out of a course in a track directory's links", () => {
+    const paths = previewPaths([{ filename: "courses/fundamentals/bindings/exercises/01-live-objects.md", status: "added" }], readFile);
+    expect(paths).toEqual(["/courses/bindings/live-objects", "/courses/bindings/exercises/01-live-objects.md"]);
+  });
+
   it("links llms.txt and the OpenAPI doc", () => {
     const paths = previewPaths(
       [
