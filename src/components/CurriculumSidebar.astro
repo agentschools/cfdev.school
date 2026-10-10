@@ -13,36 +13,32 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
 
 // MOCKUP (explore/sidebar-tracks): fake Projects and Fundamentals tracks.
 // Courses with a `name` are real; the rest link nowhere.
-const VISIBLE_PER_TRACK = 4;
-const tracks: { label: string; more: string; courses: { title: string; name?: string }[] }[] = [
+const VISIBLE_PER_TRACK = 5;
+const tracks: { label: string; courses: { title: string; name?: string }[] }[] = [
   {
     label: "Projects",
-    more: "More projects",
     courses: [
-      { title: "Build a personal website" },
+      { title: "Publish a website" },
+      { title: "Build an AI agent" },
       { title: "Create a multiplayer game" },
-      { title: "Tame your inbox" },
+      { title: "Achieve inbox zero" },
+      { title: "Get a daily digest" },
       { title: "Chat with your documents" },
       { title: "Make a link shortener" },
-      { title: "Build your own AI agent" },
-      { title: "Get a daily digest" },
       { title: "Host a photo gallery" },
-      { title: "Put your home server online" },
     ],
   },
   {
     label: "Fundamentals",
-    more: "More fundamentals",
     courses: [
       { title: "Workers", name: "workers-basics" },
       { title: "Bindings" },
-      { title: "Choosing storage" },
       { title: "Durable Objects" },
+      { title: "Storage" },
+      { title: "AI" },
       { title: "How Cloudflare works" },
       { title: "Async work" },
-      { title: "AI on Cloudflare" },
       { title: "Security at the edge" },
-      { title: "Connecting to what you already have" },
     ],
   },
 ];
@@ -145,10 +141,8 @@ const agentSetup = courses[0]!;
           {rest.length > 0 && (
             <details class="more">
               <summary>
-                <span class="when-closed">
-                  {track.more} <span class="index">({rest.length})</span>
-                </span>
-                <span class="when-open">Show less</span>
+                <span class="when-closed">More +</span>
+                <span class="when-open">Less −</span>
               </summary>
               <ol class="item-list">{rest.map(renderCourse)}</ol>
             </details>
@@ -157,14 +151,6 @@ const agentSetup = courses[0]!;
       );
     })
   }
-
-  <a
-    class="section-label section-label-link"
-    href="/courses"
-    aria-current={currentPath === "/courses" ? "page" : undefined}
-  >
-    All courses
-  </a>
 
   <a
     class="section-label section-label-link"
@@ -313,10 +299,10 @@ const agentSetup = courses[0]!;
   }
 
   .more summary {
-    padding: 0.4rem 0.5rem;
-    border-radius: 0.4rem;
-    font-size: 0.82rem;
-    color: var(--muted-fg);
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    color: color-mix(in oklch, var(--fg) 45%, transparent);
     cursor: pointer;
     list-style: none;
   }
@@ -325,16 +311,7 @@ const agentSetup = courses[0]!;
     display: none;
   }
 
-  .more summary::before {
-    content: "+ ";
-  }
-
-  .more[open] summary::before {
-    content: "− ";
-  }
-
   .more summary:hover {
-    background: var(--card-bg);
     color: var(--fg);
   }
 
