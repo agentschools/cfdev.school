@@ -10,6 +10,44 @@ const { showBrand = true } = Astro.props;
 
 const courses = await getBuiltInCourses();
 const currentPath = Astro.url.pathname.replace(/\/$/, "");
+
+// MOCKUP (explore/sidebar-tracks): fake Projects and Fundamentals tracks.
+// Courses with a `name` are real; the rest link nowhere.
+const VISIBLE_PER_TRACK = 4;
+const tracks: { label: string; more: string; courses: { title: string; name?: string }[] }[] = [
+  {
+    label: "Projects",
+    more: "More projects",
+    courses: [
+      { title: "Build a personal website" },
+      { title: "Create a multiplayer game" },
+      { title: "Tame your inbox" },
+      { title: "Chat with your documents" },
+      { title: "Make a link shortener" },
+      { title: "Build your own AI agent" },
+      { title: "Get a daily digest" },
+      { title: "Host a photo gallery" },
+      { title: "Put your home server online" },
+    ],
+  },
+  {
+    label: "Fundamentals",
+    more: "More fundamentals",
+    courses: [
+      { title: "Workers", name: "workers-basics" },
+      { title: "Bindings" },
+      { title: "Choosing storage" },
+      { title: "Durable Objects" },
+      { title: "How Cloudflare works" },
+      { title: "Async work" },
+      { title: "AI on Cloudflare" },
+      { title: "Security at the edge" },
+      { title: "Connecting to what you already have" },
+    ],
+  },
+];
+const byName = new Map(courses.map((course) => [course.name, course]));
+const agentSetup = courses[0]!;
 ---
 
 <nav class="curriculum-sidebar" aria-label="Course curriculum">
@@ -32,7 +70,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
   }
 
   {
-    courses.map((course) => (
+    [agentSetup].map((course) => (
       <>
         <a
           class="section-label section-label-link"
@@ -61,6 +99,63 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
         </ol>
       </>
     ))
+  }
+
+  {
+    tracks.map((track) => {
+      const renderCourse = (mock: { title: string; name?: string }) => {
+        const course = mock.name ? byName.get(mock.name) : undefined;
+        const href = course ? coursePath(course.name) : "#";
+        const inCourse = course && currentPath.startsWith(coursePath(course.name));
+        return (
+          <li>
+            <a href={href} aria-current={course && currentPath === href ? "page" : undefined}>
+              <span class="title" title={mock.title}>
+                {mock.title}
+              </span>
+            </a>
+            {inCourse && (
+              <ol class="item-list nested">
+                {course.exercises.map((exercise, index) => {
+                  const exHref = exercisePath(course.name, exercise.slug);
+                  return (
+                    <li data-course={course.name} data-exercise={exercise.slug}>
+                      <a href={exHref} aria-current={currentPath === exHref ? "page" : undefined}>
+                        <span class="title" title={exercise.title}>
+                          <span class="index">{String(index).padStart(2, "0")}.</span> {exercise.title}
+                        </span>
+                        <span class="check" hidden aria-label="Completed">
+                          ✓
+                        </span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </li>
+        );
+      };
+      const visible = track.courses.slice(0, VISIBLE_PER_TRACK);
+      const rest = track.courses.slice(VISIBLE_PER_TRACK);
+      return (
+        <>
+          <p class="section-label">{track.label}</p>
+          <ol class="item-list">{visible.map(renderCourse)}</ol>
+          {rest.length > 0 && (
+            <details class="more">
+              <summary>
+                <span class="when-closed">
+                  {track.more} <span class="index">({rest.length})</span>
+                </span>
+                <span class="when-open">Show less</span>
+              </summary>
+              <ol class="item-list">{rest.map(renderCourse)}</ol>
+            </details>
+          )}
+        </>
+      );
+    })
   }
 
   <a
@@ -209,6 +304,52 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
 
   .check[hidden] {
     display: none;
+  }
+
+  .item-list.nested {
+    margin: 0.1rem 0 0.3rem 0.75rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--border);
+  }
+
+  .more summary {
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--muted-fg);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .more summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .more summary::before {
+    content: "+ ";
+  }
+
+  .more[open] summary::before {
+    content: "− ";
+  }
+
+  .more summary:hover {
+    background: var(--card-bg);
+    color: var(--fg);
+  }
+
+  .more[open] summary {
+    order: 1;
+  }
+
+  .more[open] .when-closed,
+  .more:not([open]) .when-open {
+    display: none;
+  }
+
+  .more[open] {
+    display: flex;
+    flex-direction: column;
   }
 
   @media (min-width: 900px) {
