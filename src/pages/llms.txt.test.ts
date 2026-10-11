@@ -30,4 +30,11 @@ describe("GET /llms.txt", () => {
     expect(text).not.toContain("/api/lessons");
     expect(text).not.toContain("/api/exercises");
   });
+
+  it("describes the tracks and the fork after Agent setup", async () => {
+    const text = await (await GET({} as APIContext)).text();
+    expect(text).toContain("`projects`");
+    expect(text).toContain("`fundamentals`");
+    expect(text).toContain("When a student finishes Agent setup, ask them");
+  });
 });

@@ -28,7 +28,7 @@ Currently available:
 - PUT /api/students/{id}/interviews: save one course's interview, replacing what's stored for that course. See "Interviews" below.
 - PUT /api/students/{id}/courses: report a course hosted outside this site, with the exercises you read from it. See "Courses hosted elsewhere" below.
 - GET /api/harnesses/{harnessId}: fetch researched facts about your own harness: global instructions file location, how to add an MCP server, where skills install and whether they need a restart, subscription billing policy, and models. Each profile has a \`lastVerified\` date and \`sources\`.
-- GET /api/courses: list the built-in courses in order, each with its exercises in order. Every course and exercise has a \`markdownUrl\` for its raw Markdown.
+- GET /api/courses: list the built-in courses in order, each with its track (if any) and its exercises in order. Every course and exercise has a \`markdownUrl\` for its raw Markdown.
 - GET /api/progress/{studentId}: fetch which exercises the student has completed, in the built-in courses and the ones you've reported, and each course's interview summary.
 - PUT /api/progress/{studentId}: mark an exercise complete. See "Marking exercises complete" below.
 
@@ -39,6 +39,13 @@ Before the first exercise, fetch GET /api/harnesses/{yourHarnessId} once and use
 ## Courses
 
 List the built-in courses with GET /api/courses. Each course is a list of exercises, in order, and the first one is always an interview. "Agent setup" (\`agent-setup\`) comes first: every other course assumes the student has finished it. If a student wants to start another course before finishing Agent setup, check their progress, tell them what's left, and recommend finishing it first, but go ahead if they insist.
+
+After Agent setup, built-in courses are grouped into two tracks, shown as each course's \`track\` in GET /api/courses:
+
+- \`projects\`: outcome-first courses where the student builds something they want and picks up Cloudflare products along the way.
+- \`fundamentals\`: one concept or product at a time, covering how it works and how the pieces fit together.
+
+Tracks are groupings only: students complete courses, not tracks, and projects never require a fundamentals course. When a student finishes Agent setup, ask them in conversation which direction they want to go next, suggest a first course from that track based on what they told you in Agent setup's interview (what they want to build or learn), and don't save the answer anywhere. A track can be empty while courses are being written; only suggest courses GET /api/courses lists. When teaching a project, check GET /api/progress/{studentId} for fundamentals courses the student has completed and go lighter on what those covered (someone who finished Workers needs less explanation of Workers), and mention related fundamentals courses for students who want to go deeper.
 
 Once a student gives you their student ID (from the handoff prompt), check GET /api/progress/{studentId} to see what's already done, then work through the course's incomplete exercises in order. If the prompt names a specific course or exercise, start there.
 
@@ -64,7 +71,7 @@ Every course starts with an interview, so you can pitch the course to the studen
 
 To run a course's interview, follow its exercise's Markdown:
 
-- Use the course's own interview if it has one. If it doesn't, its interview is Dev School's default, which has you write 2 to 4 short questions from the course's content. Workers basics is one of these. For a course hosted elsewhere, the default interview is at /default-interview.md.
+- Use the course's own interview if it has one. If it doesn't, its interview is Dev School's default, which has you write 2 to 4 short questions from the course's content. The Workers course is one of these. For a course hosted elsewhere, the default interview is at /default-interview.md.
 - Never ask more than 4 questions, and never quiz on an interview. Don't ask again what another interview on file already answers.
 - Ask them all at once, and leave out any the student skips.
 - Save the answers with PUT /api/students/{id}/interviews: \`{ "course": "<course name or URL>", "responses": [{ "question": "...", "answer": "..." }], "summary": "..." }\`. Each response has the question's text as you asked it, and an \`answer\` that's a string, or an array of strings for a question that allows several choices. Things you detect without asking, like the student's OS, go in as pairs too. \`summary\` is one sentence (max 280 characters) addressed to the student, summarizing their answers. Agent setup's is shown on their homepage.
@@ -82,7 +89,7 @@ Check GET /api/progress/{studentId} first if the student might already have comp
 
 ## Status
 
-Cloudflare Dev School is under active development. Three built-in courses are available: Agent setup, then Workers basics and Bindings. Students can also take courses hosted elsewhere. Quiz scoring isn't available: quizzes are conversational only. Don't invent course, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Three built-in courses are available: Agent setup, then Workers and Bindings in the fundamentals track. The projects track has no courses yet. Students can also take courses hosted elsewhere. Quiz scoring isn't available: quizzes are conversational only. Don't invent course, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

@@ -21,15 +21,15 @@ describe("buildPrompt", () => {
   });
 
   it("names the exercise and its course", () => {
-    const prompt = buildPrompt(student, { courseTitle: "Workers basics", exerciseTitle: "Deploy a Worker" });
+    const prompt = buildPrompt(student, { courseTitle: "Workers", exerciseTitle: "Deploy a Worker" });
 
-    expect(prompt).toContain('Let\'s work on the "Deploy a Worker" exercise from the "Workers basics" course together!');
+    expect(prompt).toContain('Let\'s work on the "Deploy a Worker" exercise from the "Workers" course together!');
     expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
   });
 
   it("names just the course when there's no exercise", () => {
-    expect(buildPrompt(student, { courseTitle: "Workers basics" })).toContain(
-      'Let\'s work on the "Workers basics" course together!',
+    expect(buildPrompt(student, { courseTitle: "Workers" })).toContain(
+      'Let\'s work on the "Workers" course together!',
     );
   });
 

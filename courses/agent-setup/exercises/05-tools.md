@@ -101,6 +101,9 @@ agent-instructions: |
   Only mark this exercise complete once the server is connected and the
   student has seen one real request succeed through it. Use the quiz if
   they opted in, or just confirm conversationally otherwise.
+
+  If this finishes Agent setup, ask the student which way they want to
+  go next, as llms.txt's "Courses" section describes.
 ---
 
 # Tools
@@ -154,3 +157,7 @@ Ask your agent something harmless, like "List the Workers on my Cloudflare accou
 ## MCP server or `cf`?
 
 Use `cf` (from the CLI exercise) to build and deploy projects from your terminal. Use the MCP server to query and manage account resources through the API, and for anything `cf` doesn't cover yet. Your agent has both. Because `execute` can change real resources, expect your agent to check with you before it writes or deletes anything.
+
+## What's next
+
+This is the last exercise in Agent setup. From here there are two directions: projects, where you build something you want and pick up Cloudflare products along the way, and fundamentals, which cover one concept or product at a time. Your agent will ask which you'd like, or you can see what's available on the [courses](/courses) page.

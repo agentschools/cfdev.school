@@ -16,7 +16,7 @@ describe("/profile", () => {
     expect(html).toMatch(/id="profile-empty"[^>]*hidden/);
     expect(html).toContain('href="/courses/agent-setup"');
     expect(html).toContain("data-catalog=");
-    expect(html).toContain("&quot;/courses/workers-basics/deploy-a-worker&quot;");
+    expect(html).toContain("&quot;/courses/workers/deploy-a-worker&quot;");
     expect(html).toContain("&quot;generic&quot;:&quot;Unknown agent&quot;");
   });
 

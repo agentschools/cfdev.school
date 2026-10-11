@@ -24,7 +24,7 @@ vi.mock("cloudflare:workers", () => ({
 }));
 
 // Two small courses: Agent setup (interview, models, instructions) and
-// Workers basics (the default interview, deploy-a-worker).
+// Workers (the default interview, deploy-a-worker).
 vi.mock("astro:content", async () => (await import("../../../test/fake-content")).fakeAstroContent);
 
 const STUDENT = "curious-hacker-2019";
@@ -94,7 +94,7 @@ describe("GET /api/progress/{studentId}", () => {
     expect(progress.updatedAt).toBe("2026-09-10T12:00:00.000Z");
     expect(progress.courses.map((item) => [item.name, item.exercises.map((ex) => ex.slug)])).toEqual([
       ["agent-setup", ["interview", "models", "instructions"]],
-      ["workers-basics", ["interview", "deploy-a-worker"]],
+      ["workers", ["interview", "deploy-a-worker"]],
       ["bindings", ["interview", "live-objects"]],
     ]);
     for (const item of progress.courses) {
@@ -124,12 +124,12 @@ describe("GET /api/progress/{studentId}", () => {
   it("includes each course's interview summary", async () => {
     await state.db
       .prepare("INSERT INTO interviews (student_id, course_id, responses, summary, updated_at) VALUES (?, ?, ?, ?, ?)")
-      .bind(STUDENT, "workers-basics", "[]", "You've never used KV.", "2026-10-01T12:00:00.000Z")
+      .bind(STUDENT, "workers", "[]", "You've never used KV.", "2026-10-01T12:00:00.000Z")
       .run();
 
     const { GET } = await import("./[studentId]");
     const progress = (await (await GET(context(STUDENT))).json()) as Progress;
-    expect(course(progress, "workers-basics")?.interviewSummary).toBe("You've never used KV.");
+    expect(course(progress, "workers")?.interviewSummary).toBe("You've never used KV.");
     expect(course(progress, "agent-setup")?.interviewSummary).toBeUndefined();
   });
 });
@@ -142,7 +142,7 @@ describe("PUT /api/progress/{studentId}", () => {
   it("400s for an unknown course or exercise, and for the old request shapes", async () => {
     expect((await put(STUDENT, { ...models, course: "nope" })).status).toBe(400);
     expect((await put(STUDENT, { ...models, exercise: "nope" })).status).toBe(400);
-    expect((await put(STUDENT, { ...models, course: "workers-basics" })).status).toBe(400);
+    expect((await put(STUDENT, { ...models, course: "workers" })).status).toBe(400);
     expect((await put(STUDENT, { lessonSlug: "models", harness: "claude-code" })).status).toBe(400);
     expect((await put(STUDENT, { exerciseSlug: "deploy-a-worker" })).status).toBe(400);
     expect(state.broadcasts).toHaveLength(0);
@@ -192,8 +192,8 @@ describe("PUT /api/progress/{studentId}", () => {
   });
 
   it("marks a course's default interview complete", async () => {
-    const { progress } = await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "codex" });
-    expect(exercise(progress, "workers-basics", "interview")?.completions).toHaveLength(1);
+    const { progress } = await put(STUDENT, { course: "workers", exercise: "interview", harness: "codex" });
+    expect(exercise(progress, "workers", "interview")?.completions).toHaveLength(1);
     expect(exercise(progress, "agent-setup", "interview")?.completions).toEqual([]);
   });
 
@@ -213,12 +213,12 @@ describe("PUT /api/progress/{studentId}", () => {
   });
 
   it("marks a course complete once every exercise has a completion, from any harness", async () => {
-    const first = await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "claude-code" });
-    expect(course(first.progress, "workers-basics")?.completedAt).toBeUndefined();
+    const first = await put(STUDENT, { course: "workers", exercise: "interview", harness: "claude-code" });
+    expect(course(first.progress, "workers")?.completedAt).toBeUndefined();
 
-    const last = await put(STUDENT, { course: "workers-basics", exercise: "deploy-a-worker", harness: "codex" });
-    const completedAt = course(last.progress, "workers-basics")?.completedAt;
-    expect(completedAt).toBe(exercise(last.progress, "workers-basics", "deploy-a-worker")?.completions[0].completedAt);
+    const last = await put(STUDENT, { course: "workers", exercise: "deploy-a-worker", harness: "codex" });
+    const completedAt = course(last.progress, "workers")?.completedAt;
+    expect(completedAt).toBe(exercise(last.progress, "workers", "deploy-a-worker")?.completions[0].completedAt);
     expect(course(last.progress, "agent-setup")?.completedAt).toBeUndefined();
   });
 
@@ -226,11 +226,11 @@ describe("PUT /api/progress/{studentId}", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
       vi.setSystemTime(new Date("2026-10-01T12:00:00.000Z"));
-      await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "claude-code" });
-      await put(STUDENT, { course: "workers-basics", exercise: "deploy-a-worker", harness: "claude-code" });
+      await put(STUDENT, { course: "workers", exercise: "interview", harness: "claude-code" });
+      await put(STUDENT, { course: "workers", exercise: "deploy-a-worker", harness: "claude-code" });
       vi.setSystemTime(new Date("2026-10-05T12:00:00.000Z"));
-      const again = await put(STUDENT, { course: "workers-basics", exercise: "deploy-a-worker", harness: "pi" });
-      expect(course(again.progress, "workers-basics")?.completedAt).toBe("2026-10-01T12:00:00.000Z");
+      const again = await put(STUDENT, { course: "workers", exercise: "deploy-a-worker", harness: "pi" });
+      expect(course(again.progress, "workers")?.completedAt).toBe("2026-10-01T12:00:00.000Z");
       expect(again.progress.updatedAt).toBe("2026-10-05T12:00:00.000Z");
     } finally {
       vi.useRealTimers();
@@ -253,8 +253,8 @@ describe("DELETE /api/progress/{studentId}", () => {
 
   it("clears exercise and course completions but keeps the student and interviews", async () => {
     await put(STUDENT, models);
-    await put(STUDENT, { course: "workers-basics", exercise: "interview", harness: "claude-code" });
-    await put(STUDENT, { course: "workers-basics", exercise: "deploy-a-worker", harness: "claude-code" });
+    await put(STUDENT, { course: "workers", exercise: "interview", harness: "claude-code" });
+    await put(STUDENT, { course: "workers", exercise: "deploy-a-worker", harness: "claude-code" });
 
     await state.db
       .prepare("INSERT INTO interviews (student_id, course_id, responses, summary, updated_at) VALUES (?, ?, ?, ?, ?)")

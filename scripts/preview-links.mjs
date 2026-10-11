@@ -57,7 +57,7 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
     ) {
       add("/profile");
     } else if (filename === "src/content/default-interview.md" || filename === "src/pages/default-interview.md.ts") {
-      add("/courses/workers-basics/interview", "/default-interview.md");
+      add("/courses/workers/interview", "/default-interview.md");
     } else if (filename === "src/data/courses.ts" || filename === "src/pages/courses/index.astro") {
       add("/courses");
     } else if (

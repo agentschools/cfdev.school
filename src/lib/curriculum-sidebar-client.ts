@@ -15,12 +15,28 @@ function renderChecks(progress: Progress): void {
   }
 }
 
+/**
+ * Collapses Agent setup's exercise list to its title once the course is
+ * complete. The sidebar leaves out `data-collapse-when-complete` while you're
+ * on one of the course's pages, so it stays open there. Not animated: it
+ * happens as the page loads, not in response to anything the student did.
+ */
+function collapseCompleteCourses(progress: Progress): void {
+  for (const list of document.querySelectorAll<HTMLElement>("[data-collapse-when-complete]")) {
+    const course = progress.courses.find((item) => item.name === list.dataset.collapseWhenComplete);
+    list.toggleAttribute("data-collapsed", Boolean(course?.completedAt));
+  }
+}
+
 export function initCurriculumSidebar(): void {
   const accountSection = document.getElementById("account-section");
 
   function onEnrolled(student: CachedStudent): void {
     if (accountSection) accountSection.hidden = false;
-    subscribeToProgress(student.id, renderChecks);
+    subscribeToProgress(student.id, (progress) => {
+      renderChecks(progress);
+      collapseCompleteCourses(progress);
+    });
   }
 
   // Listen before checking the cached value: a fresh enrollment click on the

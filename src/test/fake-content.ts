@@ -7,20 +7,21 @@
  */
 const collections = {
   courses: [
-    { id: "agent-setup", body: "\n# Agent setup\n\nIntro.\n", data: { name: "agent-setup", description: "Set up your agent." } },
+    { id: "agent-setup", filePath: "courses/agent-setup/COURSE.md", body: "\n# Agent setup\n\nIntro.\n", data: { name: "agent-setup", description: "Set up your agent." } },
     {
-      id: "workers-basics",
-      body: "\n# Workers basics\n\nIntro.\n",
-      data: { name: "workers-basics", description: "Ship your first Worker." },
+      id: "workers",
+      filePath: "courses/fundamentals/workers/COURSE.md",
+      body: "\n# Workers\n\nIntro.\n",
+      data: { name: "workers", description: "Ship your first Worker." },
     },
-    { id: "bindings", body: "\n# Bindings\n\nIntro.\n", data: { name: "bindings", description: "Learn bindings." } },
+    { id: "bindings", filePath: "courses/fundamentals/bindings/COURSE.md", body: "\n# Bindings\n\nIntro.\n", data: { name: "bindings", description: "Learn bindings." } },
   ],
   exercises: [
     { id: "agent-setup/00-interview", body: "\n# Interview\n", data: { description: "Tell your agent about you." } },
     { id: "agent-setup/01-models", body: "\n# Models\n", data: { description: "Pick a model." } },
     { id: "agent-setup/02-instructions", body: "\n# Instructions\n", data: { description: "Write instructions." } },
     {
-      id: "workers-basics/01-deploy-a-worker",
+      id: "workers/01-deploy-a-worker",
       body: "\n# Deploy a Worker\n",
       data: { description: "Deploy a Worker." },
     },

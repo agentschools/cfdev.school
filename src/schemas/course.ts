@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRACKS } from "../data/courses";
 
 /**
  * Courses and their exercises (see #73). A course is a directory with a
@@ -80,6 +81,10 @@ export const courseExerciseSchema = z.object({
 export const courseSchema = z.object({
   ...courseFrontmatterSchema.shape,
   title: z.string().min(1).meta({ description: "The course's first `#` heading." }),
+  track: z.enum(TRACKS).optional().meta({
+    description:
+      'The course\'s track, a grouping only: "projects" (build something, outcome first) or "fundamentals" (one concept or product at a time). Agent setup has no track.',
+  }),
   url: z.url().meta({ description: "The course's page on this site." }),
   markdownUrl: z.url().meta({ description: "The course's raw COURSE.md." }),
   exercises: z.array(courseExerciseSchema).meta({

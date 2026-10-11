@@ -22,7 +22,7 @@ describe("rawCourses", () => {
   });
 
   it("adds the default interview to a course that doesn't write its own", () => {
-    const workersBasics = rawCourses().find((course) => course.name === "workers-basics");
-    expect(workersBasics?.exercises["interview.md"]).toBe(defaultInterview);
+    const workersCourse = rawCourses().find((course) => course.name === "workers");
+    expect(workersCourse?.exercises["interview.md"]).toBe(defaultInterview);
   });
 });

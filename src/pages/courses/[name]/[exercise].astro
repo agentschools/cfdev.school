@@ -2,9 +2,9 @@
 import { render } from "astro:content";
 import AgentPrompt from "../../../components/AgentPrompt.astro";
 import Layout from "../../../layouts/Layout.astro";
-import { COURSE_ORDER, coursePath, exercisePath } from "../../../data/courses";
+import { coursePath } from "../../../data/courses";
 import { harnesses } from "../../../data/harnesses";
-import { getBuiltInCourses } from "../../../lib/courses";
+import { getBuiltInCourses, nextStep } from "../../../lib/courses";
 
 export const prerender = false;
 
@@ -20,23 +20,8 @@ if (!course || !exercise) {
 
 const Content = exercise ? (await render(exercise.entry)).Content : null;
 
-// Where the "next" button points once this exercise is complete: the next
-// exercise in this course, then the next course, then the course catalog.
-const nextExercise = course?.exercises[index + 1];
-const nextCourse = courses[COURSE_ORDER.indexOf(name as (typeof COURSE_ORDER)[number]) + 1];
-const next = nextExercise
-  ? {
-      url: exercisePath(course!.name, nextExercise.slug),
-      label: `Next exercise: ${nextExercise.title} →`,
-      shortLabel: `Next: ${nextExercise.title} →`,
-    }
-  : nextCourse
-    ? {
-        url: coursePath(nextCourse.name),
-        label: `Next course: ${nextCourse.title} →`,
-        shortLabel: `Next: ${nextCourse.title} →`,
-      }
-    : { url: "/courses", label: "All courses →", shortLabel: "All courses →" };
+// Only rendered when the exercise exists.
+const next = course && exercise ? nextStep(courses, course, index) : undefined;
 
 // How the completed banner names each agent ("...using Claude Code").
 const harnessNames = Object.fromEntries(
@@ -80,7 +65,7 @@ const title = exercise?.title ?? "Exercise not found";
               <span id="exercise-completed-text">You completed this exercise!</span>
               <button id="exercise-redo" class="completed-redo" type="button">Redo this exercise</button>
             </div>
-            <a class="completed-next" href={next.url}>{next.shortLabel}</a>
+            <a class="completed-next" href={next!.url}>{next!.shortLabel}</a>
           </div>
 
           <div id="exercise-enroll-nudge" class="enroll-nudge" hidden>
@@ -97,8 +82,8 @@ const title = exercise?.title ?? "Exercise not found";
             <p id="exercise-next-pending" class="exercise-next-pending">
               Complete this exercise in your agent to continue.
             </p>
-            <a id="exercise-next-link" class="exercise-next-link" href={next.url} hidden>
-              {next.label}
+            <a id="exercise-next-link" class="exercise-next-link" href={next!.url} hidden>
+              {next!.label}
             </a>
           </div>
         </main>

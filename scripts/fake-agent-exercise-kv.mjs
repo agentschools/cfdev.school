@@ -27,46 +27,46 @@ async function main() {
 
   const courses = await request("GET", "/api/courses");
   assert(courses[0]?.name === "agent-setup", "Agent setup should be the first course");
-  const course = courses.find((c) => c.name === "workers-basics");
-  assert(course, "workers-basics missing from /api/courses");
+  const course = courses.find((c) => c.name === "workers");
+  assert(course, "workers missing from /api/courses");
   assert(course.exercises[0]?.slug === "interview", "a course's first exercise should be its interview");
   const exercise = course.exercises.find((e) => e.slug === "add-a-binding");
-  assert(exercise, "add-a-binding missing from workers-basics");
-  log(`Listed ${courses.length} course(s); workers-basics has ${course.exercises.length} exercise(s)`);
+  assert(exercise, "add-a-binding missing from workers");
+  log(`Listed ${courses.length} course(s); workers has ${course.exercises.length} exercise(s)`);
 
   const markdown = await fetchText(new URL(exercise.markdownUrl).pathname);
   assert(/^---\n[\s\S]*agent-instructions:/.test(markdown), "exercise Markdown should have agent-instructions frontmatter");
   assert(markdown.includes("PUT /api/progress/{studentId}"), "agent-instructions should mention marking complete via PUT");
   log("Fetched add-a-binding's raw Markdown");
 
-  const workersBasics = (progress) => progress.courses.find((c) => c.name === "workers-basics");
-  const completionsOf = (progress, slug) => workersBasics(progress)?.exercises.find((e) => e.slug === slug)?.completions;
+  const workersCourse = (progress) => progress.courses.find((c) => c.name === "workers");
+  const completionsOf = (progress, slug) => workersCourse(progress)?.exercises.find((e) => e.slug === slug)?.completions;
 
   const emptyProgress = await request("GET", `/api/progress/${student.id}`);
   assert(emptyProgress.studentId === student.id, "progress studentId mismatch");
   assert(completionsOf(emptyProgress, "add-a-binding")?.length === 0, "expected no completions yet");
   log("GET progress listed add-a-binding with no completions");
 
-  const mark = { course: "workers-basics", exercise: "add-a-binding", harness: "generic", model: "fake-agent/test" };
+  const mark = { course: "workers", exercise: "add-a-binding", harness: "generic", model: "fake-agent/test" };
   const afterComplete = await request("PUT", `/api/progress/${student.id}`, mark);
   assert(completionsOf(afterComplete, "add-a-binding").length === 1, "expected one completion");
-  assert(!workersBasics(afterComplete).completedAt, "the course shouldn't be complete yet");
+  assert(!workersCourse(afterComplete).completedAt, "the course shouldn't be complete yet");
   log("Marked add-a-binding complete");
 
   const withCodex = await request("PUT", `/api/progress/${student.id}`, { ...mark, harness: "codex" });
   assert(completionsOf(withCodex, "add-a-binding").length === 2, "expected one completion per harness");
   log("Completing it with a second harness added a second completion");
 
-  // Completing the rest of Workers basics (its default interview and
+  // Completing the rest of Workers (its default interview and
   // deploy-a-worker) completes the course.
   await request("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "interview" });
   const withAll = await request("PUT", `/api/progress/${student.id}`, { ...mark, exercise: "deploy-a-worker" });
   assert(
-    workersBasics(withAll).exercises.every((e) => e.completions.length > 0),
-    "expected every Workers basics exercise to be complete",
+    workersCourse(withAll).exercises.every((e) => e.completions.length > 0),
+    "expected every Workers exercise to be complete",
   );
-  assert(workersBasics(withAll).completedAt, "Workers basics should be marked complete");
-  log("Completing every Workers basics exercise marked the course complete");
+  assert(workersCourse(withAll).completedAt, "Workers should be marked complete");
+  log("Completing every Workers exercise marked the course complete");
 
   log("✅ Fake-agent exercise-kv run passed");
 }

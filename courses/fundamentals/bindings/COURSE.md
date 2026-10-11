@@ -1,7 +1,7 @@
 ---
 name: bindings
 description: "Learn what a Cloudflare binding is and why Workers are built around them: a permission and an API in one object, with no keys to leak and no URLs to forge, that you can point at different resources without changing your code. For students who've deployed a Worker."
-compatibility: "Requires a Cloudflare account and the cf CLI, both set up in the Agent setup course. Builds on a deployed Worker, like the one from Workers basics."
+compatibility: "Requires a Cloudflare account and the cf CLI, both set up in the Agent setup course. Builds on a deployed Worker, like the one from the Workers course."
 metadata:
   author: Cloudflare Dev School
 ---
