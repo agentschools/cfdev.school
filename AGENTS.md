@@ -22,13 +22,14 @@ Use sentence case for every title and heading: course and exercise titles, page 
 ## Commands
 
 - `npm run dev` — local dev server
+- `npm run dev:worker` — builds, applies D1 migrations locally, and runs the built Worker under `wrangler dev` on port 8788 with state in `.wrangler/state`, the target for the verify scripts and the progress WebSocket. It passes `--local-upstream localhost:8788` because otherwise `wrangler dev` rewrites every request's URL to the `cfdev.school` route, so server-built URLs (`/api/courses`' `markdownUrl`s, stored `exercise_url`s) would point at production. `npm run dev` doesn't have this problem.
 - `npm run build` — `astro build`
 - `npm run test` — `vitest run`
 - `npm run lint` — `eslint .`
 - `npm run deploy` — applies D1 migrations, then build + `wrangler deploy` to production (also run by `.github/workflows/deploy.yml` on merge to `main`)
 - `npm run preview:deploy` / `npm run preview:destroy` — used by `.github/workflows/preview.yml` for per-PR previews, not meant to be run by hand
-- `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `wrangler dev` after touching the interview API
-- `npm run verify:exercise` / `npm run verify:exercise-kv` — same idea, for the Workers course's two exercises; run against `wrangler dev` after touching the exercise/progress API
+- `npm run verify:interview` — scripted fake-agent smoke test against a real running Worker (`BASE_URL` env var, defaults to `http://localhost:8788`); run this against `npm run dev:worker` after touching the interview API
+- `npm run verify:exercise` / `npm run verify:exercise-kv` — same idea, for the Workers course's two exercises; run against `npm run dev:worker` after touching the exercise/progress API
 - `npm run verify:external-course` — same idea, for a course hosted elsewhere: report a manifest, take its interview, complete every exercise
 
 ## cf, not Wrangler, in student-facing content
@@ -90,7 +91,7 @@ Agent setup's interview (`courses/agent-setup/exercises/00-interview.md`, never 
 
 `/llms.txt`'s "Interviews" section holds the generic procedure for every course: use the course's own interview or the default one (`src/content/default-interview.md`, 2 to 4 agent-written questions), never more than 4 questions, never quizzed, and read all of the student's interviews before starting any course. Agents mark an interview complete with `PUT /api/progress` like any exercise. The interview PUT also broadcasts progress (see "Live progress"), since each course's `interviewSummary` is part of it.
 
-Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent": it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). It saves interviews for both courses, re-sends one, and checks the new summary arrives over the progress WebSocket. Run it against `wrangler dev` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
+Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent": it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). It saves interviews for both courses, re-sends one, and checks the new summary arrives over the progress WebSocket. Run it against `npm run dev:worker` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
 
 ## Courses and exercises
 
@@ -108,7 +109,7 @@ Built-in courses live in `courses/<name>/` at the repo root, or `courses/<track>
 - The Workers course's exercises carry their own verification in `agent-instructions`: for "deploy-a-worker" the agent fetches the deployed URL and confirms the expected text before marking it complete; for "add-a-binding" it does a two-step write-then-separate-read round trip against the deployed URL, to prove the binding persists data rather than a single request echoing something back. Both also carry light teaching beats (brief explanations adapted to the interview answers, plus a comprehension check), but completion stays gated on the agent's own verification. "add-a-binding" soft-requires "deploy-a-worker" (the agent checks progress first).
 - Progress is keyed by course and exercise (#75), see "Live progress". `exerciseCompletions()` in `src/lib/course-progress.ts` looks up one exercise's completions in a `Progress` object; client code goes through it.
 
-Verify the Workers course with `npm run verify:exercise` and `npm run verify:exercise-kv` (sibling scripts, not one parameterized script, to keep each diff small), against `wrangler dev` or a PR preview (`BASE_URL=...`). Same caveats as `verify:interview`: real enrollment and completion rows in whatever D1 `BASE_URL` points at, delete them afterward. Neither deploys a Worker or provisions a KV namespace, they only check the HTTP contract.
+Verify the Workers course with `npm run verify:exercise` and `npm run verify:exercise-kv` (sibling scripts, not one parameterized script, to keep each diff small), against `npm run dev:worker` or a PR preview (`BASE_URL=...`). Same caveats as `verify:interview`: real enrollment and completion rows in whatever D1 `BASE_URL` points at, delete them afterward. Neither deploys a Worker or provisions a KV namespace, they only check the HTTP contract.
 
 ## Bindings course
 
@@ -133,7 +134,7 @@ Students can take a course hosted anywhere (#77): a git repo in the built-in for
 - `PUT /api/progress` rejects exercises missing from the reported manifest and takes `exercise_url` from it. `GET /api/progress` lists reported courses in `externalCourses`, after the built-in `courses`, with their titles and exercise URLs. Reporting a course broadcasts progress too.
 - Agent setup's Instructions exercise has the agent add a "Cloudflare Dev School" section (student ID, plus "read <origin>/llms.txt") to the student's global instructions file, so a later session can take a course by URL.
 
-Verify with `npm run verify:external-course` against `wrangler dev` or a PR preview, with the same caveats as the other verify scripts. It doesn't clone or fetch a real course, it only checks the HTTP contract.
+Verify with `npm run verify:external-course` against `npm run dev:worker` or a PR preview, with the same caveats as the other verify scripts. It doesn't clone or fetch a real course, it only checks the HTTP contract.
 
 ## Authors
 
@@ -158,7 +159,7 @@ Exercise completion is done by the student's agent (`PUT /api/progress/{studentI
 - `/profile` (`src/pages/profile.astro` + `src/lib/profile-client.ts`, #78) lists every course the student has started, from `startedCourses()` in `src/lib/course-progress.ts`: a built-in course once it has an interview or a completion, a reported course as soon as it's reported. Built-in courses link to their pages and reported ones link out. Each exercise shows its per-agent completions, and a completed course whose exercises don't all have a completion shows "N new exercises since you finished". The homepage lists the same courses that aren't finished under the hero ("Courses in progress"), linking to `/profile`. Both pages get built-in titles from `catalogCourses()` (`src/lib/courses.ts`) in a `data-catalog` attribute, since the student's ID only exists client-side.
 - Titles and URLs of reported courses come from the student's agent: render them with `textContent` and DOM APIs, never as HTML. Elements created by client scripts need `:global()` selectors in a page's scoped `<style>`, since they don't get Astro's scoping attribute.
 - Anything that appears or disappears in response to live progress uses `setVisible()` from `src/lib/reveal.ts` (height + fade + slide, skipped for `prefers-reduced-motion`) rather than toggling `hidden` directly. It tracks its target state in `data-reveal-target`, so don't mix it with direct `hidden` writes on the same element.
-- To exercise the socket by hand: `npm run build`, then `npx wrangler dev -c dist/server/wrangler.json --port 8788 --persist-to .wrangler/state` (the `--persist-to` is needed, otherwise local D1 state lives under `dist/server/` and has no tables), open a page while enrolled, and `PUT` progress with `curl` (send an `Origin` header).
+- To exercise the socket by hand: `npm run dev:worker` (its `--persist-to` is needed, otherwise local D1 state lives under `dist/server/` and has no tables), open a page while enrolled, and `PUT` progress with `curl` (send an `Origin` header).
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 

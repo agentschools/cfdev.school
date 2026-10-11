@@ -4,7 +4,7 @@
 // instructions, then follow them against the real API. This is not a
 // simulation of an LLM conversation, it exercises the exact HTTP contract
 // llms.txt documents, end to end, against a real running Worker (local
-// wrangler dev by default, or any deployed environment via BASE_URL).
+// `npm run dev:worker` by default, or any deployed environment via BASE_URL).
 //
 // Usage:
 //   node scripts/fake-agent-interview.mjs
