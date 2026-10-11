@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildAuthorPrompt, buildPrompt } from "./agent-prompt";
+import { buildAuthorPrompt, buildChooseCoursePrompt, buildPrompt } from "./agent-prompt";
 
 const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
 
@@ -39,6 +39,15 @@ describe("buildPrompt", () => {
     expect(prompt).toContain(
       'Let\'s redo the "Models" exercise from the "Agent setup" course together, even though I\'ve already completed it.',
     );
+  });
+});
+
+describe("buildChooseCoursePrompt", () => {
+  it("asks the agent to help pick the next course", () => {
+    const prompt = buildChooseCoursePrompt(student);
+    expect(prompt).toContain("as curious-hacker-2019");
+    expect(prompt).toContain("Help me pick what to do next!");
+    expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
   });
 });
 

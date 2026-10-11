@@ -17,13 +17,15 @@ export const TRACKS = ["projects", "fundamentals"] as const;
 export type Track = (typeof TRACKS)[number];
 
 /** How pages label each track. */
-export const TRACK_LABELS: Record<Track, { title: string; description: string }> = {
+export const TRACK_LABELS: Record<Track, { title: string; pitch: string; description: string }> = {
   projects: {
     title: "Projects",
+    pitch: "Build something",
     description: "Build something you want, and pick up Cloudflare products along the way.",
   },
   fundamentals: {
     title: "Fundamentals",
+    pitch: "Learn how it works",
     description: "One concept or product at a time: how it works and how the pieces fit together.",
   },
 };

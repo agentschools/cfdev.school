@@ -1,3 +1,4 @@
+import type { Track } from "../data/courses";
 import type { ExerciseCompletion, Progress } from "../schemas/progress";
 
 /** One exercise's completions, one per harness that completed it. Empty if it isn't complete. */
@@ -13,7 +14,8 @@ export interface CatalogCourse {
   name: string;
   title: string;
   url: string;
-  exercises: { slug: string; title: string; url: string }[];
+  track?: Track;
+  exercises: { slug: string; title: string; url: string; description?: string }[];
 }
 
 export interface StartedCourse {
@@ -22,7 +24,7 @@ export interface StartedCourse {
   url: string;
   external: boolean;
   completedAt?: string;
-  exercises: { title: string; url: string; completions: ExerciseCompletion[] }[];
+  exercises: { title: string; url: string; description?: string; completions: ExerciseCompletion[] }[];
   /** How many exercises have no completion. On a completed course, they were added since the student finished it. */
   remaining: number;
 }
@@ -49,6 +51,7 @@ export function startedCourses(progress: Progress, catalog: readonly CatalogCour
           return {
             title: catalogExercise?.title ?? exercise.slug,
             url: catalogExercise?.url ?? entry.url,
+            ...(catalogExercise?.description ? { description: catalogExercise.description } : {}),
             completions: exercise.completions,
           };
         }),

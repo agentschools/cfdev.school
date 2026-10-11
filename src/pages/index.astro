@@ -1,10 +1,10 @@
 ---
-import AgentPrompt from "../components/AgentPrompt.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
-import { exercisePath, REQUIRED_COURSE } from "../data/courses";
+import { TRACK_LABELS, TRACKS } from "../data/courses";
 import { harnesses } from "../data/harnesses";
 import { catalogCourses, getBuiltInCourses } from "../lib/courses";
+import type { HarnessDirectory } from "../lib/dashboard-client";
 
 // Rendered size (px) per mark, tuned by eye so the monochrome silhouettes read
 // at the same visual weight. Falls back to a square for any harness added later.
@@ -18,21 +18,20 @@ const iconSize: Record<string, [number, number]> = {
 };
 const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harness.icon);
 
-// Where the "Next" button goes once the interview is done: the first
-// unfinished exercise in Agent setup, or the course catalog to pick a track.
 const courses = await getBuiltInCourses();
-const setup = courses.find((course) => course.name === REQUIRED_COURSE)!;
-const nextSteps = {
-  course: setup.name,
-  exercises: setup.exercises.map((exercise) => ({
-    slug: exercise.slug,
-    title: exercise.title,
-    url: exercisePath(setup.name, exercise.slug),
-  })),
-  fallback: { title: "choose a course", url: "/courses" },
-};
-const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
 const catalog = catalogCourses(courses);
+const harnessDirectory: HarnessDirectory = Object.fromEntries(
+  harnesses.map((harness) => [
+    harness.id,
+    { name: harness.id === "generic" ? "Unknown agent" : harness.name, icon: harness.icon?.mono },
+  ]),
+);
+// The choice offered once Agent setup is done: tracks with courses first.
+const trackChoices = TRACKS.map((track) => ({
+  track,
+  ...TRACK_LABELS[track],
+  hasCourses: courses.some((course) => course.track === track),
+})).sort((a, b) => Number(b.hasCourses) - Number(a.hasCourses));
 ---
 
 <Layout
@@ -40,43 +39,95 @@ const catalog = catalogCourses(courses);
   description="Learn to build on Cloudflare using whatever AI coding agent you already have installed. Free forever, no account required."
   minimalHeader
 >
+  <!--
+    The student ID only lives in localStorage, so the server always renders
+    both the visitor hero and the enrolled dashboard. Mark the page enrolled
+    before it paints, so returning students don't see the hero flash. The key
+    matches STORAGE_KEY in src/lib/enroll-client.ts.
+  -->
+  <script is:inline>
+    try {
+      if (localStorage.getItem("cfDevSchool.student")) document.documentElement.dataset.enrolled = "";
+    } catch {
+      // localStorage blocked: show the visitor hero; enroll-client.ts handles the rest.
+    }
+  </script>
   <main class="hero" id="overview">
     <div class="hero-copy">
-      <h1>You and your agent, ready for Cloudflare.</h1>
-      <p class="lede">
-        Learn the fundamentals of AI-powered development while setting up your favorite agent harness to work well
-        with Cloudflare. Then start building for real.
-      </p>
-      <div class="cta-block" data-enroll-container>
-        <button class="cta" type="button" data-enroll-trigger>Enroll — it takes 2 seconds</button>
-        <p class="fine-print">Free forever. No account required.</p>
-      </div>
-      <AgentPrompt />
-      <!-- Same treatment as the exercise pages' completed banner. -->
-      <section id="interview-complete" class="interview-complete" aria-live="polite" hidden>
-        <div class="interview-complete-body">
-          <p class="interview-complete-label">Interview complete</p>
-          <p id="interview-complete-summary" class="interview-complete-summary"></p>
+      <div class="visitor-only">
+        <h1>You and your agent, ready for Cloudflare.</h1>
+        <p class="lede">
+          Learn the fundamentals of AI-powered development while setting up your favorite agent harness to work well
+          with Cloudflare. Then start building for real.
+        </p>
+        <div class="cta-block" data-enroll-container>
+          <button class="cta" type="button" data-enroll-trigger>Enroll — it takes 2 seconds</button>
+          <p class="fine-print">Free forever. No account required.</p>
         </div>
-        <a
-          id="interview-complete-next"
-          class="interview-complete-next"
-          href={firstAfterInterview.url}
-          data-next-steps={JSON.stringify(nextSteps)}
-        >
-          Next: {firstAfterInterview.title} →
-        </a>
-      </section>
-      <section id="course-summary" class="course-summary" data-catalog={JSON.stringify(catalog)} hidden>
-        <p class="course-summary-label">Courses in progress</p>
-        <ul id="course-summary-list" class="course-summary-list"></ul>
-        <a class="course-summary-link" href="/profile">See all your progress →</a>
-      </section>
+      </div>
+
+      <div
+        id="dashboard"
+        class="dashboard student-only"
+        data-catalog={JSON.stringify(catalog)}
+        data-harnesses={JSON.stringify(harnessDirectory)}
+      >
+        <section id="up-next" class="up-next" data-loading>
+          <div id="up-next-exercise">
+            <p id="up-next-eyebrow" class="eyebrow"></p>
+            <h1 id="up-next-title" class="up-next-title"></h1>
+            <p id="up-next-description" class="up-next-description"></p>
+          </div>
+          <div id="up-next-choose" hidden>
+            <p id="choose-eyebrow" class="eyebrow">Agent setup complete</p>
+            <h1 class="up-next-title">What's next?</h1>
+            <p class="up-next-description">
+              <span id="choose-lede">Your agent is ready for Cloudflare. </span>Pick a direction: build something, or
+              learn the platform one piece at a time.
+            </p>
+            <div class="tracks">
+              {
+                trackChoices.map((choice) => {
+                  const body = (
+                    <>
+                      <span class="track-label">{choice.title}</span>
+                      <span class="track-pitch">{choice.pitch}</span>
+                      <span class="track-description">{choice.description}</span>
+                      <span class="track-start">{choice.hasCourses ? "Start →" : "Coming soon"}</span>
+                    </>
+                  );
+                  return choice.hasCourses ? (
+                    <a class="track is-available" href="/courses" data-track-start={choice.track}>
+                      {body}
+                    </a>
+                  ) : (
+                    <div class="track">{body}</div>
+                  );
+                })
+              }
+            </div>
+            <p class="prompt-lead">Not sure? Paste this into your agent and it'll suggest a course based on your interview.</p>
+          </div>
+          <div class="prompt">
+            <pre id="dashboard-prompt-text" class="prompt-text"></pre>
+            <button id="dashboard-prompt-copy" type="button" class="prompt-copy">Copy</button>
+          </div>
+          <p id="prompt-caption" class="prompt-caption">Paste this into your agent. It picks up where you left off.</p>
+        </section>
+
+        <section id="your-courses" class="your-courses" aria-labelledby="your-courses-heading" hidden>
+          <div class="section-head">
+            <h2 id="your-courses-heading" class="label">Your courses</h2>
+            <a href="/profile">All progress →</a>
+          </div>
+          <ol id="course-rows" class="course-rows"></ol>
+        </section>
+      </div>
     </div>
 
     <div class="hero-visual">
       <StudentIdCard />
-      <section id="harnesses" class="harnesses" aria-label="Works with">
+      <section id="harnesses" class="harnesses visitor-only" aria-label="Works with">
         <p class="harnesses-label">Works with</p>
         <div class="harness-grid">
           {
@@ -96,138 +147,25 @@ const catalog = catalogCourses(courses);
           }
         </div>
       </section>
+      <section id="about-you" class="side-section student-only" hidden>
+        <h2 class="label">About you</h2>
+        <p id="about-you-summary" class="about-you-summary"></p>
+        <p class="side-note">From your Agent setup interview. Tell your agent to change any answer.</p>
+      </section>
+      <section id="your-agents" class="side-section student-only" hidden>
+        <h2 class="label">Your agents</h2>
+        <ul id="agent-list" class="agent-list"></ul>
+      </section>
     </div>
   </main>
 </Layout>
 
 <script>
-  import { buildPrompt } from "../lib/agent-prompt";
-  import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "../lib/enroll-client";
-  import { subscribeToProgress } from "../lib/progress-client";
-  import { setVisible } from "../lib/reveal";
-  import { type CatalogCourse, exerciseCompletions, startedCourses } from "../lib/course-progress";
-  import type { Progress } from "../schemas/progress";
+  import { initDashboard } from "../lib/dashboard-client";
   import { initHarnessTooltips } from "../lib/harness-tooltip-client";
 
   initHarnessTooltips();
-
-  // Same prompt for every student, once enrolled: the agent figures out its
-  // own harness once it fetches /llms.txt, so there's no picker step here.
-  function initAgentPrompt(): void {
-    const promptSection = document.getElementById("agent-prompt");
-    const promptText = document.getElementById("agent-prompt-text");
-    const copyButton = document.getElementById("agent-prompt-copy") as HTMLButtonElement | null;
-    const copyConfirm = document.getElementById("agent-prompt-confirm");
-    const complete = document.getElementById("interview-complete");
-    const summary = document.getElementById("interview-complete-summary");
-    const nextLink = document.getElementById("interview-complete-next") as HTMLAnchorElement | null;
-    const courseSummary = document.getElementById("course-summary");
-    const courseSummaryList = document.getElementById("course-summary-list");
-    if (
-      !promptSection ||
-      !promptText ||
-      !copyButton ||
-      !copyConfirm ||
-      !complete ||
-      !summary ||
-      !nextLink ||
-      !courseSummary ||
-      !courseSummaryList
-    ) {
-      return;
-    }
-    const catalog = JSON.parse(courseSummary.dataset.catalog ?? "[]") as CatalogCourse[];
-
-    const nextSteps = JSON.parse(nextLink.dataset.nextSteps!) as {
-      course: string;
-      exercises: { slug: string; title: string; url: string }[];
-      fallback: { title: string; url: string };
-    };
-
-    // Until Agent setup's interview is complete, show its prompt. Once the
-    // student's agent marks it complete (often while this tab is open, pushed
-    // over the progress socket), swap the prompt for the summary saved with
-    // their interview and a button to the first exercise they haven't
-    // finished. Re-saving the interview pushes a new summary the same way.
-    let progressReceived = false;
-    function renderProgress(progress: Progress): void {
-      progressReceived = true;
-      const interviewComplete = exerciseCompletions(progress, nextSteps.course, "interview").length > 0;
-      if (interviewComplete) {
-        summary!.textContent =
-          progress.courses.find((course) => course.name === nextSteps.course)?.interviewSummary ??
-          "Your interview answers are saved.";
-        const next =
-          nextSteps.exercises.find(
-            (exercise) => exerciseCompletions(progress, nextSteps.course, exercise.slug).length === 0,
-          ) ?? nextSteps.fallback;
-        nextLink!.href = next.url;
-        nextLink!.textContent = `Next: ${next.title} →`;
-      }
-      setVisible(promptSection!, !interviewComplete);
-      setVisible(complete!, interviewComplete);
-      renderCourseSummary(progress);
-    }
-
-    // The courses the student has started but not finished, each linking to
-    // its page (or out, for a course hosted elsewhere), plus a link to
-    // /profile. Titles of courses hosted elsewhere come from the student's
-    // agent, so they only ever go in through textContent.
-    function renderCourseSummary(progress: Progress): void {
-      const started = startedCourses(progress, catalog);
-      const inProgress = started.filter((course) => !course.completedAt);
-      courseSummaryList!.replaceChildren(
-        ...inProgress.map((course) => {
-          const item = document.createElement("li");
-          const link = document.createElement("a");
-          link.href = course.url;
-          link.textContent = course.title;
-          const count = document.createElement("span");
-          count.className = "course-summary-count";
-          count.textContent = `${course.exercises.length - course.remaining} of ${course.exercises.length}`;
-          item.appendChild(link);
-          item.appendChild(count);
-          return item;
-        }),
-      );
-      if (inProgress.length === 0) {
-        const item = document.createElement("li");
-        item.textContent = "You've finished every course you've started.";
-        courseSummaryList!.appendChild(item);
-      }
-      setVisible(courseSummary!, started.length > 0);
-    }
-
-    function showPrompt(student: CachedStudent): void {
-      promptText!.textContent = buildPrompt(student);
-      copyConfirm!.hidden = true;
-      subscribeToProgress(student.id, renderProgress);
-      // If progress can't load (e.g. a cached ID the server doesn't know),
-      // fall back to showing the Interview prompt rather than nothing.
-      setTimeout(() => {
-        if (!progressReceived) setVisible(promptSection!, true);
-      }, 1500);
-    }
-
-    copyButton.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(promptText!.textContent ?? "");
-        copyConfirm!.hidden = false;
-      } catch (error) {
-        console.error("Copy failed", error);
-      }
-    });
-
-    // initEnrollment() runs globally from Layout.astro, and Astro doesn't
-    // guarantee it executes after this page-level script (in practice it runs
-    // before), so the ENROLLED_EVENT dispatch for an already-cached student can
-    // fire before the listener below is attached. Check directly as a fallback.
-    document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => showPrompt(event.detail)) as EventListener);
-    const existingStudent = readCachedStudent();
-    if (existingStudent) showPrompt(existingStudent);
-  }
-
-  initAgentPrompt();
+  initDashboard();
 </script>
 
 <style>
@@ -261,7 +199,7 @@ const catalog = catalogCourses(courses);
     min-width: 0;
   }
 
-  .hero h1 {
+  .visitor-only h1 {
     max-width: 5.6em;
     margin: 0 0 2rem;
     font-family: "Inter", system-ui, sans-serif;
@@ -311,88 +249,6 @@ const catalog = catalogCourses(courses);
     cursor: not-allowed;
   }
 
-  .interview-complete {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem 1rem;
-    max-width: 30rem;
-    padding: 0.85rem 1rem;
-    border-radius: 0.6rem;
-    background: color-mix(in oklch, var(--accent) 12%, transparent);
-    font-size: 0.95rem;
-  }
-  .interview-complete[hidden] {
-    display: none;
-  }
-  .interview-complete-body {
-    flex: 1 1 18rem;
-  }
-  .interview-complete-label {
-    margin: 0;
-    font-weight: 600;
-    color: var(--accent);
-  }
-  .interview-complete-summary {
-    margin: 0.35rem 0 0;
-    line-height: 1.5;
-  }
-  .interview-complete-next {
-    flex-shrink: 0;
-    padding: 0.45rem 0.85rem;
-    border-radius: 0.45rem;
-    background: var(--accent);
-    color: var(--accent-contrast);
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .interview-complete-next:hover {
-    filter: brightness(1.05);
-  }
-  .course-summary {
-    max-width: 30rem;
-    margin-top: 1rem;
-    font-size: 0.95rem;
-  }
-  .course-summary[hidden] {
-    display: none;
-  }
-  .course-summary-label {
-    margin: 0 0 0.4rem;
-    font-weight: 600;
-  }
-  .course-summary-list {
-    margin: 0 0 0.5rem;
-    padding: 0;
-    list-style: none;
-  }
-  /* The list items are rendered by the script above, so these need :global(). */
-  .course-summary-list :global(li) {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.3rem 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .course-summary-list :global(a) {
-    color: var(--fg);
-    text-decoration: none;
-  }
-  .course-summary-list :global(a:hover) {
-    color: var(--accent);
-  }
-  .course-summary-list :global(.course-summary-count) {
-    color: var(--muted-fg);
-    font-variant-numeric: tabular-nums;
-  }
-  .course-summary-link {
-    color: var(--accent);
-    font-size: 0.9rem;
-    text-decoration: none;
-  }
   .fine-print {
     margin: 0;
     color: var(--muted-fg);
@@ -479,6 +335,404 @@ const catalog = catalogCourses(courses);
 
     .harness-grid {
       grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* Visitor hero vs. enrolled dashboard. The inline script at the top of the
+     page sets data-enrolled before first paint; dashboard-client.ts sets it on
+     a fresh enrollment, switching the page over right away. */
+  :global(:root[data-enrolled]) .visitor-only,
+  :global(:root:not([data-enrolled])) .student-only {
+    display: none;
+  }
+
+  :global(:root[data-enrolled]) .hero {
+    align-items: flex-start;
+    gap: 4.5rem;
+    padding: 4.5rem 5rem 5rem;
+  }
+
+  :global(:root[data-enrolled]) .hero-copy {
+    max-width: 38.75rem;
+  }
+
+  :global(:root[data-enrolled]) .hero-visual {
+    align-items: stretch;
+    gap: 3rem;
+    width: 21.25rem;
+    margin: 0;
+  }
+
+  :global(:root[data-enrolled]) .hero-visual :global(.id-card) {
+    width: 21.25rem;
+  }
+
+  :global(:root[data-enrolled]) .hero-visual :global(.id-card-face) {
+    rotate: -3deg;
+    padding: 1.5rem 1.625rem;
+  }
+
+  :global(:root[data-enrolled]) .hero-visual :global(.id-card-label) {
+    font-size: 0.6875rem;
+  }
+
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5rem;
+  }
+
+  .dashboard [hidden] {
+    display: none;
+  }
+
+  /* Filled in from live progress; don't show placeholder content before it arrives. */
+  .up-next[data-loading] {
+    visibility: hidden;
+  }
+
+  .eyebrow,
+  .label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow {
+    color: light-dark(#c2410c, #ff8f57);
+  }
+
+  .label {
+    color: var(--muted-fg);
+  }
+
+  .up-next-title {
+    margin: 0.875rem 0 0;
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .up-next-description {
+    max-width: 32.5rem;
+    margin: 1rem 0 0;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+  }
+
+  .tracks {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .track {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.875rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .track.is-available {
+    border: 1.5px solid var(--accent);
+    background: light-dark(#fff7f0, #2a1c15);
+  }
+
+  .track.is-available:hover {
+    background: light-dark(#ffefe2, #33211a);
+  }
+
+  .track-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-fg);
+  }
+
+  .is-available .track-label,
+  .is-available .track-start {
+    color: light-dark(#c2410c, #ff8f57);
+  }
+
+  .track-pitch {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.875rem;
+    letter-spacing: -0.02em;
+  }
+
+  .track-description {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+  }
+
+  .track-start {
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    color: var(--muted-fg);
+  }
+
+  .is-available .track-start {
+    font-weight: 600;
+  }
+
+  .prompt-lead {
+    margin: 1.75rem 0 0;
+    max-width: none;
+    font-size: 0.875rem;
+    color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+  }
+
+  .prompt {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    padding: 1.375rem 1.25rem 1.375rem 1.5rem;
+    border: 1px solid light-dark(transparent, #34302e);
+    border-radius: 0.875rem;
+    background: light-dark(#171717, #1e1c1b);
+  }
+
+  /* The "Not sure?" line sits just above the prompt. */
+  #up-next-choose:not([hidden]) + .prompt {
+    margin-top: 0.75rem;
+  }
+
+  .prompt-text {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.3125rem;
+    color: light-dark(#f5f5f5, #efe6e1);
+  }
+
+  .prompt-copy {
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    color: #fff;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    cursor: pointer;
+  }
+
+  .prompt-copy:hover {
+    filter: brightness(1.08);
+  }
+
+  .prompt-caption {
+    margin: 0.75rem 0 0;
+    font-size: 0.875rem;
+    color: var(--muted-fg);
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 0.375rem;
+    border-bottom: 1px solid light-dark(var(--fg), #4a4544);
+  }
+
+  .section-head .label {
+    color: var(--fg);
+  }
+
+  .section-head a {
+    font-size: 0.875rem;
+    color: light-dark(#c2410c, #ff8f57);
+    text-decoration: none;
+  }
+
+  .course-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Rows and agents are rendered by dashboard-client.ts, so they need :global(). */
+  .course-rows :global(li + li) {
+    border-top: 1px solid var(--border);
+  }
+
+  .course-rows :global(.course-row) {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.125rem 0;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .course-rows :global(.course-row:hover .course-row-title) {
+    color: var(--accent);
+  }
+
+  .course-rows :global(.course-row-text) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    width: 12.5rem;
+    flex-shrink: 0;
+  }
+
+  .course-rows :global(.course-row-title) {
+    font-weight: 600;
+    line-height: 1.375rem;
+  }
+
+  .course-rows :global(.course-row-sub) {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    color: var(--muted-fg);
+  }
+
+  .course-rows :global(.course-row-bar) {
+    flex: 1;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .course-rows :global(.course-row-bar span) {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+  }
+
+  .course-rows :global(.course-row-bar span.is-done) {
+    background: var(--accent);
+  }
+
+  .course-rows :global(.course-row-count) {
+    width: 3.5rem;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 0.875rem;
+    color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .side-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .side-section[hidden] {
+    display: none;
+  }
+
+  .about-you-summary {
+    margin: 0;
+    line-height: 1.5rem;
+  }
+
+  .side-note {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    color: var(--muted-fg);
+  }
+
+  .agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0.125rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .agent-list :global(li) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .agent-list :global(.agent-icon) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+  }
+
+  .agent-list :global(.agent-mark) {
+    width: 1.125rem;
+    height: 1.125rem;
+    background-color: var(--fg);
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
+  }
+
+  .agent-list :global(.agent-text) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .agent-list :global(.agent-name) {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+  }
+
+  .agent-list :global(.agent-count) {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    color: var(--muted-fg);
+  }
+
+  @media (max-width: 1180px) {
+    :global(:root[data-enrolled]) .hero-copy {
+      max-width: none;
+      width: 100%;
+    }
+
+    :global(:root[data-enrolled]) .hero-visual {
+      align-self: stretch;
+      width: auto;
+      max-width: 21.25rem;
+    }
+  }
+
+  @media (max-width: 700px) {
+    :global(:root[data-enrolled]) .hero {
+      padding: 3rem 1.5rem;
+    }
+
+    .tracks {
+      flex-direction: column;
+    }
+
+    .course-rows :global(.course-row-text) {
+      width: 8.5rem;
     }
   }
 </style>

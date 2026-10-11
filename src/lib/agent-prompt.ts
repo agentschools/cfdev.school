@@ -31,6 +31,17 @@ export function buildPrompt(student: CachedStudent, context?: AgentPromptContext
   ].join("\n");
 }
 
+/** The enrolled homepage's prompt once Agent setup is done and no course is in progress: the agent asks which track to take (see /llms.txt's "Courses"). */
+export function buildChooseCoursePrompt(student: CachedStudent): string {
+  return [
+    `I'm enrolled in Cloudflare Dev School as ${student.id}`,
+    "",
+    "I'm ready for my next course. Help me pick what to do next!",
+    "",
+    `Fetch ${window.location.origin}/llms.txt for instructions.`,
+  ].join("\n");
+}
+
 /** The prompt on /authors (#79): no student ID, it starts writing a course rather than taking one. */
 export function buildAuthorPrompt(): string {
   return [

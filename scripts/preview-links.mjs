@@ -39,7 +39,11 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       filename === "src/pages/api/openapi.json.ts"
     ) {
       add("/api/openapi.json");
-    } else if (filename === "src/pages/index.astro") {
+    } else if (
+      filename === "src/pages/index.astro" ||
+      filename === "src/lib/dashboard.ts" ||
+      filename === "src/lib/dashboard-client.ts"
+    ) {
       add("/");
     } else if (
       filename === "src/pages/authors.astro" ||
