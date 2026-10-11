@@ -59,6 +59,8 @@ describe("homepage", () => {
     expect(html).toContain("&quot;Claude Code&quot;");
     // Marks the page enrolled before paint, so returning students don't see the hero.
     expect(html).toContain('localStorage.getItem("cfDevSchool.student")');
+    // "What's an agent?" under the prompt, and the visitor hero's "Works with" label.
+    expect(html.match(/<a[^>]*href="\/agents"[^>]*>(What(?:&#39;|')s an agent\?|Works with)<\/a>/g)).toHaveLength(2);
   });
 
   it("offers the tracks after Agent setup, available ones first", async () => {

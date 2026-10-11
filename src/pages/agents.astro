@@ -1,0 +1,232 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { harnesses } from "../data/harnesses";
+
+// Every listed harness, in harnesses.ts order: Claude Code and Codex come
+// first, the two this page recommends to newcomers.
+const supported = harnesses.filter((harness) => harness.id !== "generic");
+const RECOMMENDED = new Set(["claude-code", "codex"]);
+
+function hostname(url: string): string {
+  return new URL(url).hostname.replace(/^www\./, "");
+}
+---
+
+<Layout
+  title="What's an agent? — Cloudflare Dev School"
+  description="What an AI coding agent and an agent harness are, which agents Cloudflare Dev School supports, and which one to start with."
+>
+  <div class="page">
+    <main class="content">
+      <header class="header">
+        <h1>What's an agent?</h1>
+        <p class="lede">
+          An agent is an AI model that can do things, not just talk about them. You describe what you want, and it reads
+          your files, runs commands, edits code, and checks its own work, in a loop, until the job is done. Every Dev
+          School exercise is taught by your agent.
+        </p>
+      </header>
+
+      <section class="prose">
+        <h2>Agents and harnesses</h2>
+        <p>
+          The model is the part that thinks: Claude, GPT, Gemini, and so on. The harness is the program wrapped around
+          it, usually in your terminal. It gives the model tools for reading files, running shell commands, and
+          searching the web, asks your permission before risky steps, loads your instructions file, and connects to
+          skills and MCP servers.
+        </p>
+        <p>
+          People say "agent" for both. The difference matters because the same model can work very differently in two
+          harnesses, and because the harness decides which models and subscriptions you can use. The{" "}
+          <a href="/courses/agent-setup">Agent setup</a> course walks you through setting up whichever harness you choose.
+        </p>
+
+        <h2>New to this? Start with Claude Code or Codex</h2>
+        <p>
+          Get a subscription to Claude Code or OpenAI Codex. Both have $20/month plans, Claude Pro and ChatGPT Plus,
+          with generous usage limits. That's the best value while you're learning: a flat price and no surprise bills.
+          Codex also works on ChatGPT's free plan, with lower limits.
+        </p>
+        <p>
+          Pay-per-token API keys work too, but it's easy to spend more than you meant to while you're learning.
+        </p>
+      </section>
+
+      <section class="supported" aria-labelledby="supported-heading">
+        <h2 id="supported-heading">Supported agents</h2>
+        <p class="supported-intro">Exercises include step-by-step instructions for each of these harnesses.</p>
+        <ul class="harness-list">
+          {
+            supported.map((harness) => (
+              <li class="harness" data-harness={harness.id}>
+                {harness.icon && (
+                  <picture class="harness-logo">
+                    <source srcset={harness.icon.dark} media="(prefers-color-scheme: dark)" />
+                    <img src={harness.icon.light} alt="" width="32" height="32" />
+                  </picture>
+                )}
+                <div class="harness-body">
+                  <div class="harness-title">
+                    <h3>{harness.name}</h3>
+                    {RECOMMENDED.has(harness.id) && <span class="badge">Good place to start</span>}
+                  </div>
+                  <p class="harness-tagline">{harness.tagline}</p>
+                  <p class="harness-billing">{harness.subscriptionBilling.headline}</p>
+                  <p class="harness-meta">
+                    <code>{harness.cliCommand}</code>
+                    {harness.homepage && <a href={harness.homepage}>{hostname(harness.homepage)} →</a>}
+                  </p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="prose">
+        <h2>Other agents</h2>
+        <p>
+          Dev School isn't tied to this list. Any agent harness that can fetch a web page, read Markdown, and run shell
+          commands should be able to take the courses, with the same prompt. The difference is that exercises only
+          spell out steps for the harnesses above. With another one, your agent works out the equivalent steps from its
+          own docs.
+        </p>
+      </section>
+    </main>
+  </div>
+</Layout>
+
+<style>
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .content {
+    padding: 2.5rem 0 5rem;
+    max-width: 42rem;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    margin: 0 0 0.75rem;
+  }
+
+  .lede {
+    margin: 0 0 1.5rem;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--muted-fg);
+  }
+
+  .supported {
+    margin: 2.5rem 0;
+  }
+
+  .supported h2 {
+    margin: 0 0 0.35rem;
+  }
+
+  .supported-intro {
+    margin: 0 0 1.25rem;
+    color: var(--muted-fg);
+  }
+
+  .harness-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .harness {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card-bg);
+  }
+
+  .harness-logo {
+    display: flex;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .harness-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .harness-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .harness-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .harness-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .badge {
+    padding: 0.1rem 0.5rem;
+    border-radius: 9999px;
+    background: color-mix(in oklch, var(--accent) 14%, transparent);
+    color: light-dark(#c2410c, #ff8f57);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .harness-tagline,
+  .harness-billing,
+  .harness-meta {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .harness-billing {
+    color: var(--muted-fg);
+  }
+
+  .harness-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-top: 0.2rem;
+  }
+
+  .harness-meta code {
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.3rem;
+    background: color-mix(in oklch, var(--fg) 8%, transparent);
+    font-size: 0.85rem;
+  }
+
+  .harness-meta a {
+    color: light-dark(#c2410c, #ff8f57);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .harness-meta a:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -52,6 +52,8 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       filename === "src/pages/authors.md.ts"
     ) {
       add("/authors", "/authors.md");
+    } else if (filename === "src/pages/agents.astro") {
+      add("/agents");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {
       add("/disenroll");
     } else if (

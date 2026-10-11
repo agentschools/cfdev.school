@@ -112,7 +112,9 @@ const trackChoices = TRACKS.map((track) => ({
             <pre id="dashboard-prompt-text" class="prompt-text"></pre>
             <button id="dashboard-prompt-copy" type="button" class="prompt-copy">Copy</button>
           </div>
-          <p id="prompt-caption" class="prompt-caption">Paste this into your agent. It picks up where you left off.</p>
+          <p id="prompt-caption" class="prompt-caption">
+            Paste this into your agent. It picks up where you left off. <a href="/agents">What's an agent?</a>
+          </p>
         </section>
 
         <section id="your-courses" class="your-courses" aria-labelledby="your-courses-heading" hidden>
@@ -128,7 +130,7 @@ const trackChoices = TRACKS.map((track) => ({
     <div class="hero-visual">
       <StudentIdCard />
       <section id="harnesses" class="harnesses visitor-only" aria-label="Works with">
-        <p class="harnesses-label">Works with</p>
+        <a class="harnesses-label" href="/agents">Works with</a>
         <div class="harness-grid">
           {
             worksWith.map((harness) => {
@@ -275,6 +277,7 @@ const trackChoices = TRACKS.map((track) => ({
 
   .harnesses-label {
     margin: 0;
+    text-decoration: none;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -546,6 +549,16 @@ const trackChoices = TRACKS.map((track) => ({
     margin: 0.75rem 0 0;
     font-size: 0.875rem;
     color: var(--muted-fg);
+  }
+
+  .prompt-caption a {
+    color: light-dark(#c2410c, #ff8f57);
+    text-decoration: none;
+  }
+
+  .prompt-caption a:hover,
+  .harnesses-label:hover {
+    text-decoration: underline;
   }
 
   .section-head {

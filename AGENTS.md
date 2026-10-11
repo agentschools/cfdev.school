@@ -47,7 +47,7 @@ developers.cloudflare.com is the source of truth for every Cloudflare fact in th
 
 ## AI harness research data
 
-`src/data/harnesses.ts` is a manually maintained, Zod-schema-typed data source covering the harnesses this school supports (Claude Code, Codex, OpenCode, Pi, generic fallback): instructions file location, CLI command, skills support/install location/restart behavior, config/MCP file locations plus how to add a remote MCP server (`mcp` field, used by the Tools exercise), model comparison data, and subscription-vs-API-billing policy for third-party routing. It's consumed by the homepage "Works with" grid and served to agents as-is by `GET /api/harnesses/{id}` (`src/pages/api/harnesses/[id].ts`, schema reused in the OpenAPI doc), which `/llms.txt` tells agents to fetch once and prefer over their training data, while still checking commands against their harness's own CLI help or docs. Harness-specific facts that exercises need (file paths, commands, billing policy) belong here, not in exercise content.
+`src/data/harnesses.ts` is a manually maintained, Zod-schema-typed data source covering the harnesses this school supports (Claude Code, Codex, OpenCode, Pi, generic fallback): instructions file location, CLI command, skills support/install location/restart behavior, config/MCP file locations plus how to add a remote MCP server (`mcp` field, used by the Tools exercise), model comparison data, and subscription-vs-API-billing policy for third-party routing. It's consumed by the homepage "Works with" grid and `/agents` (each harness's `tagline`, `subscriptionBilling.headline`, `cliCommand`, and `homepage`; keep billing out of `tagline`), and served to agents as-is by `GET /api/harnesses/{id}` (`src/pages/api/harnesses/[id].ts`, schema reused in the OpenAPI doc), which `/llms.txt` tells agents to fetch once and prefer over their training data, while still checking commands against their harness's own CLI help or docs. Harness-specific facts that exercises need (file paths, commands, billing policy) belong here, not in exercise content.
 
 Each harness profile carries its own `lastVerified` date and a `sources` list. This data goes stale fast (pricing and vendor policy on third-party subscription routing change often), so `.github/workflows/refresh-harnesses.yml` re-verifies it daily: Claude (via `anthropics/claude-code-action`, file and web tools only) edits `harnesses.ts`, and the workflow opens or updates a single `chore/refresh-harnesses` PR when something besides `lastVerified` changed. Review those PRs against their cited sources before merging. Whether a person or that job edits the file, the same rules apply:
 
@@ -135,6 +135,10 @@ Students can take a course hosted anywhere (#77): a git repo in the built-in for
 - Agent setup's Instructions exercise has the agent add a "Cloudflare Dev School" section (student ID, plus "read <origin>/llms.txt") to the student's global instructions file, so a later session can take a course by URL.
 
 Verify with `npm run verify:external-course` against `npm run dev:worker` or a PR preview, with the same caveats as the other verify scripts. It doesn't clone or fetch a real course, it only checks the HTTP contract.
+
+## What's an agent? page
+
+`/agents` (`src/pages/agents.astro`) explains what an agent and an agent harness are, recommends Claude Code or Codex to newcomers ($20/month Claude Pro or ChatGPT Plus), lists every harness in `harnesses.ts` except `generic` in that file's order (Claude Code and Codex first, marked "Good place to start"), and says other harnesses should work too. It's linked from the dashboard prompt's caption, the visitor homepage's "Works with" label, the sidebar ("Agents"), and Agent setup's Models exercise. #101 tracks reworking the Models exercise around each harness's models.
 
 ## Authors
 
