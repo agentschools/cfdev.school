@@ -25,7 +25,7 @@ vi.mock("cloudflare:workers", () => ({
 }));
 
 // Two small courses: Agent setup (its own interview, models, instructions)
-// and Workers basics (the default interview, deploy-a-worker).
+// and Workers (the default interview, deploy-a-worker).
 vi.mock("astro:content", async () => (await import("../../../../test/fake-content")).fakeAstroContent);
 
 const STUDENT = "curious-hacker-2019";
@@ -69,8 +69,8 @@ const agentSetup = {
   summary: "You use AI agents now and then, have deployed on Vercel, are on macOS, and opted into quizzes.",
 };
 
-const workersBasics = {
-  course: "workers-basics",
+const workersCourse = {
+  course: "workers",
   responses: [{ question: "Have you written a serverless function before?", answer: "a few on Vercel" }],
   summary: "You've written a few serverless functions on Vercel.",
 };
@@ -98,20 +98,20 @@ describe("PUT /api/students/{id}/interviews", () => {
   });
 
   it("stores interviews for an authored and a generated interview, and GET returns both in catalog order", async () => {
-    await put(STUDENT, workersBasics);
+    await put(STUDENT, workersCourse);
     const { status, body } = await put(STUDENT, agentSetup);
 
     expect(status).toBe(200);
     expect(body.interviews).toEqual([
       { ...agentSetup, updatedAt: expect.stringMatching(/^\d{4}-/) },
-      { ...workersBasics, updatedAt: expect.stringMatching(/^\d{4}-/) },
+      { ...workersCourse, updatedAt: expect.stringMatching(/^\d{4}-/) },
     ]);
     expect((await get(STUDENT)).body).toEqual(body);
   });
 
   it("replaces a course's whole interview without touching the others", async () => {
     await put(STUDENT, agentSetup);
-    await put(STUDENT, workersBasics);
+    await put(STUDENT, workersCourse);
     const changed = {
       ...agentSetup,
       responses: [{ question: "Want a short quiz at the end of each exercise? (recommended, skippable anytime)", answer: "no" }],
@@ -121,7 +121,7 @@ describe("PUT /api/students/{id}/interviews", () => {
 
     expect(body.interviews).toEqual([
       { ...changed, updatedAt: expect.any(String) },
-      { ...workersBasics, updatedAt: expect.any(String) },
+      { ...workersCourse, updatedAt: expect.any(String) },
     ]);
   });
 
@@ -151,6 +151,6 @@ describe("PUT /api/students/{id}/interviews", () => {
     expect(state.broadcasts[1].hub).toBe(STUDENT);
     const courses = state.broadcasts[1].progress.courses;
     expect(courses.find((course) => course.name === "agent-setup")?.interviewSummary).toBe("Quizzes off.");
-    expect(courses.find((course) => course.name === "workers-basics")?.interviewSummary).toBeUndefined();
+    expect(courses.find((course) => course.name === "workers")?.interviewSummary).toBeUndefined();
   });
 });

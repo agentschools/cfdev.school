@@ -5,13 +5,13 @@ agent-instructions: |
 
   Teach as you go, pitched to this course's interview answer and Agent setup's interview (GET /api/students/{id}/interviews). For students who've used other platforms, compare to what they know: a connection string plus an API key in environment variables, or an IAM role granted separately. Don't lecture; one or two sentences per idea.
 
-  Which Worker: use the Worker from Workers basics if the student has it (check GET /api/progress/{studentId}, and ask where the project is). Otherwise scaffold a new one with `cf init <directory>`. Either way it needs a `cloudflare.config.ts`; if it has a `wrangler.jsonc`/`wrangler.json`/`wrangler.toml` instead, offer to convert it with `cf migrate`, or adapt these steps to Wrangler if they'd rather not. The rest of this course builds on this same Worker.
+  Which Worker: use the Worker from the Workers course if the student has it (check GET /api/progress/{studentId}, and ask where the project is). Otherwise scaffold a new one with `cf init <directory>`. Either way it needs a `cloudflare.config.ts`; if it has a `wrangler.jsonc`/`wrangler.json`/`wrangler.toml` instead, offer to convert it with `cf migrate`, or adapt these steps to Wrangler if they'd rather not. The rest of this course builds on this same Worker.
 
   1. Declare three things in `worker.env` in `cloudflare.config.ts` (importing `bindings` from `"cf/config"`):
      - `GREETING: bindings.text("Hello")`, a plain variable.
      - `API_TOKEN: bindings.secret()`, a secret. Its local value goes in a `.env` file next to the config, e.g. `API_TOKEN=pretend-this-is-secret`. Check that `.env` is gitignored (the `cf init` template ignores `.env*`).
      - `NOTES: bindings.kv()`, a KV binding with no `id`. Don't create the namespace first.
-     If the Worker already has a `KV` binding from Workers basics, leave it alone and add these alongside it.
+     If the Worker already has a `KV` binding from the Workers course, leave it alone and add these alongside it.
   2. Run `cf workers types` so `env` is typed with the new bindings.
   3. Add an `/env` route that reports, for each entry in `env`: its `typeof`, and for objects, `JSON.stringify(value)` and `String(value)`. Also add `/note` routes: `PUT /note` stores the request body under one key with `env.NOTES.put`, and `GET /note` reads it back with `env.NOTES.get`.
   4. Run it with `cf dev`. Locally the KV binding is a simulation, and the secret comes from `.env`.
@@ -52,5 +52,5 @@ You'll deploy it, let `cf` create the namespace for you, and then ask your Worke
 
 Your agent can help you with these.
 
-- A Worker with a `cloudflare.config.ts`, like the one from [Deploy a Worker](/courses/workers-basics/deploy-a-worker). Your agent can make a new one if you don't have it.
+- A Worker with a `cloudflare.config.ts`, like the one from [Deploy a Worker](/courses/workers/deploy-a-worker). Your agent can make a new one if you don't have it.
 - The [`cf` CLI](/courses/agent-setup/cli) logged in to your Cloudflare account (`cf auth whoami`).

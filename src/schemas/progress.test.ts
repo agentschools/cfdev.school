@@ -64,7 +64,7 @@ describe("progressSchema", () => {
             },
           ],
         },
-        { name: "workers-basics", exercises: [{ slug: "interview", completions: [] }] },
+        { name: "workers", exercises: [{ slug: "interview", completions: [] }] },
       ],
       externalCourses: [
         {

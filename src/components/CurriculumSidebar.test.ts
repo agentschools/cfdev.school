@@ -10,19 +10,34 @@ async function render(path = "/"): Promise<string> {
 }
 
 describe("CurriculumSidebar", () => {
-  it("links each built-in course, in order, and each of its exercises", async () => {
+  it("shows Agent setup with its exercises, then each track with its courses", async () => {
     const html = await render();
 
-    expect(html.indexOf('href="/courses/agent-setup"')).toBeLessThan(html.indexOf('href="/courses/workers-basics"'));
     expect(html).toContain('href="/courses/agent-setup/models"');
-    expect(html).toContain('href="/courses/workers-basics/deploy-a-worker"');
-    // Workers basics has no interview of its own, so it gets the default one.
-    expect(html).toContain('href="/courses/workers-basics/interview"');
-    expect(html).toContain('href="/courses"');
+    const order = ['href="/courses/agent-setup"', ">Projects<", "Coming soon", ">Fundamentals<", 'href="/courses/workers"', 'href="/courses/bindings"'];
+    const positions = order.map((text) => html.indexOf(text));
+    for (const position of positions) expect(position).toBeGreaterThan(-1);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    expect(html).not.toContain('href="/courses"');
+  });
+
+  it("shows a track course's exercises only on one of its pages", async () => {
+    expect(await render()).not.toContain('href="/courses/workers/deploy-a-worker"');
+
+    const html = await render("/courses/workers/deploy-a-worker");
+    expect(html).toContain('href="/courses/workers/deploy-a-worker"');
+    // Workers has no interview of its own, so it gets the default one.
+    expect(html).toContain('href="/courses/workers/interview"');
+    expect(html).not.toContain('href="/courses/bindings/live-objects"');
+  });
+
+  it("lets Agent setup collapse once complete, except on its own pages", async () => {
+    expect(await render()).toContain('data-collapse-when-complete="agent-setup"');
+    expect(await render("/courses/agent-setup/models")).not.toContain("data-collapse-when-complete");
   });
 
   it("numbers each course's exercises from 00, starting with the interview", async () => {
-    const html = await render();
+    const html = await render("/courses/workers");
 
     expect(html).toMatch(/00\.<\/span>\s*Interview/);
     expect(html).toMatch(/01\.<\/span>\s*Models/);

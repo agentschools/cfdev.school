@@ -1,11 +1,16 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { coursePath, REQUIRED_COURSE } from "../../data/courses";
+import { coursePath, REQUIRED_COURSE, TRACK_LABELS, TRACKS } from "../../data/courses";
 import { getBuiltInCourses } from "../../lib/courses";
 
 export const prerender = false;
 
 const courses = await getBuiltInCourses();
+// Agent setup on its own, then each track's courses.
+const groups = [
+  { id: "start", title: undefined, description: undefined, courses: courses.filter((course) => !course.track) },
+  ...TRACKS.map((track) => ({ id: track, ...TRACK_LABELS[track], courses: courses.filter((c) => c.track === track) })),
+];
 ---
 
 <Layout
@@ -17,26 +22,38 @@ const courses = await getBuiltInCourses();
       <h1>Courses</h1>
       <p class="lede">
         Each course is a short series of exercises your agent walks you through. Start with Agent setup, every other
-        course assumes you've finished it.
+        course assumes you've finished it. Then pick a project to build, or learn the fundamentals one at a time. Projects
+        never require a fundamentals course.
       </p>
 
-      <ol class="course-list">
-        {
-          courses.map((course, index) => (
-            <li data-course-name={course.name}>
-              <a href={coursePath(course.name)}>
-                <span class="order">
-                  Course {index + 1}
-                  {course.name === REQUIRED_COURSE && " · Start here"}
-                </span>
-                <span class="title">{course.title}</span>
-                <span class="description">{course.description}</span>
-                <span class="count">{course.exercises.length} exercises</span>
-              </a>
-            </li>
-          ))
-        }
-      </ol>
+      {
+        groups.map((group) => (
+          <section class="group" data-group={group.id}>
+            {group.title && (
+              <>
+                <h2>{group.title}</h2>
+                <p class="group-description">{group.description}</p>
+              </>
+            )}
+            {group.courses.length === 0 ? (
+              <p class="coming-soon">Coming soon.</p>
+            ) : (
+              <ol class="course-list">
+                {group.courses.map((course) => (
+                  <li data-course-name={course.name}>
+                    <a href={coursePath(course.name)}>
+                      {course.name === REQUIRED_COURSE && <span class="order">Start here</span>}
+                      <span class="title">{course.title}</span>
+                      <span class="description">{course.description}</span>
+                      <span class="count">{course.exercises.length} exercises</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+        ))
+      }
 
       <p class="authors">Know something worth teaching? <a href="/authors">Write a course</a> and host it anywhere.</p>
     </main>
@@ -64,6 +81,21 @@ const courses = await getBuiltInCourses();
     margin: 0 0 2rem;
     color: var(--muted-fg);
     font-size: 1.1rem;
+  }
+
+  .group + .group {
+    margin-top: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    margin: 0 0 0.25rem;
+  }
+
+  .group-description,
+  .coming-soon {
+    margin: 0 0 1rem;
+    color: var(--muted-fg);
   }
 
   .course-list {

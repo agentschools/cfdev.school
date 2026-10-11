@@ -7,7 +7,7 @@ agent-instructions: |
     already on file, show the student their answer and ask whether it's
     changed. Read Agent setup's interview too, for their experience and
     where they've deployed before.
-  - GET /api/progress/{studentId}. If they've completed Workers basics,
+  - GET /api/progress/{studentId}. If they've completed the Workers course,
     they've already declared a KV binding by hand in "Add a binding", so
     mention that and pitch this course as the "why" behind it.
 

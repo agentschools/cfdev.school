@@ -1,5 +1,5 @@
 import { type CollectionEntry, getCollection } from "astro:content";
-import { COURSE_ORDER, coursePath, exercisePath } from "../data/courses";
+import { COURSE_ORDER, coursePath, exercisePath, REQUIRED_COURSE, type Track } from "../data/courses";
 import type { CourseFrontmatter } from "../schemas/course";
 import type { CatalogCourse } from "./course-progress";
 import {
@@ -21,6 +21,8 @@ export interface BuiltInExercise {
 
 export interface BuiltInCourse extends CourseFrontmatter {
   title: string;
+  /** The track directory the course is in, if any (see TRACKS in src/data/courses.ts). */
+  track?: Track;
   entry: CollectionEntry<"courses">;
   exercises: BuiltInExercise[];
 }
@@ -51,9 +53,11 @@ export async function getBuiltInCourses(): Promise<BuiltInCourse[]> {
       () => toExercise(INTERVIEW_SLUG, `${INTERVIEW_SLUG}.md`, defaultInterview),
     );
 
+    const track = trackFromPath(entry.filePath);
     return {
       ...entry.data,
       title: titleFromMarkdown(entry.body ?? "") ?? name,
+      ...(track ? { track } : {}),
       entry,
       exercises,
     };
@@ -74,8 +78,51 @@ export function catalogCourses(courses: readonly BuiltInCourse[]): CatalogCourse
   }));
 }
 
+export interface NextStep {
+  url: string;
+  label: string;
+  shortLabel: string;
+}
+
+/**
+ * Where an exercise page's "next" button points once the exercise at
+ * `index` is complete: the next exercise in its course, then the next course
+ * in the same track, then the course catalog, where a student finishing
+ * Agent setup picks a track.
+ */
+export function nextStep(courses: readonly BuiltInCourse[], course: BuiltInCourse, index: number): NextStep {
+  const nextExercise = course.exercises[index + 1];
+  if (nextExercise) {
+    return {
+      url: exercisePath(course.name, nextExercise.slug),
+      label: `Next exercise: ${nextExercise.title} →`,
+      shortLabel: `Next: ${nextExercise.title} →`,
+    };
+  }
+  const nextCourse = course.track
+    ? courses.slice(courses.indexOf(course) + 1).find((item) => item.track === course.track)
+    : undefined;
+  if (nextCourse) {
+    return {
+      url: coursePath(nextCourse.name),
+      label: `Next course: ${nextCourse.title} →`,
+      shortLabel: `Next: ${nextCourse.title} →`,
+    };
+  }
+  if (course.name === REQUIRED_COURSE) {
+    return { url: "/courses", label: "Next: pick a project or the fundamentals →", shortLabel: "Next: choose a course →" };
+  }
+  return { url: "/courses", label: "All courses →", shortLabel: "All courses →" };
+}
+
 export async function getBuiltInCourse(name: string): Promise<BuiltInCourse | undefined> {
   return (await getBuiltInCourses()).find((course) => course.name === name);
+}
+
+/** "courses/fundamentals/bindings/COURSE.md" is in "fundamentals"; "courses/agent-setup/COURSE.md" has no track. */
+function trackFromPath(filePath: string | undefined): Track | undefined {
+  const dirs = filePath?.split("/") ?? [];
+  return dirs.length === 4 ? (dirs[1] as Track) : undefined;
 }
 
 function toExercise(slug: string, file: string, entry: BuiltInExercise["entry"]): BuiltInExercise {

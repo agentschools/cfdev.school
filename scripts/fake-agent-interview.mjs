@@ -4,7 +4,7 @@
 // instructions, then follow them against the real API. This is not a
 // simulation of an LLM conversation, it exercises the exact HTTP contract
 // llms.txt documents, end to end, against a real running Worker (local
-// wrangler dev by default, or any deployed environment via BASE_URL).
+// `npm run dev:worker` by default, or any deployed environment via BASE_URL).
 //
 // Usage:
 //   node scripts/fake-agent-interview.mjs
@@ -31,10 +31,10 @@ async function main() {
   log("Fetched /llms.txt and confirmed it documents the interview and course endpoints");
 
   // Step 2b: every course starts with an interview. Agent setup writes its
-  // own; Workers basics gets the default one, which has the agent write its
+  // own; Workers gets the default one, which has the agent write its
   // own questions. Both should point at the interviews API.
   const courses = await request("GET", "/api/courses");
-  for (const name of ["agent-setup", "workers-basics"]) {
+  for (const name of ["agent-setup", "workers"]) {
     const exercise = courses.find((c) => c.name === name)?.exercises[0];
     assert(exercise?.slug === "interview", `expected ${name}'s interview first, got ${exercise?.slug}`);
     const markdown = await fetchText(new URL(exercise.markdownUrl).pathname);
@@ -64,23 +64,23 @@ async function main() {
   await request("PUT", `/api/students/${student.id}/interviews`, agentSetup);
   log("Saved Agent setup's interview");
 
-  // Step 5: Workers basics' interview, with questions the agent wrote itself.
-  const workersBasics = {
-    course: "workers-basics",
+  // Step 5: Workers' interview, with questions the agent wrote itself.
+  const workersCourse = {
+    course: "workers",
     responses: [
       { question: "Have you written a serverless function before?", answer: "a few on Vercel" },
       { question: "What do you want your first Worker to do?", answer: "serve a JSON API" },
     ],
     summary: "You've written a few serverless functions on Vercel and want your first Worker to serve a JSON API.",
   };
-  await request("PUT", `/api/students/${student.id}/interviews`, workersBasics);
+  await request("PUT", `/api/students/${student.id}/interviews`, workersCourse);
   const both = await request("GET", `/api/students/${student.id}/interviews`);
   assert(
-    JSON.stringify(both.interviews.map((i) => i.course)) === '["agent-setup","workers-basics"]',
+    JSON.stringify(both.interviews.map((i) => i.course)) === '["agent-setup","workers"]',
     `expected both interviews in catalog order, got ${both.interviews.map((i) => i.course)}`,
   );
   assert(JSON.stringify(both.interviews[0].responses) === JSON.stringify(agentSetup.responses), "Agent setup's responses changed");
-  log("Saved Workers basics' interview; GET returned both in catalog order");
+  log("Saved Workers' interview; GET returned both in catalog order");
 
   // Step 6: mark Agent setup's interview complete, as its agent-instructions say.
   const progress = await request("PUT", `/api/progress/${student.id}`, {
@@ -109,7 +109,7 @@ async function main() {
   assert(pushed, "the new summary wasn't pushed over the progress socket");
   const after = await request("GET", `/api/students/${student.id}/interviews`);
   assert(after.interviews[0].responses[3].answer === "no", "the quiz answer didn't change");
-  assert(after.interviews[1].summary === workersBasics.summary, "re-saving Agent setup's interview touched Workers basics'");
+  assert(after.interviews[1].summary === workersCourse.summary, "re-saving Agent setup's interview touched Workers'");
   log("Re-sent Agent setup's interview with quizzes off; the new summary was pushed live");
 
   log("✅ Fake-agent interview run passed");

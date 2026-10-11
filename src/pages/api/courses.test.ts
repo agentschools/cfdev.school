@@ -6,18 +6,19 @@ vi.mock("astro:content", () => ({
   getCollection: async (name: string) =>
     ({
       courses: [
-        { id: "agent-setup", body: "# Agent setup\n", data: { name: "agent-setup", description: "Set up." } },
+        { id: "agent-setup", filePath: "courses/agent-setup/COURSE.md", body: "# Agent setup\n", data: { name: "agent-setup", description: "Set up." } },
         {
-          id: "workers-basics",
-          body: "# Workers basics\n",
-          data: { name: "workers-basics", description: "Ship.", metadata: { author: "Cloudflare Dev School" } },
+          id: "workers",
+          filePath: "courses/fundamentals/workers/COURSE.md",
+          body: "# Workers\n",
+          data: { name: "workers", description: "Ship.", metadata: { author: "Cloudflare Dev School" } },
         },
-        { id: "bindings", body: "# Bindings\n", data: { name: "bindings", description: "Learn bindings." } },
+        { id: "bindings", filePath: "courses/fundamentals/bindings/COURSE.md", body: "# Bindings\n", data: { name: "bindings", description: "Learn bindings." } },
       ],
       exercises: [
         { id: "agent-setup/00-interview", body: "# Interview\n", data: {} },
         { id: "agent-setup/01-models", body: "# Models\n", data: { description: "Pick a model." } },
-        { id: "workers-basics/01-deploy-a-worker", body: "# Deploy a Worker\n", data: {} },
+        { id: "workers/01-deploy-a-worker", body: "# Deploy a Worker\n", data: {} },
       ],
       defaultInterview: [{ id: "default-interview", body: "# Interview\n", data: {} }],
     })[name],
@@ -32,10 +33,10 @@ describe("GET /api/courses", () => {
     const { GET } = await import("./courses");
     const body = await (await GET(context())).json();
 
-    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "workers-basics", "bindings"]);
+    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "workers", "bindings"]);
     for (const course of body) expect(courseSchema.parse(course)).toEqual(course);
 
-    const [agentSetup, workersBasics] = body;
+    const [agentSetup, workersCourse] = body;
     expect(agentSetup.url).toBe("https://school.example/courses/agent-setup");
     expect(agentSetup.markdownUrl).toBe("https://school.example/courses/agent-setup/COURSE.md");
     expect(agentSetup.exercises[1]).toEqual({
@@ -45,7 +46,9 @@ describe("GET /api/courses", () => {
       url: "https://school.example/courses/agent-setup/models",
       markdownUrl: "https://school.example/courses/agent-setup/exercises/01-models.md",
     });
-    expect(workersBasics.metadata).toEqual({ author: "Cloudflare Dev School" });
-    expect(workersBasics.exercises[0].markdownUrl).toBe("https://school.example/courses/workers-basics/exercises/interview.md");
+    expect(agentSetup.track).toBeUndefined();
+    expect(workersCourse.track).toBe("fundamentals");
+    expect(workersCourse.metadata).toEqual({ author: "Cloudflare Dev School" });
+    expect(workersCourse.exercises[0].markdownUrl).toBe("https://school.example/courses/workers/exercises/interview.md");
   });
 });

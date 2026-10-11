@@ -1,6 +1,6 @@
 ---
-import { coursePath, exercisePath } from "../data/courses";
-import { getBuiltInCourses } from "../lib/courses";
+import { coursePath, exercisePath, REQUIRED_COURSE, TRACK_LABELS, TRACKS } from "../data/courses";
+import { type BuiltInCourse, getBuiltInCourses } from "../lib/courses";
 
 interface Props {
   showBrand?: boolean;
@@ -10,6 +10,57 @@ const { showBrand = true } = Astro.props;
 
 const courses = await getBuiltInCourses();
 const currentPath = Astro.url.pathname.replace(/\/$/, "");
+
+// Agent setup comes first with its exercises, then each track with its
+// courses. A track course's exercises show only while you're on one of its
+// pages, and each track lists its first few courses with a "More +" toggle
+// for the rest.
+const VISIBLE_PER_TRACK = 5;
+
+interface SidebarCourse {
+  course: BuiltInCourse;
+  /** False for Agent setup, whose title is its section label. */
+  showTitle: boolean;
+  showExercises: boolean;
+  /** Hidden behind "More +". */
+  extra: boolean;
+}
+
+interface Section {
+  id: string;
+  label: string;
+  href?: string;
+  courses: SidebarCourse[];
+  /** Agent setup collapses to its title once complete, unless you're on one of its pages. */
+  collapseWhenComplete?: string;
+}
+
+function inCourse(name: string): boolean {
+  return currentPath === coursePath(name) || currentPath.startsWith(`${coursePath(name)}/`);
+}
+
+const agentSetup = courses.find((course) => course.name === REQUIRED_COURSE)!;
+const sections: Section[] = [
+  {
+    id: agentSetup.name,
+    label: agentSetup.title,
+    href: coursePath(agentSetup.name),
+    courses: [{ course: agentSetup, showTitle: false, showExercises: true, extra: false }],
+    collapseWhenComplete: inCourse(agentSetup.name) ? undefined : agentSetup.name,
+  },
+  ...TRACKS.map((track) => ({
+    id: track,
+    label: TRACK_LABELS[track].title,
+    courses: courses
+      .filter((course) => course.track === track)
+      .map((course, index) => ({
+        course,
+        showTitle: true,
+        showExercises: inCourse(course.name),
+        extra: index >= VISIBLE_PER_TRACK,
+      })),
+  })),
+];
 ---
 
 <nav class="curriculum-sidebar" aria-label="Course curriculum">
@@ -32,44 +83,73 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
   }
 
   {
-    courses.map((course) => (
-      <>
-        <a
-          class="section-label section-label-link"
-          href={coursePath(course.name)}
-          aria-current={currentPath === coursePath(course.name) ? "page" : undefined}
-        >
-          {course.title}
-        </a>
-        <ol class="item-list">
-          {course.exercises.map((exercise, index) => {
-            const href = exercisePath(course.name, exercise.slug);
-            return (
-              <li data-course={course.name} data-exercise={exercise.slug}>
-                <a href={href} aria-current={currentPath === href ? "page" : undefined}>
-                  <span class="title" title={exercise.title}>
-                    {/* Zero-based, like the exercise files: the interview is "00." */}
-                    <span class="index">{String(index).padStart(2, "0")}.</span> {exercise.title}
-                  </span>
-                  <span class="check" hidden aria-label="Completed">
-                    ✓
-                  </span>
-                </a>
-              </li>
-            );
-          })}
-        </ol>
-      </>
-    ))
+    sections.map((section) => {
+      const hasExtra = section.courses.some((item) => item.extra);
+      // Open "More +" when you're on a course behind it.
+      const extraOpen = section.courses.some((item) => item.extra && item.showExercises);
+      return (
+        <div class="sidebar-section">
+          {section.href ? (
+            <a
+              class="section-label section-label-link"
+              href={section.href}
+              aria-current={currentPath === section.href ? "page" : undefined}
+            >
+              {section.label}
+            </a>
+          ) : (
+            <p class="section-label">{section.label}</p>
+          )}
+          {section.courses.length === 0 && <p class="coming-soon">Coming soon</p>}
+          {hasExtra && (
+            <input class="more-toggle" type="checkbox" id={`more-${section.id}`} checked={extraOpen} />
+          )}
+          {section.courses.length > 0 && (
+            <ol class="item-list" data-collapse-when-complete={section.collapseWhenComplete}>
+              {section.courses.map(({ course, showTitle, showExercises, extra }) => {
+                const exercises = showExercises
+                  ? course.exercises.map((exercise, index) => {
+                      const href = exercisePath(course.name, exercise.slug);
+                      return (
+                        <li data-course={course.name} data-exercise={exercise.slug}>
+                          <a href={href} aria-current={currentPath === href ? "page" : undefined}>
+                            <span class="title" title={exercise.title}>
+                              {/* Zero-based, like the exercise files: the interview is "00." */}
+                              <span class="index">{String(index).padStart(2, "0")}.</span> {exercise.title}
+                            </span>
+                            <span class="check" hidden aria-label="Completed">
+                              ✓
+                            </span>
+                          </a>
+                        </li>
+                      );
+                    })
+                  : [];
+                if (!showTitle) return exercises;
+                const href = coursePath(course.name);
+                return (
+                  <li class:list={{ extra }}>
+                    <a href={href} aria-current={currentPath === href ? "page" : undefined}>
+                      <span class="title" title={course.title}>
+                        {course.title}
+                      </span>
+                    </a>
+                    {showExercises && <ol class="item-list nested">{exercises}</ol>}
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          {hasExtra && (
+            <label class="more" for={`more-${section.id}`}>
+              <span class="when-closed">More +</span>
+              <span class="when-open">Less −</span>
+            </label>
+          )}
+        </div>
+      );
+    })
   }
-
-  <a
-    class="section-label section-label-link"
-    href="/courses"
-    aria-current={currentPath === "/courses" ? "page" : undefined}
-  >
-    All courses
-  </a>
 
   <a
     class="section-label section-label-link"
@@ -126,8 +206,8 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
     color: color-mix(in oklch, var(--fg) 45%, transparent);
   }
 
-  .brand + .section-label,
-  .curriculum-sidebar > .section-label:first-child {
+  .brand + .sidebar-section > .section-label:first-child,
+  .curriculum-sidebar > .sidebar-section:first-child > .section-label:first-child {
     margin-top: 0;
   }
 
@@ -208,6 +288,59 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "");
   }
 
   .check[hidden] {
+    display: none;
+  }
+
+  .item-list[data-collapsed] {
+    display: none;
+  }
+
+  .item-list.nested {
+    margin: 0.1rem 0 0.3rem 0.75rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--border);
+  }
+
+  .coming-soon {
+    margin: 0;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.88rem;
+    color: var(--muted-fg);
+  }
+
+  /* Visually hidden but focusable, so "More +" works from the keyboard. */
+  .more-toggle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .more-toggle:focus-visible ~ .more {
+    outline: 2px solid var(--accent);
+    border-radius: 0.25rem;
+  }
+
+  .more-toggle:not(:checked) + .item-list > .extra {
+    display: none;
+  }
+
+  .more {
+    display: inline-block;
+    margin-top: 0.1rem;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    color: color-mix(in oklch, var(--fg) 45%, transparent);
+    cursor: pointer;
+  }
+
+  .more:hover {
+    color: var(--fg);
+  }
+
+  .more-toggle:checked ~ .more .when-closed,
+  .more-toggle:not(:checked) ~ .more .when-open {
     display: none;
   }
 

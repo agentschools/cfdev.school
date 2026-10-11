@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "dev:worker": "astro build && wrangler d1 migrations apply cloudflare-dev-school --local --persist-to .wrangler/state && wrangler dev -c dist/server/wrangler.json --port 8788 --persist-to .wrangler/state --local-upstream localhost:8788",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",

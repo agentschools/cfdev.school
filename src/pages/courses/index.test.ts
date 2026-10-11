@@ -14,9 +14,13 @@ describe("courses index", () => {
       expect(html).toContain(`href="/courses/${course.id}"`);
       expect(html).toContain(course.data.description);
     }
-    expect(html.indexOf('data-course-name="agent-setup"')).toBeLessThan(html.indexOf('data-course-name="workers-basics"'));
-    expect(html).toMatch(/Course 1\s*· Start here/);
-    // Workers basics has one exercise of its own, plus the default interview.
+    expect(html).toContain("Start here");
+    // Agent setup, then Projects (no courses yet), then Fundamentals.
+    const order = ['data-course-name="agent-setup"', 'data-group="projects"', "Coming soon.", 'data-group="fundamentals"', 'data-course-name="workers"', 'data-course-name="bindings"'];
+    const positions = order.map((text) => html.indexOf(text));
+    for (const position of positions) expect(position).toBeGreaterThan(-1);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    // Workers has one exercise of its own, plus the default interview.
     expect(html).toContain("2 exercises");
   });
 });

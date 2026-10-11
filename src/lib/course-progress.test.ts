@@ -13,10 +13,10 @@ const catalog: CatalogCourse[] = [
     ],
   },
   {
-    name: "workers-basics",
-    title: "Workers basics",
-    url: "/courses/workers-basics",
-    exercises: [{ slug: "interview", title: "Interview", url: "/courses/workers-basics/interview" }],
+    name: "workers",
+    title: "Workers",
+    url: "/courses/workers",
+    exercises: [{ slug: "interview", title: "Interview", url: "/courses/workers/interview" }],
   },
 ];
 
@@ -37,7 +37,7 @@ function progress(overrides: Partial<Progress> = {}): Progress {
           { slug: "models", completions: [] },
         ],
       },
-      { name: "workers-basics", exercises: [{ slug: "interview", completions: [] }] },
+      { name: "workers", exercises: [{ slug: "interview", completions: [] }] },
     ],
     externalCourses: [],
     updatedAt: "2026-10-01T12:00:00.000Z",
@@ -61,7 +61,7 @@ describe("startedCourses", () => {
               { slug: "models", completions: [] },
             ],
           },
-          { name: "workers-basics", interviewSummary: "You're new to Workers.", exercises: [{ slug: "interview", completions: [] }] },
+          { name: "workers", interviewSummary: "You're new to Workers.", exercises: [{ slug: "interview", completions: [] }] },
         ],
       }),
       catalog,
@@ -69,7 +69,7 @@ describe("startedCourses", () => {
 
     expect(started.map((course) => [course.title, course.remaining])).toEqual([
       ["Agent setup", 1],
-      ["Workers basics", 1],
+      ["Workers", 1],
     ]);
     expect(started[0]).toMatchObject({
       url: "/courses/agent-setup",

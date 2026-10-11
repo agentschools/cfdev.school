@@ -2,7 +2,7 @@
 import AgentPrompt from "../components/AgentPrompt.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
-import { coursePath, exercisePath, REQUIRED_COURSE } from "../data/courses";
+import { exercisePath, REQUIRED_COURSE } from "../data/courses";
 import { harnesses } from "../data/harnesses";
 import { catalogCourses, getBuiltInCourses } from "../lib/courses";
 
@@ -19,11 +19,9 @@ const iconSize: Record<string, [number, number]> = {
 const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harness.icon);
 
 // Where the "Next" button goes once the interview is done: the first
-// unfinished exercise in Agent setup, or the course after it.
+// unfinished exercise in Agent setup, or the course catalog to pick a track.
 const courses = await getBuiltInCourses();
-const setupIndex = courses.findIndex((course) => course.name === REQUIRED_COURSE);
-const setup = courses[setupIndex];
-const afterSetup = courses[setupIndex + 1];
+const setup = courses.find((course) => course.name === REQUIRED_COURSE)!;
 const nextSteps = {
   course: setup.name,
   exercises: setup.exercises.map((exercise) => ({
@@ -31,9 +29,7 @@ const nextSteps = {
     title: exercise.title,
     url: exercisePath(setup.name, exercise.slug),
   })),
-  fallback: afterSetup
-    ? { title: afterSetup.title, url: coursePath(afterSetup.name) }
-    : { title: "Courses", url: "/courses" },
+  fallback: { title: "choose a course", url: "/courses" },
 };
 const firstAfterInterview = nextSteps.exercises[1] ?? nextSteps.fallback;
 const catalog = catalogCourses(courses);

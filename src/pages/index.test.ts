@@ -36,13 +36,13 @@ describe("homepage", () => {
     expect(html.match(/data-enroll-trigger/g)).toHaveLength(1);
   });
 
-  it("renders the sidebar with every built-in course's exercises linked", async () => {
+  it("renders the sidebar with Agent setup's exercises and the track courses linked", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
     expect(html).toContain('href="/courses/agent-setup/models"');
     expect(html).toContain('href="/courses/agent-setup/instructions"');
-    expect(html).toContain('href="/courses/workers-basics/deploy-a-worker"');
+    expect(html).toContain('href="/courses/workers"');
   });
 
   it("points the post-interview Next button at Agent setup's second exercise", async () => {
