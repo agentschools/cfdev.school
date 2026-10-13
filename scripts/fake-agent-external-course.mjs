@@ -18,9 +18,11 @@ async function main() {
   log(`Enrolled as ${student.id}`);
 
   const llmsTxt = await fetchText("/llms.txt");
-  assert(llmsTxt.includes("PUT /api/students/{id}/courses"), "llms.txt doesn't document PUT courses");
-  assert(llmsTxt.includes("git clone --depth 1"), "llms.txt doesn't explain how to read a repo course");
-  log("Fetched /llms.txt and confirmed it documents courses hosted elsewhere");
+  assert(llmsTxt.includes("/external-courses.md"), "llms.txt doesn't point at /external-courses.md");
+  const procedure = await fetchText("/external-courses.md");
+  assert(procedure.includes("PUT /api/students/{id}/courses"), "external-courses.md doesn't document PUT courses");
+  assert(procedure.includes("git clone --depth 1"), "external-courses.md doesn't explain how to read a repo course");
+  log("Fetched /llms.txt and /external-courses.md and confirmed they document courses hosted elsewhere");
 
   // Step 1: report the manifest of a repo course with no interview of its own,
   // using a URL with a trailing ".git" the way a student might paste it.

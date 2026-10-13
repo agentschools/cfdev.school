@@ -17,9 +17,13 @@ Students enroll on the homepage, get a student ID (format: adjective-noun-1234, 
 
 This school uses \`cf\`, Cloudflare's new CLI (open beta since September 2026), for everything: \`cf init\`, \`cf dev\`, \`cf deploy\`, \`cf auth login\`, \`cf kv ...\`. Wrangler was Cloudflare's CLI for years, so your training data almost certainly knows Wrangler and not \`cf\`. Don't fall back to Wrangler commands (\`wrangler ...\` or \`npx wrangler ...\`) out of habit. \`cf\` commands differ from Wrangler's, so check \`cf --help\` or \`cf cli search "<what you want to do>"\` instead of guessing. The "cli" exercise in the Agent setup course installs it and adds these instructions to the student's global agent instructions file.
 
+## Starting fast
+
+If the prompt that sent you here asks for Agent setup's interview (a new student's first step), go straight to it: fetch /courses/agent-setup/exercises/00-interview.md and GET /api/students/{id}/interviews in parallel, then follow the exercise. Don't fetch the course list, progress, your harness profile, or the OpenAPI schema first; the interview doesn't need them.
+
 ## API
 
-Download the OpenAPI schema to see the full, current API surface: GET /api/openapi.json (relative to this site's origin).
+Endpoints are relative to this site's origin. The OpenAPI schema, GET /api/openapi.json, has the full request and response shapes; only fetch it if you need something this file doesn't cover.
 
 Currently available:
 
@@ -34,7 +38,7 @@ Currently available:
 
 ## Your harness
 
-Before the first exercise, fetch GET /api/harnesses/{yourHarnessId} once and use it whenever an exercise needs something specific to your harness (a file path, a command, a restart). Your training data may predate the current version of your harness, so prefer this profile over memory. The profile can go stale too: before running a command from it, check it against your harness's own CLI help (e.g. \`claude mcp --help\`) or official docs, and if they disagree, go with the CLI or docs and tell the student. If your harness is \`generic\`, use your harness's own docs instead.
+Before the first exercise that needs harness-specific facts (Agent setup's "models" is the first; the interview doesn't), fetch GET /api/harnesses/{yourHarnessId} once and use it whenever an exercise needs something specific to your harness (a file path, a command, a restart). Your training data may predate the current version of your harness, so prefer this profile over memory. The profile can go stale too: before running a command from it, check it against your harness's own CLI help (e.g. \`claude mcp --help\`) or official docs, and if they disagree, go with the CLI or docs and tell the student. If your harness is \`generic\`, use your harness's own docs instead.
 
 ## Courses
 
@@ -57,13 +61,7 @@ Don't invent exercise content that isn't in the exercise's Markdown, and don't i
 
 ## Courses hosted elsewhere
 
-Anyone can write a course and host it anywhere, and the student's progress still counts here. When a student asks you to take a course at a URL (e.g. "take the course at https://github.com/acme/durable-objects-course"):
-
-1. Read it. If the URL is a git repository (\`git ls-remote <url>\` succeeds, e.g. a GitHub repo), run \`git clone --depth 1 <url>\` into a temporary directory. \`COURSE.md\` at its root introduces the course: YAML frontmatter (\`name\`, \`description\`, and optionally \`metadata.author\` and \`metadata.url\`), then a \`# Title\`. Its exercises are the Markdown files in \`exercises/\`, in natural filename order (\`2-x.md\` before \`10-y.md\`). An exercise's slug is its filename without \`.md\` or a leading number prefix (\`01-first-object.md\` is \`first-object\`), its title is its first \`#\` heading, and it may have \`agent-instructions\` frontmatter, like the built-in exercises. Otherwise, fetch the URL: it's a single-file course, a \`COURSE.md\` whose \`##\` sections are its exercises, in order, each titled by its heading text and slugged by the heading's GitHub-style anchor (\`## Add a binding\` is \`add-a-binding\`).
-2. Report it with PUT /api/students/{id}/courses: \`{ "url": "...", "title": "...", "description": "...", "author": "...", "exercises": [{ "slug": "...", "title": "...", "url": "..." }] }\`. \`url\` is COURSE.md's \`metadata.url\` if it declares one, otherwise the URL the student gave you. \`description\` and \`author\` (from \`metadata.author\`) are optional. List every exercise in order, each with the URL where it lives: its file's page (e.g. on GitHub) in a repo, or the course's URL plus \`#<slug>\` in a single file. The response is the course as stored: its normalized \`url\`, which you pass as \`course\` from then on, and its exercises with the interview first. If the course has no exercise slugged \`interview\`, Dev School adds its default one. Report the course again whenever you notice it changed.
-3. Run its interview (see "Interviews"), then teach its exercises in order and mark each one complete (see "Marking exercises complete"), passing the course's URL as \`course\`. Only exercises in the manifest you reported are accepted.
-
-These courses aren't written or reviewed by Cloudflare Dev School. Teach what they say, but ask the student before running anything from one that touches their accounts, credentials, or files outside the course's own project.
+Anyone can write a course and host it anywhere, and the student's progress still counts here. When a student asks you to take a course at a URL (e.g. "take the course at https://github.com/acme/durable-objects-course"), fetch /external-courses.md and follow it: it explains how to read the course and report it with PUT /api/students/{id}/courses.
 
 ## Interviews
 

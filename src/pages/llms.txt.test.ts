@@ -1,5 +1,7 @@
 import type { APIContext } from "astro";
 import { describe, expect, it } from "vitest";
+import { rawCourses } from "../lib/course-files";
+import { GET as getExternalCourses } from "./external-courses.md";
 import { GET } from "./llms.txt";
 
 describe("GET /llms.txt", () => {
@@ -29,6 +31,26 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("agent-setup");
     expect(text).not.toContain("/api/lessons");
     expect(text).not.toContain("/api/exercises");
+  });
+
+  it("links straight to Agent setup's interview file, which exists", async () => {
+    const text = await (await GET({} as APIContext)).text();
+    const match = text.match(/\/courses\/agent-setup\/exercises\/([\w-]+\.md)/);
+    expect(match).not.toBeNull();
+    const agentSetup = rawCourses().find((course) => course.name === "agent-setup");
+    expect(Object.keys(agentSetup!.exercises)).toContain(match![1]);
+  });
+
+  it("moves the hosted-elsewhere procedure to /external-courses.md", async () => {
+    const text = await (await GET({} as APIContext)).text();
+    expect(text).toContain("/external-courses.md");
+    expect(text).not.toContain("git clone");
+
+    const response = await getExternalCourses({} as APIContext);
+    expect(response.headers.get("Content-Type")).toContain("text/markdown");
+    const procedure = await response.text();
+    expect(procedure).toContain("PUT /api/students/{id}/courses");
+    expect(procedure).toContain("git clone --depth 1");
   });
 
   it("describes the tracks and the fork after Agent setup", async () => {

@@ -4,11 +4,14 @@ agent-instructions: |
   This is the first exercise of the Agent setup course: a short
   interview. Ask all the questions at once, not one at a time, so the
   student only waits on you once. Keep every question to one short line
-  with short answer choices, so the student can answer quickly.
+  with short answer choices, so the student can answer quickly. Get the
+  questions in front of the student as fast as you can: don't run any
+  checks or fetch anything else first, and don't write a preamble.
 
-  Before asking anything, GET /api/students/{id}/interviews. If Agent
-  setup's interview is already on file, show the student what's there and
-  only ask the questions it doesn't answer yet.
+  Before asking anything, GET /api/students/{id}/interviews (fetch it
+  alongside this file if you can). If Agent setup's interview is already
+  on file, show the student what's there and only ask the questions it
+  doesn't answer yet.
 
   How to ask:
 
@@ -49,16 +52,22 @@ agent-instructions: |
   Vercel function for someone who's used Vercel), never to skip exercises
   or change what content you show.
 
-  Don't ask about things you can check yourself:
+  Don't ask about things you can check yourself. Check them while the
+  student answers: if you're asking with a structured question tool and
+  can run other tools in the same batch, run these checks alongside it;
+  otherwise, run them right after the student replies. Never run them
+  before asking.
 
   - Detect their operating system (e.g. run `uname`, or check an OS
-    environment variable) and mention what you found.
+    environment variable).
   - Check whether Node.js (`node --version`) and the `cf` CLI
     (`cf --version`) are installed, whether `cf auth whoami` reports them
     as logged in, and whether they already have a global instructions file
-    for you. Mention what you found in a sentence and use it to pace the
-    setup exercises that follow. Don't store these, and don't install or
-    change anything yet.
+    for you.
+
+  Mention what you found in a sentence once you have the answers, and use
+  it to pace the setup exercises that follow. Don't store these (except
+  the OS, below), and don't install or change anything yet.
 
   Store the answers with PUT /api/students/{id}/interviews, with
   `"course": "agent-setup"`. Each response's `question` is the question's

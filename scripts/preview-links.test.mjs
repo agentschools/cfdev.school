@@ -39,6 +39,11 @@ describe("previewPaths", () => {
     expect(paths).toEqual(["/api/harnesses/pi", "/"]);
   });
 
+  it("links /external-courses.md", () => {
+    const paths = previewPaths([{ filename: "src/content/external-courses.md", status: "added" }], readFile);
+    expect(paths).toEqual(["/external-courses.md"]);
+  });
+
   it("skips removed files and tests, falling back to the homepage", () => {
     const paths = previewPaths(
       [
