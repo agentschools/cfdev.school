@@ -136,10 +136,11 @@ The course was taken end to end as a student on production in October 2026 (a Pi
 `courses/fundamentals/durable-objects/` has a one-question interview and four exercises on one new Worker: a `Counter` per name, 50 simultaneous increments against it and against a KV read-modify-write, a `Room` class with its own SQLite table, and hibernatable WebSockets broadcasting to everyone in a room. Its outline was written without a planning conversation, so review it like a draft. Tested with `cf` v1.0.0-beta.12 (October 2026), locally and deployed on a personal account, and fact-checked against the docs:
 
 - Classes are declared with `exports: { Counter: exports.durableObject({ storage: "sqlite" }) }` and reached with `ctx.exports.Counter.getByName(name)`, no `env` binding and no compatibility flag at compatibility date 2026-10-01. Deploy output says "Durable Object exports reconciliation: Created: Counter".
-- `cf durable-objects namespaces list` is paginated (pass `--per-page 1000`); namespaces are named `<worker>_<Class>` with `use_sqlite: true`. `cf durable-objects namespaces objects list --id` returned an empty list for objects that had data, so the course doesn't use it.
+- `cf durable-objects namespaces list` is paginated (pass `--per-page 1000`), and so is `cf kv namespaces list` (20 per page by default; the courses pass `--per-page 100`); namespaces are named `<worker>_<Class>` with `use_sqlite: true`. `cf durable-objects namespaces objects list --id` returned an empty list for objects that had data, so the course doesn't use it.
 - 50 parallel increments: the Durable Object returned 1 to 50 exactly once each; the KV read-modify-write topped out at 5 to 9, and about 2 of 50 `put`s threw `KV PUT failed: 429 Too Many Requests`.
 - State survives a redeploy. `cf workers delete --force` also removes the Worker's Durable Object namespaces.
 - Node's global `WebSocket` works as a test client against `wss://` on workers.dev.
+- Taken end to end as a student on the PR #104 preview (fresh enrollment, deleted afterward): every step worked as written. 429s from KV in "no-lost-updates" vary from run to run, sometimes none.
 
 ## Courses hosted elsewhere
 

@@ -19,7 +19,7 @@ agent-instructions: |
   6. Verify before completing. YOU must:
      - fetch `/env` on the deployed URL and confirm `GREETING` and `API_TOKEN` are strings and `NOTES` is an object whose `JSON.stringify` is `{}`;
      - `PUT /note`, then in a separate request `GET /note`, and confirm the value comes back. If anyone read `/note` on the deployed URL before the `PUT`, the "not found" may be cached for up to about a minute, so retry before assuming something's wrong (see "swap-resources" for why);
-     - confirm with `cf kv namespaces list` that the namespace `cf deploy` created exists.
+     - confirm with `cf kv namespaces list --per-page 100` that the namespace `cf deploy` created exists. The list is paginated, 20 per page by default, so without `--per-page` an account with many namespaces won't show it.
      Don't trust the student saying it worked.
   7. Teach the point of what they just saw, using their own `/env` output:
      - The secret is a string. Anything that logs or serializes `env` (a debug log line, an error reporter) leaks it, and anyone holding that string has the access it grants.
