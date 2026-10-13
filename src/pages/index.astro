@@ -185,17 +185,6 @@ const trackChoices = TRACKS.map((track) => ({
     overflow-x: clip;
   }
 
-  /* Big screens: center the hero vertically too, keeping the copy and the
-     card top-aligned with each other. Laptop-height screens keep it at the top. */
-  @media (min-width: 1181px) and (min-height: 1000px) {
-    .hero {
-      flex-wrap: wrap;
-      align-content: center;
-      min-height: 100svh;
-      box-sizing: border-box;
-    }
-  }
-
   .hero-copy {
     flex: 1;
     min-width: 0;
