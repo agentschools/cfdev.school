@@ -5,7 +5,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
 - No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
 - Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
-- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then two in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98) and Bindings (see "Bindings course"). The projects track has no courses yet. See "Courses and exercises" and #98, which tracks the rest of the tracks work.
+- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"). The projects track has no courses yet. See "Courses and exercises" and #98, which tracks the rest of the tracks work.
 
 ## Titles
 
@@ -130,6 +130,16 @@ Every `cf` command and behavior in `courses/fundamentals/bindings/` was tested a
 - `cf build`/`cf deploy` print "Cannot connect to the Docker daemon" when Docker is installed but not running. Harmless for Workers without containers.
 
 The course was taken end to end as a student on production in October 2026 (a Pi agent, a fresh enrollment, throwaway `cfds-lab-` Workers), which found the issues above. Exercise 04's optional deploy wasn't part of that run.
+
+## Durable Objects course
+
+`courses/fundamentals/durable-objects/` has a one-question interview and four exercises on one new Worker: a `Counter` per name, 50 simultaneous increments against it and against a KV read-modify-write, a `Room` class with its own SQLite table, and hibernatable WebSockets broadcasting to everyone in a room. Its outline was written without a planning conversation, so review it like a draft. Tested with `cf` v1.0.0-beta.12 (October 2026), locally and deployed on a personal account, and fact-checked against the docs:
+
+- Classes are declared with `exports: { Counter: exports.durableObject({ storage: "sqlite" }) }` and reached with `ctx.exports.Counter.getByName(name)`, no `env` binding and no compatibility flag at compatibility date 2026-10-01. Deploy output says "Durable Object exports reconciliation: Created: Counter".
+- `cf durable-objects namespaces list` is paginated (pass `--per-page 1000`); namespaces are named `<worker>_<Class>` with `use_sqlite: true`. `cf durable-objects namespaces objects list --id` returned an empty list for objects that had data, so the course doesn't use it.
+- 50 parallel increments: the Durable Object returned 1 to 50 exactly once each; the KV read-modify-write topped out at 5 to 9, and about 2 of 50 `put`s threw `KV PUT failed: 429 Too Many Requests`.
+- State survives a redeploy. `cf workers delete --force` also removes the Worker's Durable Object namespaces.
+- Node's global `WebSocket` works as a test client against `wss://` on workers.dev.
 
 ## Courses hosted elsewhere
 

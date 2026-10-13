@@ -5,6 +5,12 @@ const collections = vi.hoisted(() => ({
     { id: "workers", filePath: "courses/fundamentals/workers/COURSE.md", body: "\n# Workers\n", data: { name: "workers", description: "Ship a Worker." } },
     { id: "agent-setup", filePath: "courses/agent-setup/COURSE.md", body: "\n# Agent setup\n", data: { name: "agent-setup", description: "Set up." } },
     { id: "bindings", filePath: "courses/fundamentals/bindings/COURSE.md", body: "\n# Bindings\n", data: { name: "bindings", description: "Learn bindings." } },
+    {
+      id: "durable-objects",
+      filePath: "courses/fundamentals/durable-objects/COURSE.md",
+      body: "\n# Durable Objects\n",
+      data: { name: "durable-objects", description: "Learn Durable Objects." },
+    },
   ],
   exercises: [
     { id: "agent-setup/10-tools", body: "# Tools\n", data: {} },
@@ -27,6 +33,7 @@ describe("getBuiltInCourses", () => {
       ["agent-setup", "Agent setup"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
+      ["durable-objects", "Durable Objects"],
     ]);
   });
 
@@ -37,6 +44,7 @@ describe("getBuiltInCourses", () => {
       ["agent-setup", undefined],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
+      ["durable-objects", "fundamentals"],
     ]);
   });
 
@@ -71,14 +79,14 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, workers, bindings] = courses;
+    const [agentSetup, workers, , durableObjects] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
       url: "/courses/bindings",
       label: "Next course: Bindings →",
     });
-    expect(nextStep(courses, bindings, bindings.exercises.length - 1).url).toBe("/courses");
+    expect(nextStep(courses, durableObjects, durableObjects.exercises.length - 1).url).toBe("/courses");
   });
 
   it("sends a student finishing Agent setup to the catalog to pick a track", async () => {
