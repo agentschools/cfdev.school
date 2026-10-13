@@ -122,7 +122,12 @@ Every `cf` command and behavior in `courses/fundamentals/bindings/` was tested a
 - `defineConfig` takes a function of `{ mode }`, and `cf deploy --mode staging` with a different Worker name provisions separate resources.
 - `bindings.workerLoader()` and `ctx.exports` work with no extra config at compatibility date 2026-10-01, locally and deployed. Dynamic Workers need Workers Paid once deployed (per the pricing docs; only tested on a paid account), so exercise 04 verifies locally.
 - New deploys can take about 20 to 30 seconds to serve the new version.
-- `cf workers delete` and `cf kv namespaces delete` abort when run non-interactively unless given `--force`.
+- `cf workers delete` and `cf kv namespaces delete` abort when run non-interactively unless given `--force`, and print nothing on success.
+- KV caches negative lookups: a `GET` before a `PUT` can make the new value take about a minute to show up at that location, which tripped up "swap-resources" verification until it said to retry.
+- `dev: { remote: true }` fails with `RemoteSessionAuthenticationError` when stray `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_API_KEY`/`CLOUDFLARE_ACCOUNT_ID` variables override the OAuth login.
+- `cf build`/`cf deploy` print "Cannot connect to the Docker daemon" when Docker is installed but not running. Harmless for Workers without containers.
+
+The course was taken end to end as a student on production in October 2026 (a Pi agent, a fresh enrollment, throwaway `cfds-lab-` Workers), which found the issues above. Exercise 04's optional deploy wasn't part of that run.
 
 ## Courses hosted elsewhere
 
