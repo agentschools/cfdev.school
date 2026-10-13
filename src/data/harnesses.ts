@@ -24,6 +24,19 @@ const modelSchema = z.object({
       output: z.number().nonnegative(),
     })
     .optional(),
+  /** One line on when to pick this model over the others in the same harness, from the vendor's own description. Used by the Models exercise. */
+  bestFor: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+/** A subscription plan a harness can sign in with, so compatibility can be compared across harnesses. */
+const subscriptionPlanSchema = z.object({
+  /** e.g. "Claude Pro or Max", "ChatGPT Plus or Pro". */
+  plan: z.string(),
+  /** Whether this harness can sign in with the plan at all (and the vendor allows it). */
+  signIn: z.boolean(),
+  /** Whether usage from this harness draws on the plan's included limits. False means it bills separately (e.g. pay-per-token extra usage); null means not verified. */
+  countsAgainstPlan: z.boolean().nullable(),
   notes: z.string().optional(),
 });
 
@@ -85,6 +98,8 @@ export const harnessProfileSchema = z.object({
     thirdPartyRoutingHonorsPlanLimits: z.boolean().nullable(),
     /** One short sentence on how you pay, for /agents' list. Keep the detail in `summary`. */
     headline: z.string(),
+    /** Every subscription plan this harness can sign in with, or that students commonly try and can't. Empty when it only takes API keys or it varies (generic). */
+    plans: z.array(subscriptionPlanSchema),
     summary: z.string(),
   }),
   models: z.array(modelSchema),
@@ -129,6 +144,9 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
       headline: "Included with Claude Pro ($20/month) and Max plans.",
+      plans: [
+        { plan: "Claude Pro or Max", signIn: true, countsAgainstPlan: true, notes: "Fable models can bill usage credits instead of the plan's limits, depending on plan; Claude Code asks first." },
+      ],
       summary:
         "Native first-party harness. Pro ($20/mo), Max 5x ($100/mo) and Max 20x ($200/mo) plans all cover Claude Code directly against the same usage pool as claude.ai. An ANTHROPIC_API_KEY in the environment overrides subscription login and switches to per-token API billing. Anthropic explicitly prohibits OTHER third-party harnesses from routing through a Claude Pro/Max login on Claude Code's behalf; this only applies to Claude Code itself.",
     },
@@ -139,7 +157,7 @@ export const harnesses: HarnessProfile[] = [
         vision: true,
         toolUse: true,
         apiPricePerMTok: { input: 10, output: 50 },
-        notes: "For demanding reasoning and long-horizon agentic work.",
+        bestFor: "Your hardest and longest-running tasks (`/model fable`). Never the default; on some plans it bills usage credits.",
       },
       {
         name: "Claude Opus 5.5",
@@ -147,6 +165,7 @@ export const harnesses: HarnessProfile[] = [
         vision: true,
         toolUse: true,
         apiPricePerMTok: { input: 4, output: 20 },
+        bestFor: "Complex reasoning and long-running agentic coding (`/model opus`). Anthropic's suggested starting point.",
       },
       {
         name: "Claude Sonnet 5.5",
@@ -154,17 +173,28 @@ export const harnesses: HarnessProfile[] = [
         vision: true,
         toolUse: true,
         apiPricePerMTok: { input: 2, output: 10 },
+        bestFor: "Everyday coding, with the best mix of speed and intelligence (`/model sonnet`).",
       },
       {
-        name: "Claude Haiku 4.5",
-        contextWindowTokens: 200000,
+        name: "Claude Haiku 5.5",
+        contextWindowTokens: 1000000,
         vision: true,
         toolUse: true,
-        apiPricePerMTok: { input: 1, output: 5 },
+        apiPricePerMTok: { input: 0.1, output: 0.5 },
+        bestFor: "Quick, simple tasks where speed matters most (`/model haiku`).",
+        notes: "Anthropic lists its price as \"from\" $0.10/$0.50 per MTok. Replaced Claude Haiku 4.5, now a legacy model, as the `haiku` alias on the Anthropic API.",
       },
     ],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://platform.claude.com/docs/en/about-claude/models/overview",
+        note: "Verified 2026-10-13: current models are Fable 5.1, Opus 5.5, Sonnet 5.5, and Haiku 5.5 (Haiku 4.5 is legacy), all 1M context; Haiku 5.5 priced from $0.10/$0.50 per MTok.",
+      },
+      {
+        url: "https://code.claude.com/docs/en/model-config",
+        note: "Verified 2026-10-13: aliases fable (hardest, longest tasks; never the default; can bill usage credits), opus (complex reasoning), sonnet (daily coding), haiku (simple tasks), resolving to Fable 5.1, Opus 5.5, Sonnet 5.5, and Haiku 5.5 on the Anthropic API.",
+      },
       {
         url: "https://claude.com/pricing",
         note: "Verified 2026-10-11 for subscriptionBilling.headline: Pro is $20/month billed monthly ($17/month billed annually) and includes Claude Code.",
@@ -231,20 +261,47 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
       headline: "Included with every ChatGPT plan, including Free. Plus is $20/month.",
+      plans: [{ plan: "ChatGPT (Free, Go, Plus, Pro)", signIn: true, countsAgainstPlan: true }],
       summary:
         "codex login opens a ChatGPT browser flow and bills against your ChatGPT plan (Free, Go $8/mo, Plus $20/mo, Pro from $100/mo) by default; codex login --with-api-key switches to standard per-token OpenAI API billing. Unlike Anthropic, OpenAI officially endorses third-party harnesses (OpenCode, Pi) authenticating with a ChatGPT Plus/Pro login via the Codex for OSS program.",
     },
     models: [
       {
         name: "GPT-6.1 Sol",
-        contextWindowTokens: 400000,
+        contextWindowTokens: 1050000,
         vision: true,
         toolUse: true,
-        notes: "Default Codex CLI model since 0.159.1 (2026-09-29), per search results (not confirmed on the official docs page, which lists Astra, GPT-6.1 Sol and GPT-6 Luna as recommended). Context window, vision and API pricing were NOT verified (400000 is carried over from the previous entry); check platform.openai.com/pricing. GPT-5.5 retires 2026-10-14.",
+        apiPricePerMTok: { input: 2, output: 10 },
+        bestFor: "Complex coding and agentic work, near Astra's performance at a lower cost. OpenAI's recommended default where available (Plus and up).",
+      },
+      {
+        name: "GPT-6 Astra",
+        contextWindowTokens: 1050000,
+        vision: true,
+        toolUse: true,
+        apiPricePerMTok: { input: 10, output: 50 },
+        bestFor: "OpenAI's most capable model, for the hardest work across code, apps, and research.",
+      },
+      {
+        name: "GPT-6 Luna",
+        contextWindowTokens: 1050000,
+        vision: true,
+        toolUse: true,
+        apiPricePerMTok: { input: 0.1, output: 0.5 },
+        bestFor: "Focused, repeatable tasks at the lowest cost. The model for the Free and Go plans.",
+        notes: "GPT-5.5 retires from Codex on 2026-10-14; Free and Go users move to GPT-6 Luna.",
       },
     ],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+        note: "Verified 2026-10-13: 1,050,000 context window, text and image input, $2/$10 per MTok. Astra is $10/$50 and Luna $0.10/$0.50 on their own model pages, both 1,050,000 context.",
+      },
+      {
+        url: "https://developers.openai.com/codex/models",
+        note: "Verified 2026-10-13: recommended models GPT-6.1 Sol (complex work, Plus and up at launch), GPT-6 Astra (most capable), GPT-6 Luna (focused tasks; Free and Go). GPT-5.5 retires from Codex 2026-10-14. Switch with /model or --model.",
+      },
       {
         url: "https://developers.openai.com/codex/pricing",
         note: "Verified 2026-10-11 for subscriptionBilling.headline: Codex is included in ChatGPT Free, Go, Plus ($20/month), Pro (from $100/month: $100, $200, or $500), Business, Edu, and Enterprise.",
@@ -322,6 +379,13 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: false,
       thirdPartyRoutingHonorsPlanLimits: false,
       headline: "Free and open source. Sign in with ChatGPT, GitHub Copilot, or GitLab Duo, or use an API key.",
+      plans: [
+        { plan: "Claude Pro or Max", signIn: false, countsAgainstPlan: null, notes: "Anthropic prohibits it; OpenCode removed the plugins that did it in 1.3.0." },
+        { plan: "ChatGPT Plus or Pro", signIn: true, countsAgainstPlan: true },
+        { plan: "GitHub Copilot", signIn: true, countsAgainstPlan: null, notes: "Supported; how usage counts against the Copilot plan wasn't verified." },
+        { plan: "GitLab Duo", signIn: true, countsAgainstPlan: null, notes: "Supported; how usage counts against the Duo plan wasn't verified." },
+        { plan: "OpenCode Go", signIn: true, countsAgainstPlan: true, notes: "OpenCode's own subscription, for a curated set of open models." },
+      ],
       summary:
         "OpenCode's own docs state Anthropic explicitly prohibits driving a Claude Pro/Max subscription from OpenCode; the bundled plugins that did this were removed as of OpenCode 1.3.0. For Claude models, only an Anthropic API key (pay-per-token) or OpenCode's own Zen gateway work. OpenCode does support ChatGPT Plus, GitHub Copilot, and GitLab Duo subscription logins with zero extra setup, since OpenAI/GitHub/GitLab permit third-party routing. OpenCode Go is OpenCode's own subscription for a curated set of open models.",
     },
@@ -399,6 +463,12 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: false,
       headline: "Free and open source. Sign in with ChatGPT, GitHub Copilot, or xAI, or use an API key.",
+      plans: [
+        { plan: "ChatGPT Plus or Pro", signIn: true, countsAgainstPlan: true },
+        { plan: "Claude Pro or Max", signIn: true, countsAgainstPlan: false, notes: "Since April 2026 it draws from Anthropic's pay-per-token extra usage, not the plan's limits." },
+        { plan: "GitHub Copilot", signIn: true, countsAgainstPlan: null },
+        { plan: "xAI", signIn: true, countsAgainstPlan: null },
+      ],
       summary:
         "pi's /login supports ChatGPT Plus/Pro (Codex), Claude Pro/Max, GitHub Copilot, and xAI subscriptions. As of an April 2026 Anthropic enforcement change, Claude Pro/Max login in pi (and other third-party tools) technically works but draws from Anthropic's separate pay-per-token \"extra usage\" pool, not your Claude plan's included limits, so there's no cost benefit over an API key for Claude models. ChatGPT Plus/Pro login has no such restriction: OpenAI's Codex for OSS program officially endorses third-party harnesses using it, and usage counts against the ChatGPT plan as expected.",
     },
@@ -477,6 +547,7 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
       headline: "Free Hobby plan with limited usage. Pro is $20/month.",
+      plans: [{ plan: "Cursor (Hobby, Pro, Pro+, Ultra)", signIn: true, countsAgainstPlan: true }],
       summary:
         "cursor-agent login signs in with your Cursor account and draws from the same usage pools as the editor: Hobby is free with limited usage, then Pro ($20/mo), Pro+ ($60/mo), and Ultra ($200/mo) each add a Cursor Models pool (Composer, Grok) plus an Other Models pool for third-party frontier models (Claude, GPT, Gemini) at API-equivalent rates. A CURSOR_API_KEY env var switches to standalone per-token billing outside the subscription pools. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
     },
@@ -572,6 +643,7 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
       headline: "Included with every GitHub Copilot plan, including Free. Pro is $10/month.",
+      plans: [{ plan: "GitHub Copilot (Free, Pro, Pro+, Max, Business, Enterprise)", signIn: true, countsAgainstPlan: true }],
       summary:
         "Copilot CLI is a core feature of every GitHub Copilot plan (Free, Pro $10/mo, Pro+ $39/mo, Max $100/mo, Business, Enterprise); each prompt draws from that plan's monthly GitHub AI Credits allowance (base credits plus a variable flex allotment), shared across Copilot Chat, the CLI, and cloud agents. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
     },
@@ -645,6 +717,7 @@ export const harnesses: HarnessProfile[] = [
       supportsSubscriptionLogin: false,
       thirdPartyRoutingHonorsPlanLimits: null,
       headline: "Depends on the agent and which model provider you sign in with.",
+      plans: [],
       summary:
         "Varies by harness and model vendor. As a rule of thumb: check whether the model vendor's own docs list your harness as an officially supported or endorsed third-party client before assuming a subscription login will work as expected.",
     },

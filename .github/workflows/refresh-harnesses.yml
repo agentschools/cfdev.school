@@ -63,6 +63,22 @@ jobs:
             official docs, using WebSearch and WebFetch. Don't rely on your training
             data: these facts change faster than it does.
 
+            Two parts need extra care, because the Models exercise teaches from them
+            and students compare them across harnesses:
+            - models: list the models each harness offers to subscription users
+              today, with the vendor's current names, context windows, and API
+              prices, and a one-line bestFor in the vendor's own terms (when to pick
+              it over the others in the same harness, plus how to switch to it if
+              the harness has an alias like `/model opus`). Remove retired models
+              and add new ones. For harnesses that aren't tied to one lab (OpenCode,
+              Pi), keep the list empty unless the harness ships its own models, and
+              say in subscriptionBilling.summary that models depend on the provider.
+            - subscriptionBilling.plans: every plan the harness can sign in with,
+              with signIn and countsAgainstPlan (null when you can't confirm it).
+              Check each vendor's third-party policy once (Anthropic for Claude
+              plans, OpenAI for ChatGPT plans, GitHub for Copilot, and so on) and
+              make every harness's entry for that vendor's plan agree with it.
+
             Rules:
             - Edit only src/data/harnesses.ts. Don't reformat, reorder, or rewrite
               text that's still accurate.
