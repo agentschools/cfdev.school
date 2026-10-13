@@ -1,88 +1,110 @@
 ---
-description: "Choose the right model for your agent and your budget."
+description: "Get to know the models your agent can use, when each one is worth it, and the best-value way to pay for them."
 agent-instructions: |
-  Cover these topics for the harness you're running in. Use your harness
-  profile (GET /api/harnesses/{yourHarnessId}), especially its
-  `subscriptionBilling` and `models` fields, for the specifics.
+  This exercise is about the models available in the harness you're
+  running in, not models in general. Use your harness profile
+  (GET /api/harnesses/{yourHarnessId}): `models` (each with `bestFor`,
+  context window, and API price) and `subscriptionBilling` (its `plans`
+  list and `summary`). The profile can lag behind the vendor, so check
+  what your harness actually offers too: most have a `/model` command
+  that lists the models available to the student's account. If the two
+  disagree, go with what the harness shows and say so.
 
-  1. The cost vs. capability tradeoff: the most capable models (current
-     flagship models from Anthropic and OpenAI, and comparable models from
-     other labs) produce better code and reason through harder problems,
-     but cost more per request. Cheaper or free models are fine for small,
-     well-specified tasks but tend to need more course-correction on
-     anything complex, which often costs more time than the money saved.
-     Show the student how to see and switch the current model in your
-     harness (most use a `/model` command; check yours). Model lineups
-     change often, so don't present specific model names or prices as
-     current unless your profile or the vendor's docs confirm them.
+  1. The models they have. Show the student the models their harness
+     offers on their plan, as a short list: name, what it's for (from
+     `bestFor`), and how to switch to it. Then show them how to see and
+     change the current model themselves (`/model` in most harnesses;
+     check yours). Have them actually run it.
 
-  2. Subscription vs. API billing: most harnesses support two ways to pay
-     for models: a flat monthly subscription (e.g. a ChatGPT or Claude
-     plan) or pay-per-token API billing. Recommend a subscription plan as
-     the default starting point for interactive use, it's usually the
-     better value and avoids surprise bills. Explain that free tiers
-     specifically tend to default to weaker models, and that this often
-     costs more in wasted time than a paid plan would have cost in money.
-     Then explain how billing works in your harness specifically, from
-     your profile's `subscriptionBilling.summary`: which subscription
-     logins it supports, whether a subscription login actually draws on
-     the plan's limits when used from this harness, and how an API key
-     changes that. Call out the common surprise for your harness, e.g. in
-     Claude Code a stray ANTHROPIC_API_KEY in the environment silently
-     switches to per-token billing (`/status` shows which is active). If
-     your harness is `generic` or its profile doesn't cover the student's
-     provider, say so plainly rather than guessing, and point them to that
-     provider's own pricing page.
+  2. When each is worth it. Explain the tradeoffs with their models as
+     the examples, not abstract tiers:
+     - Bigger models plan better, catch more of their own mistakes, and
+       need less correction on hard or unfamiliar problems. They're
+       slower, and they use up a subscription's limits faster (or cost
+       more per token on an API key).
+     - Smaller, faster models are great for quick, well-defined edits,
+       and the wait matters more than the depth there.
+     - A good default habit: stay on the harness's default or a mid-size
+       model, step up when a task is big, risky, or going in circles, and
+       step down for small, mechanical changes.
+     For Claude Code, that's Sonnet for everyday coding, Opus for complex
+     work, Fable for the hardest and longest tasks (it can bill usage
+     credits on some plans, and Claude Code asks first), and Haiku for
+     quick, simple ones. For Codex, that's GPT-6.1 Sol for most work,
+     Astra for the hardest, and Luna for focused, cheap tasks (and on the
+     Free and Go plans). For harnesses that aren't tied to one lab, like
+     OpenCode and Pi, the models depend on which provider they sign in
+     with, so start from that: ask, or check what's configured.
 
-     Never suggest routing a Claude Pro/Max subscription through any
-     harness other than Claude Code. Anthropic's terms prohibit it, and
-     don't offer community plugins or workarounds that do it.
+  3. Paying for them. Recommend a subscription for interactive use: a
+     flat price and no surprise bills, usually better value than paying
+     per token. If they're new and don't have one, the best value is
+     Claude Pro (for Claude Code) or ChatGPT Plus (for Codex), both
+     $20/month with generous usage limits; ChatGPT's free plan also works
+     in Codex, with lower limits and the smaller Luna model. Then explain
+     how it works in their harness from `subscriptionBilling.plans`:
+     which plans it can sign in with (`signIn`), and whether that usage
+     draws on the plan's own limits (`countsAgainstPlan`). The important
+     cross-harness facts:
+     - OpenAI allows ChatGPT plans in third-party harnesses (OpenCode,
+       Pi), and usage counts against the plan.
+     - Anthropic doesn't allow Claude Pro/Max plans in harnesses other
+       than Claude Code. Where a harness still offers a Claude login, it
+       bills separately, so there's no plan benefit. Never suggest
+       routing a Claude subscription through another harness, and don't
+       offer plugins or workarounds that do it.
+     Call out the common surprise for their harness, e.g. in Claude Code
+     a stray ANTHROPIC_API_KEY in the environment silently switches to
+     per-token billing (`/status` shows which is active). If their harness
+     is `generic` or the profile doesn't cover their provider, say so
+     plainly and point them to that provider's own pricing page.
 
-  3. Context windows: what they are (the amount of text, in tokens, a
-     model can "see" at once, including the conversation, file contents,
-     and tool output), that larger flagship models typically offer
-     100K-1M+ token windows while smaller/cheaper models are often much
-     smaller (8K-32K), and that hitting the limit can cause the agent to
-     lose track of earlier context or slow down. Practical guidance: keep
-     sessions focused on one task, and start a fresh session for unrelated
-     work.
+  4. Context windows, briefly: the amount of text, in tokens, a model can
+     consider at once, including the conversation, files it read, and
+     tool output. Current flagship models have windows around a million
+     tokens, but quality still drops in very long sessions. Practical
+     habit: one task per session, and a fresh session for unrelated work.
 
-  4. Mention Cloudflare as an option: Cloudflare AI Gateway is a proxy that
-     routes requests to providers like OpenAI and Anthropic through a
-     single Cloudflare bill via Unified Billing, useful if the student
-     already has a Cloudflare account and wants to consolidate billing.
-     Workers AI runs a curated set of open-source models directly on
-     Cloudflare's network. Neither is required for this course, mention
-     them as options, not requirements.
+  5. Mention Cloudflare as an option, briefly: AI Gateway can route
+     requests to providers like OpenAI and Anthropic through one
+     Cloudflare bill with Unified Billing, and Workers AI runs open models
+     on Cloudflare's network. Neither is required for this course.
 
-  This exercise has no file-system verification step. Confirm understanding
-  conversationally (or via the quiz, if the student opted in) before
-  marking it complete.
+  This exercise has no file-system verification step. Before marking it
+  complete, have the student switch models once with their harness's
+  command and switch back, and confirm understanding conversationally (or
+  via the quiz, if they opted in).
 ---
 
 # Models
 
-The model behind your agent is the single biggest factor in how useful it'll be to you. More capable models write better code, catch more mistakes, and need less hand-holding, but they cost more per request. Cheaper or free models can be fine for small, well-defined tasks, but on anything nontrivial they often need more back-and-forth to get right, which can end up costing more in your time than a better model would have cost in money.
+The model behind your agent is the biggest factor in how useful it'll be. Your agent can probably use several, and picking the right one for the task, and paying for it the right way, makes a real difference.
 
-## Subscription vs. pay-per-token
+## The models in your agent
 
-Most agent harnesses let you pay one of two ways: a flat monthly subscription tied to the model vendor's own app (like a ChatGPT or Claude plan), or pay-per-token API billing. For everyday interactive coding, a subscription plan is usually the better starting point: it's predictable, and it's typically better value than paying per token for the same amount of use. Pay-per-token billing makes more sense for automation, CI, or workloads where a human isn't in the loop deciding when to send the next message.
+Each agent offers its own lineup, usually from fast and cheap to slow and most capable. In [Claude Code](https://code.claude.com/docs/en/model-config), that's Haiku, Sonnet, Opus, and Fable. In [Codex](https://developers.openai.com/codex/models), it's Luna, GPT-6.1 Sol, and Astra. Agents that aren't tied to one lab, like OpenCode and Pi, offer whatever models the providers you sign in with have.
 
-Free tiers exist on most harnesses, but they usually default to the vendor's weakest available models. That's fine for learning the tool itself, but if you find yourself fighting the model to get simple things right, that's a sign it's time to either add a paid subscription or switch to a stronger model on your current plan.
+Most agents let you see and switch models with a `/model` command. Your agent will show you yours.
 
-See [What's an agent?](/agents) for how each supported agent is paid for, and which one to start with if you're new.
+## Bigger isn't always better
+
+More capable models plan better, catch more of their own mistakes, and need less hand-holding on hard problems. They're also slower, and they use up your plan's limits faster. Smaller models are quick and great for small, well-defined changes.
+
+A good habit: stick with your agent's default for most work, switch up for big or tricky tasks (or when it's going in circles), and switch down for quick, mechanical ones.
+
+## Paying for it
+
+For everyday coding, a subscription is usually the best value: a flat monthly price and no surprise bills. If you're new to this, start with [Claude Pro](https://claude.com/pricing) for Claude Code or [ChatGPT Plus](https://developers.openai.com/codex/pricing) for Codex. Both are $20/month with generous usage limits. ChatGPT's free plan works in Codex too, with lower limits.
+
+Plans don't work everywhere. OpenAI lets you use a ChatGPT plan in other agents like OpenCode and Pi. Anthropic doesn't allow Claude plans outside Claude Code. [What's an agent?](/agents) lists how you pay for each supported agent.
 
 ## Context windows
 
-Every model has a context window: the amount of text it can consider at once, measured in tokens (roughly ¾ of a word). This includes your messages, any files the agent has read, and its own previous responses. Flagship models today typically offer context windows from 100,000 tokens up to a million or more, which is enough for long sessions without much thought. Smaller or cheaper models often have much smaller windows (8,000-32,000 tokens), which can fill up quickly.
-
-When a context window fills up, agents typically either summarize older parts of the conversation to make room, or start losing track of earlier instructions. If your agent starts behaving as if it's forgotten something you told it earlier, that's usually a context problem, not a reasoning problem. Keeping sessions focused on one task, and starting fresh sessions for unrelated work, goes a long way.
+Every model has a context window: the amount of text it can consider at once, measured in tokens (roughly ¾ of a word). It includes your messages, files the agent has read, and its own previous responses. Today's flagship models handle around a million tokens, but they still do best when a session stays focused. If your agent starts acting like it forgot something you said earlier, start a fresh session for the next task.
 
 ## Cloudflare as a model provider
 
 If you already have a Cloudflare account, two options are worth knowing about, though neither is required for this course:
 
-- **[AI Gateway](https://developers.cloudflare.com/ai-gateway/)** is a proxy in front of providers like OpenAI, Anthropic, and others. With [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/), you can pay for multiple providers through one Cloudflare bill instead of managing a separate account with each one.
-- **[Workers AI](https://developers.cloudflare.com/workers-ai/)** runs a curated set of open-source models directly on Cloudflare's network.
-
-Check your harness's own documentation for how to point it at a custom provider or gateway.
+- [AI Gateway](https://developers.cloudflare.com/ai-gateway/) is a proxy in front of providers like OpenAI, Anthropic, and others. With [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/), you can pay for several providers through one Cloudflare bill.
+- [Workers AI](https://developers.cloudflare.com/workers-ai/) runs a curated set of open-source models on Cloudflare's network.
