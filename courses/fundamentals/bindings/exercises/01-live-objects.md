@@ -15,10 +15,10 @@ agent-instructions: |
   2. Run `cf workers types` so `env` is typed with the new bindings.
   3. Add an `/env` route that reports, for each entry in `env`: its `typeof`, and for objects, `JSON.stringify(value)` and `String(value)`. Also add `/note` routes: `PUT /note` stores the request body under one key with `env.NOTES.put`, and `GET /note` reads it back with `env.NOTES.get`.
   4. Run it with `cf dev`. Locally the KV binding is a simulation, and the secret comes from `.env`.
-  5. Deploy with `cf deploy --secrets-file .env`. Point out what the deploy output shows: `cf` sees `NOTES` has no namespace, creates one (named after the Worker and the binding, e.g. `<worker>-notes`), and binds it, and the config file still has no ID. Later deploys reuse the same namespace. The secret's value shows as hidden. A new deploy can take up to about 30 seconds to start serving; retry before assuming something's wrong.
+  5. Deploy with `cf deploy --secrets-file .env`. Point out what the deploy output shows: `cf` sees `NOTES` has no namespace, creates one (named after the Worker and the binding, e.g. `<worker>-notes`), and binds it, and the config file still has no ID. Later deploys reuse the same namespace. The secret's value shows as hidden. A new deploy can take up to about 30 seconds to start serving; retry before assuming something's wrong. If the build prints "Cannot connect to the Docker daemon", it's harmless: this Worker doesn't use Docker, and the deploy still completes. Tell the student so they don't think it failed.
   6. Verify before completing. YOU must:
      - fetch `/env` on the deployed URL and confirm `GREETING` and `API_TOKEN` are strings and `NOTES` is an object whose `JSON.stringify` is `{}`;
-     - `PUT /note`, then in a separate request `GET /note`, and confirm the value comes back;
+     - `PUT /note`, then in a separate request `GET /note`, and confirm the value comes back. If anyone read `/note` on the deployed URL before the `PUT`, the "not found" may be cached for up to about a minute, so retry before assuming something's wrong (see "swap-resources" for why);
      - confirm with `cf kv namespaces list` that the namespace `cf deploy` created exists.
      Don't trust the student saying it worked.
   7. Teach the point of what they just saw, using their own `/env` output:

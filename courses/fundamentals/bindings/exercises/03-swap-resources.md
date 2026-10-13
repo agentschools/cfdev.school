@@ -13,7 +13,7 @@ agent-instructions: |
   4. Verify before completing. YOU must, against the deployed URLs:
      - `GET /note` on the staging Worker and confirm it doesn't return the production value;
      - `PUT /note` a new value on staging, then `GET /note` on both Workers, in separate requests, and confirm staging returns the new value and production still returns its own.
-     Deploys can take up to about 30 seconds to start serving; retry before assuming something's wrong. Don't trust the student saying it worked.
+     Deploys can take up to about 30 seconds to start serving; retry before assuming something's wrong. KV is eventually consistent, and the first `GET` on staging caches "not found": staging can keep returning nothing for about a minute after the `PUT`. Retry for up to a minute (don't re-`PUT`), and turn the wait into a teaching moment: a write is usually visible right away where it was made, but cached reads elsewhere, including cached misses, can take 60 seconds or more to update (https://developers.cloudflare.com/kv/concepts/how-kv-works/). Don't trust the student saying it worked.
   5. Teach the point:
      - Code can only reach a resource through a binding, so it can never be hard-coded to the production namespace. Every deployment of the same code can be pointed somewhere else. In testing, this is called dependency injection, and with bindings it comes for free.
      - The same idea works inside one Worker. When `env` is passed to `fetch()`, a router Worker can combine two Workers' handlers and give each its own `env`, e.g. `apiWorker.fetch(request, { KV: env.API_KV }, ctx)`, even if both named their binding `KV`. Show this as a snippet; it doesn't need to be built.
