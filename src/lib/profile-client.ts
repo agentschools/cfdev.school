@@ -1,4 +1,4 @@
-import { type CatalogCourse, type StartedCourse, startedCourses } from "./course-progress";
+import { type CatalogCourse, groupByTrack, type StartedCourse, startedCourses } from "./course-progress";
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { subscribeToProgress } from "./progress-client";
 import type { ExerciseCompletion, Progress } from "../schemas/progress";
@@ -39,7 +39,7 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className: strin
 function renderCourse(course: StartedCourse, harnessNames: Record<string, string>): HTMLElement {
   const section = element("section", "profile-course");
 
-  const heading = element("h2", "profile-course-title");
+  const heading = element("h3", "profile-course-title");
   const link = element("a", "", course.title);
   link.href = course.url;
   heading.appendChild(link);
@@ -87,7 +87,13 @@ export function initProfilePage(): void {
   function render(progress: Progress): void {
     const courses = startedCourses(progress, catalog);
     empty!.hidden = courses.length > 0;
-    list!.replaceChildren(...courses.map((course) => renderCourse(course, harnessNames)));
+    // Grouped like the sidebar: Agent setup, then each track, then courses hosted elsewhere.
+    list!.replaceChildren(
+      ...groupByTrack(courses).flatMap((group) => [
+        ...(group.title ? [element("h2", "profile-group-title", group.title)] : []),
+        ...group.courses.map((course) => renderCourse(course, harnessNames)),
+      ]),
+    );
   }
 
   function onEnrolled(student: CachedStudent): void {

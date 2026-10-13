@@ -82,8 +82,25 @@ describe("buildDashboard", () => {
     );
     expect(dashboard.upNext).toMatchObject({ courseTitle: "Workers", exerciseTitle: "Deploy a Worker", index: 1 });
     expect(dashboard.courses).toEqual([
-      { title: "Agent setup", url: "/courses/agent-setup", done: 1, segments: [true, false], next: "Models" },
-      { title: "Workers", url: "/courses/workers", done: 1, segments: [true, false], next: "Deploy a Worker" },
+      {
+        id: "start",
+        courses: [{ title: "Agent setup", url: "/courses/agent-setup", external: false, done: 1, segments: [true, false], next: "Models" }],
+      },
+      {
+        id: "fundamentals",
+        title: "Fundamentals",
+        courses: [
+          {
+            title: "Workers",
+            url: "/courses/workers",
+            external: false,
+            track: "fundamentals",
+            done: 1,
+            segments: [true, false],
+            next: "Deploy a Worker",
+          },
+        ],
+      },
     ]);
     expect(dashboard.agents).toEqual([
       { harness: "claude-code", exercises: 1 },
@@ -99,8 +116,8 @@ describe("buildDashboard", () => {
     );
     expect(dashboard.upNext).toEqual({ kind: "choose", justFinishedAgentSetup: true });
     expect(dashboard.aboutYou).toBe("You're new here.");
-    expect(dashboard.courses[0]).toMatchObject({ completedAt: "2026-10-02T00:00:00.000Z", done: 2 });
-    expect(dashboard.courses[0].next).toBeUndefined();
+    expect(dashboard.courses[0].courses[0]).toMatchObject({ completedAt: "2026-10-02T00:00:00.000Z", done: 2 });
+    expect(dashboard.courses[0].courses[0].next).toBeUndefined();
     expect(dashboard.agents).toEqual([{ harness: "claude-code", exercises: 2 }]);
     expect(dashboard.trackStarts).toEqual({ fundamentals: { title: "Workers", url: "/courses/workers" } });
   });

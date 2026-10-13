@@ -1,6 +1,6 @@
 import { buildChooseCoursePrompt, buildPrompt } from "./agent-prompt";
 import type { CatalogCourse } from "./course-progress";
-import { buildDashboard, type Dashboard } from "./dashboard";
+import { buildDashboard, type Dashboard, type DashboardCourse } from "./dashboard";
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { subscribeToProgress } from "./progress-client";
 import type { Progress } from "../schemas/progress";
@@ -77,47 +77,59 @@ export function initDashboard(): void {
     renderAgents(dashboard);
   }
 
-  function renderCourses({ courses }: Dashboard): void {
-    el("your-courses").hidden = courses.length === 0;
+  function renderCourses({ courses: groups }: Dashboard): void {
+    el("your-courses").hidden = groups.length === 0;
     el("course-rows").replaceChildren(
-      ...courses.map((course) => {
-        const item = document.createElement("li");
-        const link = document.createElement("a");
-        link.className = "course-row";
-        link.href = course.url;
-
-        const text = document.createElement("span");
-        text.className = "course-row-text";
-        const title = document.createElement("span");
-        title.className = "course-row-title";
-        title.textContent = course.title;
-        const sub = document.createElement("span");
-        sub.className = "course-row-sub";
-        sub.textContent = course.next
-          ? `Next: ${course.next}`
-          : course.completedAt
-            ? `Completed ${formatDate(course.completedAt)}`
-            : "";
-        text.append(title, sub);
-
-        const bar = document.createElement("span");
-        bar.className = "course-row-bar";
-        bar.setAttribute("aria-hidden", "true");
-        for (const complete of course.segments) {
-          const segment = document.createElement("span");
-          if (complete) segment.className = "is-done";
-          bar.appendChild(segment);
-        }
-
-        const count = document.createElement("span");
-        count.className = "course-row-count";
-        count.textContent = `${course.done} of ${course.segments.length}`;
-
-        link.append(text, bar, count);
-        item.appendChild(link);
-        return item;
-      }),
+      ...groups.flatMap((group) => [
+        ...(group.title ? [courseGroupLabel(group.title)] : []),
+        ...group.courses.map(courseRow),
+      ]),
     );
+  }
+
+  function courseGroupLabel(title: string): HTMLElement {
+    const item = document.createElement("li");
+    item.className = "course-group";
+    item.textContent = title;
+    return item;
+  }
+
+  function courseRow(course: DashboardCourse): HTMLElement {
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.className = "course-row";
+    link.href = course.url;
+
+    const text = document.createElement("span");
+    text.className = "course-row-text";
+    const title = document.createElement("span");
+    title.className = "course-row-title";
+    title.textContent = course.title;
+    const sub = document.createElement("span");
+    sub.className = "course-row-sub";
+    sub.textContent = course.next
+      ? `Next: ${course.next}`
+      : course.completedAt
+        ? `Completed ${formatDate(course.completedAt)}`
+        : "";
+    text.append(title, sub);
+
+    const bar = document.createElement("span");
+    bar.className = "course-row-bar";
+    bar.setAttribute("aria-hidden", "true");
+    for (const complete of course.segments) {
+      const segment = document.createElement("span");
+      if (complete) segment.className = "is-done";
+      bar.appendChild(segment);
+    }
+
+    const count = document.createElement("span");
+    count.className = "course-row-count";
+    count.textContent = `${course.done} of ${course.segments.length}`;
+
+    link.append(text, bar, count);
+    item.appendChild(link);
+    return item;
   }
 
   function renderAboutYou({ aboutYou }: Dashboard): void {
