@@ -18,16 +18,27 @@ export function buildPrompt(student: CachedStudent, context?: AgentPromptContext
   const origin = window.location.origin;
   const { courseTitle, exerciseTitle, redo } = context ?? { courseTitle: "Agent setup", exerciseTitle: "Interview" };
   const workOnLine = !exerciseTitle
-    ? `Let's work on the "${courseTitle}" course together!`
+    ? `Let's work on the "${courseTitle}" course together.`
     : redo
       ? `Let's redo the "${exerciseTitle}" exercise from the "${courseTitle}" course together, even though I've already completed it.`
-      : `Let's work on the "${exerciseTitle}" exercise from the "${courseTitle}" course together!`;
+      : `Let's work on the "${exerciseTitle}" exercise from the "${courseTitle}" course together.`;
   return [
     `I'm enrolled in Cloudflare Dev School as ${student.id}`,
     "",
     workOnLine,
     "",
     `Fetch ${origin}/llms.txt for instructions.`,
+  ].join("\n");
+}
+
+/** The enrolled homepage's prompt once Agent setup is done and no course is in progress: the agent asks which track to take (see /llms.txt's "Courses"). */
+export function buildChooseCoursePrompt(student: CachedStudent): string {
+  return [
+    `I'm enrolled in Cloudflare Dev School as ${student.id}`,
+    "",
+    "I'm ready for my next course. Help me pick what to do next.",
+    "",
+    `Fetch ${window.location.origin}/llms.txt for instructions.`,
   ].join("\n");
 }
 

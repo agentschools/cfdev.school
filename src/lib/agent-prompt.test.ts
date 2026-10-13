@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildAuthorPrompt, buildPrompt } from "./agent-prompt";
+import { buildAuthorPrompt, buildChooseCoursePrompt, buildPrompt } from "./agent-prompt";
 
 const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
 
@@ -13,7 +13,7 @@ describe("buildPrompt", () => {
       [
         "I'm enrolled in Cloudflare Dev School as curious-hacker-2019",
         "",
-        'Let\'s work on the "Interview" exercise from the "Agent setup" course together!',
+        'Let\'s work on the "Interview" exercise from the "Agent setup" course together.',
         "",
         "Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.",
       ].join("\n"),
@@ -23,13 +23,13 @@ describe("buildPrompt", () => {
   it("names the exercise and its course", () => {
     const prompt = buildPrompt(student, { courseTitle: "Workers", exerciseTitle: "Deploy a Worker" });
 
-    expect(prompt).toContain('Let\'s work on the "Deploy a Worker" exercise from the "Workers" course together!');
+    expect(prompt).toContain('Let\'s work on the "Deploy a Worker" exercise from the "Workers" course together.');
     expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
   });
 
   it("names just the course when there's no exercise", () => {
     expect(buildPrompt(student, { courseTitle: "Workers" })).toContain(
-      'Let\'s work on the "Workers" course together!',
+      'Let\'s work on the "Workers" course together.',
     );
   });
 
@@ -39,6 +39,15 @@ describe("buildPrompt", () => {
     expect(prompt).toContain(
       'Let\'s redo the "Models" exercise from the "Agent setup" course together, even though I\'ve already completed it.',
     );
+  });
+});
+
+describe("buildChooseCoursePrompt", () => {
+  it("asks the agent to help pick the next course", () => {
+    const prompt = buildChooseCoursePrompt(student);
+    expect(prompt).toContain("as curious-hacker-2019");
+    expect(prompt).toContain("Help me pick what to do next.");
+    expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
   });
 });
 

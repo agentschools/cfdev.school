@@ -70,10 +70,12 @@ export function catalogCourses(courses: readonly BuiltInCourse[]): CatalogCourse
     name: course.name,
     title: course.title,
     url: coursePath(course.name),
+    ...(course.track ? { track: course.track } : {}),
     exercises: course.exercises.map((exercise) => ({
       slug: exercise.slug,
       title: exercise.title,
       url: exercisePath(course.name, exercise.slug),
+      ...(exercise.description ? { description: exercise.description } : {}),
     })),
   }));
 }

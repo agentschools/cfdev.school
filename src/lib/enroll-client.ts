@@ -7,6 +7,7 @@
 // Licensed under the Apache 2.0 license found in the LICENSE file or at:
 //     https://opensource.org/licenses/Apache-2.0
 
+// Also read by the inline script at the top of src/pages/index.astro, which can't import this module.
 const STORAGE_KEY = "cfDevSchool.student";
 const CHARS = "abcdefghijklmnopqrstuvwxyz";
 const DIGITS = "0123456789";

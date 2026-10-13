@@ -35,7 +35,7 @@ const sourceSchema = z.object({
 export const harnessProfileSchema = z.object({
   id: z.enum(["claude-code", "codex", "opencode", "pi", "cursor", "copilot", "generic"]),
   name: z.string(),
-  /** One-line, homepage-card-friendly description. Keep the deeper detail in subscriptionBilling.summary. */
+  /** One line on what the harness is, shown on /agents. How you pay for it goes in subscriptionBilling.headline, not here. */
   tagline: z.string(),
   /** Logo, borrowed from developers.cloudflare.com/agent-setup/. Not every harness has one there. */
   icon: z
@@ -46,6 +46,8 @@ export const harnessProfileSchema = z.object({
       mono: z.string(),
     })
     .optional(),
+  /** The harness's own product page, linked from /agents. */
+  homepage: z.string().url().optional(),
   cliCommand: z.string(),
   /** Default global instructions file name/location for this harness. */
   instructionsFile: z.object({
@@ -81,6 +83,8 @@ export const harnessProfileSchema = z.object({
     supportsSubscriptionLogin: z.boolean(),
     /** Does that subscription login count against plan limits when driven from THIS harness specifically (as opposed to the vendor's own first-party client)? */
     thirdPartyRoutingHonorsPlanLimits: z.boolean().nullable(),
+    /** One short sentence on how you pay, for /agents' list. Keep the detail in `summary`. */
+    headline: z.string(),
     summary: z.string(),
   }),
   models: z.array(modelSchema),
@@ -94,8 +98,9 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "claude-code",
     name: "Claude Code",
-    tagline: "Anthropic's official terminal agent. Included in your Claude Pro or Max plan.",
+    tagline: "Anthropic's official terminal agent.",
     icon: { light: "/icons/agents/claude-code/light.svg", dark: "/icons/agents/claude-code/dark.svg", mono: "/icons/agents/claude-code/mono.svg" },
+    homepage: "https://claude.com/product/claude-code",
     cliCommand: "claude",
     instructionsFile: {
       path: "CLAUDE.md (project root) or ~/.claude/CLAUDE.md (global)",
@@ -123,6 +128,7 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
+      headline: "Included with Claude Pro ($20/month) and Max plans.",
       summary:
         "Native first-party harness. Pro ($20/mo), Max 5x ($100/mo) and Max 20x ($200/mo) plans all cover Claude Code directly against the same usage pool as claude.ai. An ANTHROPIC_API_KEY in the environment overrides subscription login and switches to per-token API billing. Anthropic explicitly prohibits OTHER third-party harnesses from routing through a Claude Pro/Max login on Claude Code's behalf; this only applies to Claude Code itself.",
     },
@@ -160,6 +166,10 @@ export const harnesses: HarnessProfile[] = [
     lastVerified: "2026-10-03",
     sources: [
       {
+        url: "https://claude.com/pricing",
+        note: "Verified 2026-10-11 for subscriptionBilling.headline: Pro is $20/month billed monthly ($17/month billed annually) and includes Claude Code.",
+      },
+      {
         url: "https://code.claude.com/docs/en/mcp",
         note: "Adding remote HTTP MCP servers, --scope user, /mcp OAuth login, claude mcp list. Verified 2026-10-03: `claude mcp login` exists, and config/auth changes take effect without a restart.",
       },
@@ -192,8 +202,9 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "codex",
     name: "OpenAI Codex",
-    tagline: "OpenAI's terminal agent. Works with any ChatGPT plan, including Free.",
+    tagline: "OpenAI's terminal agent.",
     icon: { light: "/icons/agents/codex/light.svg", dark: "/icons/agents/codex/dark.svg", mono: "/icons/agents/codex/mono.svg" },
+    homepage: "https://developers.openai.com/codex",
     cliCommand: "codex",
     instructionsFile: {
       path: "AGENTS.md (project root) or ~/.codex/AGENTS.md (global)",
@@ -219,8 +230,9 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
+      headline: "Included with every ChatGPT plan, including Free. Plus is $20/month.",
       summary:
-        "codex login opens a ChatGPT browser flow and bills against your ChatGPT plan (Free, Go $8/mo, Plus $20/mo, Pro $200/mo) by default; codex login --with-api-key switches to standard per-token OpenAI API billing. Unlike Anthropic, OpenAI officially endorses third-party harnesses (OpenCode, Pi) authenticating with a ChatGPT Plus/Pro login via the Codex for OSS program.",
+        "codex login opens a ChatGPT browser flow and bills against your ChatGPT plan (Free, Go $8/mo, Plus $20/mo, Pro from $100/mo) by default; codex login --with-api-key switches to standard per-token OpenAI API billing. Unlike Anthropic, OpenAI officially endorses third-party harnesses (OpenCode, Pi) authenticating with a ChatGPT Plus/Pro login via the Codex for OSS program.",
     },
     models: [
       {
@@ -233,6 +245,10 @@ export const harnesses: HarnessProfile[] = [
     ],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://developers.openai.com/codex/pricing",
+        note: "Verified 2026-10-11 for subscriptionBilling.headline: Codex is included in ChatGPT Free, Go, Plus ($20/month), Pro (from $100/month: $100, $200, or $500), Business, Edu, and Enterprise.",
+      },
       {
         url: "https://learn.chatgpt.com/docs/extend/mcp?surface=cli",
         note: "Redirect target of developers.openai.com/codex/mcp. Verified 2026-10-03: codex mcp add --url, codex mcp login, ~/.codex/config.toml. Re-checked 2026-10-05: the docs now state the CLI recognizes config changes without a restart; only the desktop app and IDE extension need one.",
@@ -276,6 +292,7 @@ export const harnesses: HarnessProfile[] = [
     name: "OpenCode",
     tagline: "Open-source, model-agnostic terminal agent with 75+ provider support.",
     icon: { light: "/icons/agents/opencode/light.svg", dark: "/icons/agents/opencode/dark.svg", mono: "/icons/agents/opencode/mono.svg" },
+    homepage: "https://opencode.ai",
     cliCommand: "opencode",
     instructionsFile: {
       path: "AGENTS.md, discovered by walking up from cwd to the project root, plus ~/.config/opencode/AGENTS.md (global)",
@@ -304,12 +321,17 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: false,
       thirdPartyRoutingHonorsPlanLimits: false,
+      headline: "Free and open source. Sign in with ChatGPT, GitHub Copilot, or GitLab Duo, or use an API key.",
       summary:
         "OpenCode's own docs state Anthropic explicitly prohibits driving a Claude Pro/Max subscription from OpenCode; the bundled plugins that did this were removed as of OpenCode 1.3.0. For Claude models, only an Anthropic API key (pay-per-token) or OpenCode's own Zen gateway work. OpenCode does support ChatGPT Plus, GitHub Copilot, and GitLab Duo subscription logins with zero extra setup, since OpenAI/GitHub/GitLab permit third-party routing. OpenCode Go is OpenCode's own subscription for a curated set of open models.",
     },
     models: [],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://github.com/anomalyco/opencode",
+        note: "Verified 2026-10-11 for subscriptionBilling.headline: open source under the MIT license.",
+      },
       {
         url: "https://opencode.ai/docs/mcp-servers",
         note: "Remote MCP servers (type remote), opencode mcp add/auth, automatic OAuth on 401.",
@@ -349,6 +371,7 @@ export const harnesses: HarnessProfile[] = [
     name: "Pi",
     tagline: "A minimal, extensible terminal coding harness you adapt to your workflow.",
     icon: { light: "/icons/agents/pi/light.svg", dark: "/icons/agents/pi/dark.svg", mono: "/icons/agents/pi/mono.svg" },
+    homepage: "https://pi.dev",
     cliCommand: "pi",
     instructionsFile: {
       path: "AGENTS.md (or CLAUDE.md) at ~/.pi/agent/AGENTS.md (global), plus parent directories and the current directory (project), all concatenated",
@@ -375,12 +398,17 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: false,
+      headline: "Free and open source. Sign in with ChatGPT, GitHub Copilot, or xAI, or use an API key.",
       summary:
         "pi's /login supports ChatGPT Plus/Pro (Codex), Claude Pro/Max, GitHub Copilot, and xAI subscriptions. As of an April 2026 Anthropic enforcement change, Claude Pro/Max login in pi (and other third-party tools) technically works but draws from Anthropic's separate pay-per-token \"extra usage\" pool, not your Claude plan's included limits, so there's no cost benefit over an API key for Claude models. ChatGPT Plus/Pro login has no such restriction: OpenAI's Codex for OSS program officially endorses third-party harnesses using it, and usage counts against the ChatGPT plan as expected.",
     },
     models: [],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://github.com/earendil-works/pi",
+        note: "Verified 2026-10-11 for subscriptionBilling.headline: open source under the MIT license.",
+      },
       {
         url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/mcp.md",
         note: "Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload. Re-checked 2026-10-03. Re-checked 2026-10-05: docs confirm locations, `pi mcp add --url`, /mcp for auth and /reload, but `pi mcp login` is not documented there (oauthLogin left unchanged, unconfirmed from the shell).",
@@ -420,6 +448,7 @@ export const harnesses: HarnessProfile[] = [
     name: "Cursor",
     tagline: "Anysphere's editor-first agent, also usable as a standalone terminal CLI.",
     icon: { light: "/icons/agents/cursor/light.svg", dark: "/icons/agents/cursor/dark.svg", mono: "/icons/agents/cursor/mono.svg" },
+    homepage: "https://cursor.com/cli",
     cliCommand: "cursor-agent",
     instructionsFile: {
       path: "AGENTS.md (project root, plain-markdown alternative to structured .cursor/rules/*.mdc files) plus user-level ~/.cursor/rules/ or account-synced Cursor Settings rules for global instructions",
@@ -447,6 +476,7 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
+      headline: "Free Hobby plan with limited usage. Pro is $20/month.",
       summary:
         "cursor-agent login signs in with your Cursor account and draws from the same usage pools as the editor: Hobby is free with limited usage, then Pro ($20/mo), Pro+ ($60/mo), and Ultra ($200/mo) each add a Cursor Models pool (Composer, Grok) plus an Other Models pool for third-party frontier models (Claude, GPT, Gemini) at API-equivalent rates. A CURSOR_API_KEY env var switches to standalone per-token billing outside the subscription pools. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
     },
@@ -461,6 +491,10 @@ export const harnesses: HarnessProfile[] = [
     ],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://cursor.com/pricing",
+        note: "Verified 2026-10-11 for subscriptionBilling.headline: Hobby is free with limited agent requests, Pro is $20/month.",
+      },
       {
         url: "https://cursor.com/docs/mcp",
         note: "Checked 2026-10-03: docs say to restart Cursor after modifying mcp.json. The OAuth section only documents static client credentials; the browser-prompt flow described here is unconfirmed.",
@@ -506,8 +540,9 @@ export const harnesses: HarnessProfile[] = [
   {
     id: "copilot",
     name: "GitHub Copilot CLI",
-    tagline: "GitHub's terminal agent, included with every Copilot plan from Free up.",
+    tagline: "GitHub's terminal agent.",
     icon: { light: "/icons/agents/copilot/light.svg", dark: "/icons/agents/copilot/dark.svg", mono: "/icons/agents/copilot/mono.svg" },
+    homepage: "https://github.com/features/copilot/cli",
     cliCommand: "copilot",
     instructionsFile: {
       path: "AGENTS.md or .github/copilot-instructions.md (project root) plus ~/.copilot/copilot-instructions.md (global, applies to every session regardless of project)",
@@ -536,6 +571,7 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
+      headline: "Included with every GitHub Copilot plan, including Free. Pro is $10/month.",
       summary:
         "Copilot CLI is a core feature of every GitHub Copilot plan (Free, Pro $10/mo, Pro+ $39/mo, Max $100/mo, Business, Enterprise); each prompt draws from that plan's monthly GitHub AI Credits allowance (base credits plus a variable flex allotment), shared across Copilot Chat, the CLI, and cloud agents. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
     },
@@ -550,6 +586,10 @@ export const harnesses: HarnessProfile[] = [
     ],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://github.com/features/copilot/plans",
+        note: "Verified 2026-10-11 for subscriptionBilling.headline: Copilot CLI is enabled on every plan including Free; Pro is $10/month.",
+      },
       {
         url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli",
         note: "Install methods and the `copilot` binary name.",
@@ -604,6 +644,7 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: false,
       thirdPartyRoutingHonorsPlanLimits: null,
+      headline: "Depends on the agent and which model provider you sign in with.",
       summary:
         "Varies by harness and model vendor. As a rule of thumb: check whether the model vendor's own docs list your harness as an officially supported or endorsed third-party client before assuming a subscription login will work as expected.",
     },

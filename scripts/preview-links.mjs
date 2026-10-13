@@ -39,7 +39,11 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       filename === "src/pages/api/openapi.json.ts"
     ) {
       add("/api/openapi.json");
-    } else if (filename === "src/pages/index.astro") {
+    } else if (
+      filename === "src/pages/index.astro" ||
+      filename === "src/lib/dashboard.ts" ||
+      filename === "src/lib/dashboard-client.ts"
+    ) {
       add("/");
     } else if (
       filename === "src/pages/authors.astro" ||
@@ -48,6 +52,8 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       filename === "src/pages/authors.md.ts"
     ) {
       add("/authors", "/authors.md");
+    } else if (filename === "src/pages/agents.astro") {
+      add("/agents");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {
       add("/disenroll");
     } else if (

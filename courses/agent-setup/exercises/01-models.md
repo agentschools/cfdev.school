@@ -70,6 +70,8 @@ Most agent harnesses let you pay one of two ways: a flat monthly subscription ti
 
 Free tiers exist on most harnesses, but they usually default to the vendor's weakest available models. That's fine for learning the tool itself, but if you find yourself fighting the model to get simple things right, that's a sign it's time to either add a paid subscription or switch to a stronger model on your current plan.
 
+See [What's an agent?](/agents) for how each supported agent is paid for, and which one to start with if you're new.
+
 ## Context windows
 
 Every model has a context window: the amount of text it can consider at once, measured in tokens (roughly ¾ of a word). This includes your messages, any files the agent has read, and its own previous responses. Flagship models today typically offer context windows from 100,000 tokens up to a million or more, which is enough for long sessions without much thought. Smaller or cheaper models often have much smaller windows (8,000-32,000 tokens), which can fill up quickly.

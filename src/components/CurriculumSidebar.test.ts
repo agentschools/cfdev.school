@@ -14,7 +14,7 @@ describe("CurriculumSidebar", () => {
     const html = await render();
 
     expect(html).toContain('href="/courses/agent-setup/models"');
-    const order = ['href="/courses/agent-setup"', ">Projects<", "Coming soon", ">Fundamentals<", 'href="/courses/workers"', 'href="/courses/bindings"'];
+    const order = ['href="/courses/agent-setup"', ">Projects<", "Coming soon", ">Fundamentals<", 'href="/courses/workers"', 'href="/courses/bindings"', 'href="/agents"', 'href="/authors"'];
     const positions = order.map((text) => html.indexOf(text));
     for (const position of positions) expect(position).toBeGreaterThan(-1);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));

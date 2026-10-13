@@ -45,20 +45,31 @@ describe("homepage", () => {
     expect(html).toContain('href="/courses/workers"');
   });
 
-  it("points the post-interview Next button at Agent setup's second exercise", async () => {
+  it("renders the enrolled dashboard shell, filled in client-side, with the catalog and harness names it needs", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
-    expect(html).toMatch(/id="interview-complete-next"[^>]*href="\/courses\/agent-setup\/models"/);
-    expect(html).toMatch(/Next: Models →/);
+    expect(html).toMatch(/id="up-next"[^>]*data-loading/);
+    expect(html).toContain('id="dashboard-prompt-copy"');
+    expect(html).toMatch(/id="your-courses"[^>]*hidden/);
+    expect(html).toContain('href="/profile"');
+    expect(html).toMatch(/id="about-you"[^>]*hidden/);
+    expect(html).toMatch(/id="your-agents"[^>]*hidden/);
+    expect(html).toContain("&quot;/courses/workers/deploy-a-worker&quot;");
+    expect(html).toContain("&quot;Claude Code&quot;");
+    // Marks the page enrolled before paint, so returning students don't see the hero.
+    expect(html).toContain('localStorage.getItem("cfDevSchool.student")');
+    // "What's an agent?" under the prompt, and the visitor hero's "Works with" label.
+    expect(html.match(/<a[^>]*href="\/agents"[^>]*>(What(?:&#39;|')s an agent\?|Works with)<\/a>/g)).toHaveLength(2);
   });
 
-  it("renders a hidden courses-in-progress summary that links to /profile", async () => {
+  it("offers the tracks after Agent setup, available ones first", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
-    expect(html).toMatch(/id="course-summary"[^>]*hidden/);
-    expect(html).toContain('href="/profile"');
+    expect(html).toMatch(/data-track-start="fundamentals"/);
+    expect(html.indexOf("Learn how it works")).toBeLessThan(html.indexOf("Build something"));
+    expect(html).toContain("Coming soon");
   });
 
   it("does not render the old anchor-nav header or in-page outline", async () => {
@@ -67,15 +78,5 @@ describe("homepage", () => {
 
     expect(html).not.toContain('href="#harnesses"');
     expect(html).not.toContain('href="#how-it-works"');
-  });
-
-  it("renders the agent prompt box, hidden by default, with no harness picker", async () => {
-    const container = await AstroContainer.create();
-    const html = await container.renderToString(Index);
-
-    expect(html).toContain('id="agent-prompt"');
-    expect(html).toContain('id="agent-prompt-copy"');
-    expect(html).not.toContain("harness-picker");
-    expect(html).not.toContain("Pick your agent");
   });
 });
