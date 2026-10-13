@@ -6,6 +6,12 @@ const collections = vi.hoisted(() => ({
     { id: "agent-setup", filePath: "courses/agent-setup/COURSE.md", body: "\n# Agent setup\n", data: { name: "agent-setup", description: "Set up." } },
     { id: "bindings", filePath: "courses/fundamentals/bindings/COURSE.md", body: "\n# Bindings\n", data: { name: "bindings", description: "Learn bindings." } },
     {
+      id: "publish-a-website",
+      filePath: "courses/projects/publish-a-website/COURSE.md",
+      body: "\n# Publish a website\n",
+      data: { name: "publish-a-website", description: "Publish a site." },
+    },
+    {
       id: "durable-objects",
       filePath: "courses/fundamentals/durable-objects/COURSE.md",
       body: "\n# Durable Objects\n",
@@ -31,6 +37,7 @@ describe("getBuiltInCourses", () => {
     const courses = await getBuiltInCourses();
     expect(courses.map((course) => [course.name, course.title])).toEqual([
       ["agent-setup", "Agent setup"],
+      ["publish-a-website", "Publish a website"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
       ["durable-objects", "Durable Objects"],
@@ -42,6 +49,7 @@ describe("getBuiltInCourses", () => {
     const courses = await getBuiltInCourses();
     expect(courses.map((course) => [course.name, course.track])).toEqual([
       ["agent-setup", undefined],
+      ["publish-a-website", "projects"],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
       ["durable-objects", "fundamentals"],
@@ -79,7 +87,7 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, workers, , durableObjects] = courses;
+    const [agentSetup, publishAWebsite, workers, , durableObjects] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
@@ -87,6 +95,8 @@ describe("nextStep", () => {
       label: "Next course: Bindings →",
     });
     expect(nextStep(courses, durableObjects, durableObjects.exercises.length - 1).url).toBe("/courses");
+    // The last course in Projects doesn't continue into Fundamentals.
+    expect(nextStep(courses, publishAWebsite, publishAWebsite.exercises.length - 1).url).toBe("/courses");
   });
 
   it("sends a student finishing Agent setup to the catalog to pick a track", async () => {
