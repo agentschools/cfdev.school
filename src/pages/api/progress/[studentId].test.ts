@@ -96,6 +96,7 @@ describe("GET /api/progress/{studentId}", () => {
       ["agent-setup", ["interview", "models", "instructions"]],
       ["workers", ["interview", "deploy-a-worker"]],
       ["bindings", ["interview", "live-objects"]],
+      ["durable-objects", ["interview"]],
     ]);
     for (const item of progress.courses) {
       expect(item.completedAt).toBeUndefined();
