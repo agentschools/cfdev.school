@@ -30,8 +30,8 @@ agent-instructions: |
      slug, filename order, a `#` title on every exercise file, and at most
      four interview questions.
   6. Test it by taking it as a student, once it's published at its https
-     URL. Follow the "Courses hosted elsewhere" section of /llms.txt on the
-     site you fetched this guide from: use the author's student ID if they
+     URL. Follow /external-courses.md on the site you fetched this guide
+     from: use the author's student ID if they
      have one, or enroll a test student with POST /api/students, report
      the course, and work through every exercise until the course is
      complete. Fix anything that was unclear, or that the check couldn't
