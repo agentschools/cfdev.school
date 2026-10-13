@@ -16,7 +16,7 @@ agent-instructions: |
   4. Verify before completing. YOU must:
      - fetch `https://<hostname>/` and confirm it's their site, and `https://<hostname>/api/entries` and confirm the guestbook API answers;
      - fetch the `*.workers.dev` URL and confirm it still works too.
-     It's usually live within a minute; retry for a few minutes before assuming something's wrong. Don't trust the student saying it worked.
+     It's usually live within a minute; retry for a few minutes before assuming something's wrong. If the hostname doesn't resolve on the student's machine but `dig +short <hostname> @1.1.1.1` returns addresses, their computer cached an earlier "not found" from before the record existed: check with `curl --resolve <hostname>:443:<address> https://<hostname>/`, and tell them it'll clear on its own (or after flushing their DNS cache). Don't trust the student saying it worked.
   5. Teach the point, briefly:
      - A custom domain points the whole hostname at the Worker. Cloudflare manages the DNS record and certificate, and removing the domain from the config (or deleting the Worker) removes them.
      - Their site is now theirs: a domain they control, assets served free from Cloudflare's network, and a small API and database for anything dynamic.
