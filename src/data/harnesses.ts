@@ -557,6 +557,7 @@ export const harnesses: HarnessProfile[] = [
         contextWindowTokens: 200000,
         vision: false,
         toolUse: true,
+        apiPricePerMTok: { input: 0.5, output: 2.5 },
         notes: "Cursor's own agentic coding model, drawn from the Cursor Models pool rather than billed as a third-party model.",
       },
     ],
@@ -565,6 +566,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://cursor.com/pricing",
         note: "Verified 2026-10-11 for subscriptionBilling.headline: Hobby is free with limited agent requests, Pro is $20/month.",
+      },
+      {
+        url: "https://cursor.com/docs/models-and-pricing",
+        note: "Checked 2026-10-13: Composer 2.5 is $0.50/$2.50 per MTok (a faster variant is $3/$15). The Cursor Models pool also covers Grok 4.5 to 4.7, which aren't listed in models (context window and capabilities not confirmed). Pro $20, Pro Plus $60, Ultra $200 per month confirmed on cursor.com/help/account-and-billing/pricing; cursor.com/pricing returned unrelated, inconsistent content, so it was ignored. Composer 2.5's context window and vision support weren't confirmed.",
       },
       {
         url: "https://cursor.com/docs/mcp",
@@ -626,11 +631,11 @@ export const harnesses: HarnessProfile[] = [
     mcp: {
       nativeSupport: true,
       addRemoteServer:
-        "/mcp add inside Copilot CLI (type HTTP), or add { \"mcpServers\": { \"cloudflare\": { \"type\": \"http\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.copilot/mcp-config.json.",
+        "copilot mcp add --transport http cloudflare https://mcp.cloudflare.com/mcp from the shell, /mcp add inside Copilot CLI (type HTTP), or add { \"mcpServers\": { \"cloudflare\": { \"type\": \"http\", \"url\": \"https://mcp.cloudflare.com/mcp\" } } } to ~/.copilot/mcp-config.json.",
       oauthLogin:
         "Copilot CLI prompts for authorization when the server requires OAuth. Not hands-on verified; fall back to an API token header if it does not.",
       restartBehavior:
-        "Servers added with `/mcp add` are available immediately, no restart (per the docs). For hand edits to mcp-config.json the docs don't say; restart Copilot CLI to be safe. Not hands-on verified.",
+        "Servers added with `copilot mcp add` or `/mcp add` are available immediately, no restart (per the docs). For hand edits to mcp-config.json the docs don't say; restart Copilot CLI to be safe. Not hands-on verified.",
     },
     skills: {
       supported: true,
@@ -659,8 +664,12 @@ export const harnesses: HarnessProfile[] = [
     lastVerified: "2026-10-03",
     sources: [
       {
+        url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers",
+        note: "Verified 2026-10-13: `copilot mcp add --transport http SERVER-NAME URL` exists, and a server added this way is available immediately without restarting the CLI. The page doesn't cover OAuth, so oauthLogin is unchanged and still unverified.",
+      },
+      {
         url: "https://github.com/features/copilot/plans",
-        note: "Verified 2026-10-11 for subscriptionBilling.headline: Copilot CLI is enabled on every plan including Free; Pro is $10/month.",
+        note: "Verified 2026-10-13: Free $0, Pro $10, Pro+ $39, Max $100 per month, Copilot CLI on every individual plan. Also verified 2026-10-11 for subscriptionBilling.headline: Copilot CLI is enabled on every plan including Free; Pro is $10/month.",
       },
       {
         url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli",
