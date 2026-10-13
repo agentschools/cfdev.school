@@ -16,7 +16,7 @@ describe("courses index", () => {
     }
     expect(html).toContain("Start here");
     // Agent setup, then Projects (no courses yet), then Fundamentals.
-    const order = ['data-course-name="agent-setup"', 'data-group="projects"', "Coming soon.", 'data-group="fundamentals"', 'data-course-name="workers"', 'data-course-name="bindings"'];
+    const order = ['data-course-name="agent-setup"', 'data-group="projects"', 'data-course-name="publish-a-website"', 'data-group="fundamentals"', 'data-course-name="workers"', 'data-course-name="bindings"'];
     const positions = order.map((text) => html.indexOf(text));
     for (const position of positions) expect(position).toBeGreaterThan(-1);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));

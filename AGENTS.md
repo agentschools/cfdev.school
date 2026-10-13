@@ -5,7 +5,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
 - No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
 - Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
-- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"). The projects track has no courses yet. See "Courses and exercises" and #98, which tracks the rest of the tracks work.
+- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"), plus one in the projects track: Publish a website (see "Publish a website course"). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
 
 ## Titles
 
@@ -141,6 +141,16 @@ The course was taken end to end as a student on production in October 2026 (a Pi
 - State survives a redeploy. `cf workers delete --force` also removes the Worker's Durable Object namespaces.
 - Node's global `WebSocket` works as a test client against `wss://` on workers.dev.
 - Taken end to end as a student on the PR #104 preview (fresh enrollment, deleted afterward): every step worked as written. 429s from KV in "no-lost-updates" vary from run to run, sometimes none.
+
+## Publish a website course
+
+`courses/projects/publish-a-website/` is the first project course: a two-question interview (what site, and whether they have a domain), then the student's own site as static assets with a 404 page, a guestbook on D1, and a custom domain. Its outline was written without a planning conversation, so review it like a draft. Tested with `cf` v1.0.0-beta.12 (October 2026), locally and deployed on a personal account, with a throwaway custom domain on one of its zones:
+
+- Files in a `cf init` project's `public/` are the static assets. With a Worker entrypoint, unmatched paths run the Worker, so `assets: { notFoundHandling: "404-page" }` only works if the Worker passes requests to `env.ASSETS.fetch(request)` (`ASSETS: bindings.assets()`).
+- `bindings.d1()` with no `id` is created on deploy as `<worker>-db`. `cf d1 migrations apply` only takes a database ID. Locally it needs the ID too (so it goes in the config after the first deploy) plus `--persist-to .cloudflare/state`, which is where `cf dev` keeps state; otherwise `cf dev` says `no such table`. It asks for confirmation and waits if stdin is open; with stdin closed it takes the default, yes. The local apply then prints its result and never exits (reproduced twice); the remote apply exits normally.
+- `domains: ["<hostname>"]` publishes a custom domain, and turns off workers.dev unless `workersDev: true` is set (the warning says "Wrangler file"). The domain served within a minute. Deleting the Worker removed its DNS record. macOS cached "not found" for the hostname after a check made before the record existed, so plain curl kept failing while `dig @1.1.1.1` resolved it; the exercise explains how to check around that.
+- `cf registrar registrations check <domain>` is read-only and returns availability and price. Buying wasn't tested.
+- Taken end to end as a student on the PR #105 preview (fresh enrollment, deleted afterward), including a custom domain. That run found the local migration and DNS cache issues above.
 
 ## Courses hosted elsewhere
 

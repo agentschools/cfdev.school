@@ -67,9 +67,10 @@ describe("homepage", () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
 
+    // Both tracks have courses, so they keep TRACKS order: Projects first.
+    expect(html).toMatch(/data-track-start="projects"/);
     expect(html).toMatch(/data-track-start="fundamentals"/);
-    expect(html.indexOf("Learn how it works")).toBeLessThan(html.indexOf("Build something"));
-    expect(html).toContain("Coming soon");
+    expect(html.indexOf("Build something")).toBeLessThan(html.indexOf("Learn how it works"));
   });
 
   it("does not render the old anchor-nav header or in-page outline", async () => {

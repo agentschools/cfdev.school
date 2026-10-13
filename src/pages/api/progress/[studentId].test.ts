@@ -94,6 +94,7 @@ describe("GET /api/progress/{studentId}", () => {
     expect(progress.updatedAt).toBe("2026-09-10T12:00:00.000Z");
     expect(progress.courses.map((item) => [item.name, item.exercises.map((ex) => ex.slug)])).toEqual([
       ["agent-setup", ["interview", "models", "instructions"]],
+      ["publish-a-website", ["interview"]],
       ["workers", ["interview", "deploy-a-worker"]],
       ["bindings", ["interview", "live-objects"]],
       ["durable-objects", ["interview"]],
