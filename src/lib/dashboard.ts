@@ -1,6 +1,6 @@
 import { REQUIRED_COURSE, TRACKS, type Track } from "../data/courses";
 import type { Progress } from "../schemas/progress";
-import { type CatalogCourse, type StartedCourse, startedCourses } from "./course-progress";
+import { type CatalogCourse, type CourseGroup, groupByTrack, type StartedCourse, startedCourses } from "./course-progress";
 
 /** What the enrolled homepage's "Up next" block shows. */
 export type UpNext =
@@ -21,6 +21,8 @@ export type UpNext =
 export interface DashboardCourse {
   title: string;
   url: string;
+  external: boolean;
+  track?: Track;
   completedAt?: string;
   done: number;
   /** One per exercise, true once it has a completion. */
@@ -31,7 +33,8 @@ export interface DashboardCourse {
 
 export interface Dashboard {
   upNext: UpNext;
-  courses: DashboardCourse[];
+  /** Started courses, grouped like the sidebar (see groupByTrack). */
+  courses: CourseGroup<DashboardCourse>[];
   /** Agents that completed at least one exercise, most exercises first. */
   agents: { harness: string; exercises: number }[];
   /** Agent setup's interview summary, once there is one. */
@@ -52,7 +55,7 @@ export function buildDashboard(progress: Progress, catalog: readonly CatalogCour
 
   return {
     upNext: upNext(started, catalog, progress),
-    courses: started.map(toDashboardCourse),
+    courses: groupByTrack(started.map(toDashboardCourse)),
     agents: agents(progress),
     aboutYou: progress.courses.find((course) => course.name === REQUIRED_COURSE)?.interviewSummary,
     trackStarts: Object.fromEntries(
@@ -116,6 +119,8 @@ function toDashboardCourse(course: StartedCourse): DashboardCourse {
   return {
     title: course.title,
     url: course.url,
+    external: course.external,
+    ...(course.track ? { track: course.track } : {}),
     ...(course.completedAt ? { completedAt: course.completedAt } : {}),
     done: segments.filter(Boolean).length,
     segments,

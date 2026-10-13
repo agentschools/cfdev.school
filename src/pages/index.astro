@@ -590,6 +590,21 @@ const trackChoices = TRACKS.map((track) => ({
     border-top: 1px solid var(--border);
   }
 
+  .course-rows :global(.course-group) {
+    padding: 1.25rem 0 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-fg);
+  }
+
+  .course-rows :global(li + .course-group),
+  .course-rows :global(.course-group + li) {
+    border-top: none;
+  }
+
   .course-rows :global(.course-row) {
     display: flex;
     align-items: center;

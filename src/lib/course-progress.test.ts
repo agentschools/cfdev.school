@@ -120,3 +120,20 @@ describe("startedCourses", () => {
     ]);
   });
 });
+
+describe("groupByTrack", () => {
+  it("puts courses outside any track first, then each track, then courses hosted elsewhere, leaving out empty groups", async () => {
+    const { groupByTrack } = await import("./course-progress");
+    const courses = [
+      { title: "Bindings", track: "fundamentals" as const, external: false },
+      { title: "Somebody's course", external: true },
+      { title: "Agent setup", external: false },
+      { title: "Workers", track: "fundamentals" as const, external: false },
+    ];
+    expect(groupByTrack(courses).map((group) => [group.id, group.title, group.courses.map((c) => c.title)])).toEqual([
+      ["start", undefined, ["Agent setup"]],
+      ["fundamentals", "Fundamentals", ["Bindings", "Workers"]],
+      ["elsewhere", "Hosted elsewhere", ["Somebody's course"]],
+    ]);
+  });
+});
