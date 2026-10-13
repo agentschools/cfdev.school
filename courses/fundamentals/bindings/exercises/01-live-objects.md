@@ -21,11 +21,7 @@ agent-instructions: |
      - `PUT /note`, then in a separate request `GET /note`, and confirm the value comes back. If anyone read `/note` on the deployed URL before the `PUT`, the "not found" may be cached for up to about a minute, so retry before assuming something's wrong (see "swap-resources" for why);
      - confirm with `cf kv namespaces list --per-page 100` that the namespace `cf deploy` created exists. The list is paginated, 20 per page by default, so without `--per-page` an account with many namespaces won't show it.
      Don't trust the student saying it worked.
-  7. Teach the point of what they just saw, using their own `/env` output:
-     - The secret is a string. Anything that logs or serializes `env` (a debug log line, an error reporter) leaks it, and anyone holding that string has the access it grants.
-     - The binding is a live object, already connected. `JSON.stringify` shows `{}`: there's no key in it to leak. The KV namespace's real credentials never reach the Worker's code.
-     - Declaring the binding was the whole permission step. There's no separate access list to update on the namespace, and a Worker with no binding has no access at all.
-     - Since Cloudflare knows every binding, it can answer "which Workers use this namespace?" without reading anyone's code.
+  7. Teach the body's "Why it matters" section, using their own `/env` output rather than the example in the body. Point at the actual `{}` next to the actual secret string.
   8. Comprehension check: ask the student why a leaked log of `env` is a problem for `API_TOKEN` but not for `NOTES`. Gently correct anything off. Verification is the gate, not their answer.
   9. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes. Then move on to "call-another-worker".
 
@@ -54,3 +50,50 @@ Your agent can help you with these.
 
 - A Worker with a `cloudflare.config.ts`, like the one from [Deploy a Worker](/courses/workers/deploy-a-worker). Your agent can make a new one if you don't have it.
 - The [`cf` CLI](/courses/agent-setup/cli) logged in to your Cloudflare account (`cf auth whoami`).
+
+## Strings vs. bindings
+
+On a typical platform, code that reads from a database gets a URL and a key, and builds a client from them:
+
+```ts
+// A typical platform (not Cloudflare)
+const db = connect(env.DATABASE_URL, env.DATABASE_KEY);
+const value = await db.get("content");
+```
+
+On Cloudflare, you declare the binding in `cloudflare.config.ts`:
+
+```ts
+env: {
+  GREETING: bindings.text("Hello"),
+  API_TOKEN: bindings.secret(),
+  NOTES: bindings.kv(),
+},
+```
+
+Then `env.NOTES` arrives already connected. There's nothing to set up:
+
+```ts
+import { env } from "cloudflare:workers";
+
+export default {
+  async fetch(request) {
+    return new Response(await env.NOTES.get("content"));
+  },
+};
+```
+
+`GREETING` and `API_TOKEN` are plain strings. `NOTES` is a live object. Ask your Worker to serialize all three and you get something like this:
+
+```text
+GREETING   string   "Hello"
+API_TOKEN  string   "pretend-this-is-secret"
+NOTES      object   {}
+```
+
+## Why it matters
+
+- A secret is a string, and strings leak. A debug log line or an error reporter that prints `env` exposes it, and anyone holding that string has the access it grants.
+- A binding has nothing in it to leak. The KV namespace's real credentials never reach your code, which is why `NOTES` shows up as `{}`.
+- Declaring the binding is the whole permission step. There's no access list to update on the namespace, and a Worker with no binding has no access at all.
+- Cloudflare knows every binding, so it can tell you which Workers use a namespace without reading anyone's code.

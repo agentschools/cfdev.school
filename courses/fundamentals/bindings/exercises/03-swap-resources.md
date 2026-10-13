@@ -14,10 +14,7 @@ agent-instructions: |
      - `GET /note` on the staging Worker and confirm it doesn't return the production value;
      - `PUT /note` a new value on staging, then `GET /note` on both Workers, in separate requests, and confirm staging returns the new value and production still returns its own.
      Deploys can take up to about 30 seconds to start serving; retry before assuming something's wrong. KV is eventually consistent, and the first `GET` on staging caches "not found": staging can keep returning nothing for about a minute after the `PUT`. Retry for up to a minute (don't re-`PUT`), and turn the wait into a teaching moment: a write is usually visible right away where it was made, but cached reads elsewhere, including cached misses, can take 60 seconds or more to update (https://developers.cloudflare.com/kv/concepts/how-kv-works/). Don't trust the student saying it worked.
-  5. Teach the point:
-     - Code can only reach a resource through a binding, so it can never be hard-coded to the production namespace. Every deployment of the same code can be pointed somewhere else. In testing, this is called dependency injection, and with bindings it comes for free.
-     - The same idea works inside one Worker. When `env` is passed to `fetch()`, a router Worker can combine two Workers' handlers and give each its own `env`, e.g. `apiWorker.fetch(request, { KV: env.API_KV }, ctx)`, even if both named their binding `KV`. Show this as a snippet; it doesn't need to be built.
-     - The `cf init` template imports `env` from `"cloudflare:workers"` instead of taking it as a parameter. That's convenient, especially in deeply nested functions, and the docs cover the tradeoffs (https://developers.cloudflare.com/workers/runtime-apis/bindings/#importing-env-as-a-global): a global `env` can still be overridden for a block of code with `withEnv({ ... }, () => ...)` from `"cloudflare:workers"`; at the top level of a module, plain values like text and secrets work but binding calls that do I/O (like `env.NOTES.get`) don't; and a client built from a binding at module scope can outlive a binding change, since Cloudflare may reuse a running isolate when only bindings change. Passing `env` as a parameter stays the docs' recommended pattern for dependency injection and testing. Ask the student which style their Worker uses, and let them choose.
+  5. Teach the body's "Why it matters" section. The router snippet doesn't need to be built. When you get to the two ways to get `env`, add the tradeoffs the body leaves out (https://developers.cloudflare.com/workers/runtime-apis/bindings/#importing-env-as-a-global): a global `env` can still be overridden for a block of code with `withEnv({ ... }, () => ...)` from `"cloudflare:workers"`; at the top level of a module, plain values like text and secrets work but binding calls that do I/O (like `env.NOTES.get`) don't; and a client built from a binding at module scope can outlive a binding change, since Cloudflare may reuse a running isolate when only bindings change. Passing `env` as a parameter stays the docs' recommended pattern for dependency injection and testing. Ask the student which style their Worker uses, and let them choose.
   6. Comprehension check: ask the student why it's impossible for this Worker's staging deployment to write to the production namespace by mistake. Gently correct anything off.
   7. Clean up, with the student's OK: delete the staging Worker (`cf workers delete <name>-staging`) and its namespace (`cf kv namespaces delete <id>`), unless they want to keep them. Both commands prompt for confirmation and abort when run non-interactively, so pass `--force` once the student has said yes.
   8. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes. Then move on to "capabilities".
@@ -39,3 +36,53 @@ Writing to one won't touch the other, and your agent checks that it doesn't.
 ## Prerequisites
 
 - You've completed [Call another Worker](/courses/bindings/call-another-worker) and still have that Worker on disk.
+
+## Where a binding points
+
+Your code always says `env.NOTES`. What that points at depends on how you run it:
+
+| How you run it               | `env.NOTES` points at                  |
+| ---------------------------- | -------------------------------------- |
+| `cf dev`                     | A local simulation on your machine     |
+| `cf dev`, with remote on     | The real namespace in your account     |
+| `cf deploy`                  | The real namespace                     |
+| `cf deploy --mode staging`   | A second namespace, just for staging   |
+
+A remote binding is one setting on the binding. It needs the namespace's ID:
+
+```ts
+NOTES: bindings.kv({ id: "<namespace id>", dev: { remote: true } }),
+```
+
+And since `cloudflare.config.ts` is TypeScript, it can take a function of the mode. Give staging its own Worker name, and it gets its own namespace:
+
+```ts
+export default defineConfig(({ mode }) => ({
+  worker: {
+    name: mode === "staging" ? "my-worker-staging" : "my-worker",
+    // entrypoint, compatibilityDate, ...
+    env: {
+      NOTES: bindings.kv(),
+    },
+  },
+}));
+```
+
+## Why it matters
+
+- Your code can only reach a resource through a binding, so it can't be hard-coded to production data. Any deployment of the same code can point somewhere else. In testing this is called dependency injection, and with bindings you get it without trying.
+- It works inside one Worker too. Say you combine two Workers into one, and both called their KV binding `KV`. If each handler takes `env` as a parameter, a router can give each one its own:
+
+  ```ts
+  export default {
+    async fetch(request, env, ctx) {
+      const { hostname } = new URL(request.url);
+      if (hostname === "api.example.com") {
+        return apiWorker.fetch(request, { KV: env.API_KV }, ctx);
+      }
+      return assetsWorker.fetch(request, { KV: env.ASSETS_KV }, ctx);
+    },
+  };
+  ```
+
+- There are two ways to get `env`. The `cf init` template imports it (`import { env } from "cloudflare:workers"`), which is handy deep inside your code. Taking it as a parameter, `fetch(request, env, ctx)`, is what makes the router above possible, and it's what the [docs](https://developers.cloudflare.com/workers/runtime-apis/bindings/#importing-env-as-a-global) recommend for testing.

@@ -15,11 +15,8 @@ agent-instructions: |
      - fetch `/greet` on the main Worker's deployed URL and confirm it returns the greeter's message, with the main Worker's name as the caller (that's `ctx.props` arriving);
      - fetch the greeter's would-be URL, `https://greeter.<their-subdomain>.workers.dev` (the subdomain is in the main Worker's URL), and confirm it does not return the greeter's response (its `fetch()` 404 text). Cloudflare answers with its own error page instead.
      Deploys can take up to about 30 seconds to start serving; retry before assuming something's wrong. Don't trust the student saying it worked.
-  8. Teach the point, using what they just verified:
-     - There's no URL an attacker can feed your code to reach the greeter. If your Worker fetches a user-supplied URL (an avatar, a webhook), no URL leads there; only code that uses `env.GREETER` can call it. That's server-side request forgery (SSRF) ruled out by design. One caveat, for students who'll put a Worker on their own domain in front of an origin server: there, a global `fetch()` to the Worker's own zone goes straight to the origin, skipping Cloudflare's security settings, unless the Worker sets the `global_fetch_strictly_public` compatibility flag (https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public). A workers.dev Worker like theirs has no origin behind it.
-     - There's no API key between the two Workers and no certificate to manage. The binding is the permission, and `props` tells the greeter who's calling. The platform ensures `props` can only be set by someone with permission to edit and deploy the Worker receiving them, so the greeter can trust them without signatures or keys (https://developers.cloudflare.com/workers/runtime-apis/context/#props). `props` can also scope a binding to one resource, like a single document: a custom binding.
+  8. Teach the body's "Why it matters" section, using what they just verified: the greeter's would-be URL returning Cloudflare's error page is the SSRF point made concrete. Mention the origin-server caveat only if the student plans to put a Worker on their own domain in front of an existing server. Then add one thing the body doesn't cover:
      - `/env` from the last exercise shows `GREETER` as `{}` and `[object Fetcher]`. Enumerating it (`for (const key in env.GREETER)`) lists only `fetch` and `connect`, yet `typeof env.GREETER.greet` is `"function"`: RPC methods are resolved when called, so they don't show up when enumerated. Show this with a quick `for...in` rather than claiming it.
-     - For private services outside Cloudflare (an API in AWS or a home network), Workers VPC gives you the same thing: a binding to one host and port, not open network access. One sentence, no exercise.
   9. Comprehension check: ask the student what an attacker would need to call the greeter, compared to a service with a public URL and an API key. Gently correct anything off.
   10. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes. Then move on to "swap-resources".
 
@@ -39,3 +36,47 @@ Then you'll check that nothing else can reach the greeter, and think about what 
 ## Prerequisites
 
 - You've completed [Live objects](/courses/bindings/live-objects) and still have that Worker on disk.
+
+## A Worker you call like a function
+
+The greeter exports a class with a method on it:
+
+```ts
+import { WorkerEntrypoint } from "cloudflare:workers";
+
+export default class extends WorkerEntrypoint<Env, { caller: string }> {
+  async greet(name: string) {
+    return `Hello, ${name}! (called by ${this.ctx.props.caller})`;
+  }
+}
+```
+
+Your first Worker binds to it in `cloudflare.config.ts`, saying who's calling with `props`:
+
+```ts
+env: {
+  GREETER: bindings.worker({ worker: greeter, props: { caller: "my-worker" } }),
+},
+```
+
+And calls it like a local async function. There's no HTTP request to build, no hostname, and no key:
+
+```ts
+const message = await env.GREETER.greet("Ada");
+```
+
+This is [RPC](https://developers.cloudflare.com/workers/runtime-apis/rpc/) (remote procedure call): the greeter runs as its own Worker, but you call its methods as if they were yours.
+
+## Why it matters
+
+- No URL leads to the greeter. Say your Worker fetches a URL a user gives it, like an avatar image:
+
+  ```ts
+  const avatar = await fetch(userSuppliedUrl);
+  ```
+
+  On a private network, an attacker could pass an internal hostname and make your server fetch something only it can see. That's server-side request forgery (SSRF). Here there's no URL to pass: only code that uses `env.GREETER` can reach the greeter.
+- There's no API key between the two Workers and no certificate to manage. The binding is the permission.
+- The greeter can trust `props`. Only someone allowed to deploy the greeter can set them ([docs](https://developers.cloudflare.com/workers/runtime-apis/context/#props)), so they work as the caller's identity without signatures. `props` can also limit a binding to one thing, like a single document.
+- One caveat: a Worker on your own domain, in front of an existing server, can reach that server with a plain `fetch()` to the domain, skipping Cloudflare's security settings. The [`global_fetch_strictly_public`](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public) compatibility flag turns that off. A workers.dev Worker has no server behind it.
+- For private services outside Cloudflare, like an API in another cloud or on a home network, [Workers VPC](https://developers.cloudflare.com/workers-vpc/) brings bindings there too. A [VPC Service](https://developers.cloudflare.com/workers-vpc/configuration/vpc-services/) is a binding to one host and port in your private network, not open network access.

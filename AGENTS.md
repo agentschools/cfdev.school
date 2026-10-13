@@ -117,6 +117,8 @@ Verify the Workers course with `npm run verify:exercise` and `npm run verify:exe
 
 ## Bindings course
 
+Each exercise's body carries the teaching, so students can read it on the page as a preview: a short section with simple code blocks, then "Why it matters". `agent-instructions` keep the procedure, verification, `cf` workarounds, and comprehension checks, and point at the body's sections instead of repeating them. Agents read the body too (`/llms.txt` says to follow both).
+
 Every `cf` command and behavior in `courses/fundamentals/bindings/` was tested against a real account with `cf` v1.0.0-beta.12 (October 2026), and the content was checked against the docs (see "Cloudflare docs are canon"). Re-test before changing these claims, `cf` is in beta:
 
 - `bindings.kv()` with no `id` is created on `cf deploy` (named `<worker>-<binding>`), and later deploys reuse it without an ID in the config. Remote bindings (`dev: { remote: true }`) do need the `id`.
