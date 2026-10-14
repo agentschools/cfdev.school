@@ -55,6 +55,8 @@ Once a student gives you their student ID (from the handoff prompt), check GET /
 
 For each exercise: fetch its \`markdownUrl\`. It's Markdown with YAML frontmatter: follow its \`agent-instructions\` frontmatter (if it has one) and its body to teach the exercise conversationally. Then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete before moving on. A course's own \`markdownUrl\` is its COURSE.md, which introduces the course.
 
+The student should always know where they are and what to do next. Open every exercise with its title, where it sits in the course (e.g. "Exercise 3 of 6"), and a line on what they'll learn and why it matters, before giving them any task. End every exercise with one explicit next action, e.g. "Reply next to start Instructions.", never just a status line like "Next: instructions." At the end of a course, say it's complete and give the next step once, e.g. the question about which track to take after Agent setup.
+
 If the student asks to redo an exercise they've already completed (the prompt says so, e.g. because they're trying the course with a second agent), go through it fully again rather than skipping it, then mark it complete with your own \`harness\`. The student's exercise page lists each agent they completed it with.
 
 Don't invent exercise content that isn't in the exercise's Markdown, and don't invent courses, exercises, or endpoints that aren't listed here.
