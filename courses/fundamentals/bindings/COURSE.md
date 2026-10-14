@@ -8,7 +8,7 @@ metadata:
 
 # Bindings
 
-On most platforms, your code reaches a database or another service with a URL and a secret key. On Cloudflare, your Worker gets bindings instead: objects on `env` that are already connected to a resource, like a KV namespace, another Worker, or an AI model. This course is about why that design matters.
+On most platforms, your code reaches a database or another service with a URL and a secret key. On Cloudflare, your Worker gets bindings instead: objects on `env` that are already connected to a resource, like a KV namespace, another Worker, or an AI model. If you took the Workers course, you already added one in "Add a binding": that showed how to declare and use a binding. This course is about why bindings are designed that way, and what that design lets you do.
 
 You'll see what a binding actually is, call one Worker from another without a public URL, point the same code at different resources, and finally hand a piece of untrusted code exactly the capabilities you choose and nothing else.
 
