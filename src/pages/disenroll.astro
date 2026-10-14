@@ -28,13 +28,13 @@ import Layout from "../layouts/Layout.astro";
           <p id="reset-progress-status" class="status" hidden></p>
         </section>
 
-        <section class="card card-danger">
+        <section class="card">
           <h2>Disenroll completely</h2>
           <p>
             Remove your student ID and progress from this browser. Your data on the server is not affected.
             You will need to re-enroll to use Cloudflare Dev School again.
           </p>
-          <button id="disenroll-btn" type="button" class="btn btn-danger">
+          <button id="disenroll-btn" type="button" class="btn btn-primary">
             Disenroll from Cloudflare Dev School
           </button>
         </section>
@@ -128,11 +128,6 @@ import Layout from "../layouts/Layout.astro";
     line-height: 1.6;
   }
 
-  .card-danger {
-    /* Not var(--accent): this is a destructive action and needs to read as a
-       distinct warning color, not the brand orange used everywhere else. */
-    border-color: color-mix(in oklch, oklch(0.62 0.22 25) 40%, var(--border));
-  }
 
   .btn {
     display: inline-flex;
@@ -158,16 +153,6 @@ import Layout from "../layouts/Layout.astro";
 
   .btn-primary:hover:not(:disabled) {
     filter: brightness(1.05);
-  }
-
-  .btn-danger {
-    border: 1px solid oklch(0.62 0.22 25);
-    background: transparent;
-    color: oklch(0.62 0.22 25);
-  }
-
-  .btn-danger:hover:not(:disabled) {
-    background: color-mix(in oklch, oklch(0.62 0.22 25) 12%, transparent);
   }
 
   .status {
