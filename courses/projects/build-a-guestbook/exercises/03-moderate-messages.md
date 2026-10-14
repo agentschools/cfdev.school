@@ -1,5 +1,5 @@
 ---
-description: "Screen new entries with a decision model and hold back the ones that look like spam."
+description: "Screen new entries with an AI decision model and hold back the ones that look like spam."
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
