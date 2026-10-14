@@ -11,7 +11,7 @@ agent-instructions: |
 
   1. Provision: help them create a KV namespace with `cf kv namespaces create --title <name>`. It prints JSON that includes the new namespace's `id`. Explain what a KV namespace is: a key-value store on Cloudflare's network, independent of any single Worker.
   2. Bind: add `KV: bindings.kv({ id: "<that id>" })` to the `worker.env` object in their `cloudflare.config.ts` (importing `bindings` from `"cf/config"` if it isn't already). This is a manual edit — don't reach for a template that already has the binding wired up, the point is to see how a binding is declared. Explain what a binding is: the named connection between a Worker and a platform resource, which shows up on `env` in the Worker's code.
-  3. Extend the Worker: update the same Worker's `fetch` handler so it reads a `key` (and, for writes, a `value`) from the request — e.g. query string params — and uses the binding: `PUT`-style requests call `env.KV.put(key, value)`, `GET`-style requests call `env.KV.get(key)` and return it (or a 404 if missing). Point out that `env.KV` is the binding from step 2 in action.
+  3. Extend the Worker: update the same Worker's `fetch` handler so it reads a `key` (and, for writes, a `value`) from the request — e.g. query string params — and uses the binding: `PUT`-style requests call `env.KV.put(key, value)`, `GET`-style requests call `env.KV.get(key)` and return it (or a 404 if no value is stored under that key). Requests without a `key` must keep returning the response from "Deploy a Worker", so the Worker's homepage doesn't turn into an error; the binding is added on top of what's there. Point out that `env.KV` is the binding from step 2 in action.
   4. Run locally: start the local dev server with `cf dev` and confirm a local write followed by a local read returns the same value. Local dev uses a local simulation of KV, not the real namespace.
   5. Deploy: deploy to the student's own Cloudflare account with `cf deploy`.
   6. Verify before completing: YOU must make two separate requests against the deployed URL — first write a value, then in a follow-up request read it back — and confirm it matches. A single request proving a value round-trips in memory is not enough; the two-step, separately-issued round trip is what proves the KV binding is actually persisting data rather than the Worker just echoing something back. Do not trust the student saying it worked — check it yourself. Tell the student why you verify this way: the separate read is what proves persistence.
@@ -28,7 +28,7 @@ This exercise extends the Worker you deployed in [Deploy a Worker](/courses/work
 
 ## What you'll build
 
-The same Worker, now with a `KV` binding on `env`. You'll write a value (e.g. via a query string) and, in a separate request, read it back from the public URL. Getting the same value back proves the binding actually persists data, not that a single request just echoed something. Out of scope: multiple namespaces, TTLs, R2/D1, and other storage.
+The same Worker, now with a `KV` binding on `env`. Its homepage still shows the response from the first exercise. You'll write a value (e.g. via a query string) and, in a separate request, read it back from the public URL. Getting the same value back proves the binding actually persists data, not that a single request just echoed something. Out of scope: multiple namespaces, TTLs, R2/D1, and other storage.
 
 ## Prerequisites
 
