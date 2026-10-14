@@ -1,5 +1,7 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { buildPrompt } from "./agent-prompt";
+import { hasCompletions } from "./course-progress";
+import { subscribeToProgress } from "./progress-client";
 
 /**
  * Course page (/courses/{name}). Enrolled students get a prompt for working
@@ -16,13 +18,20 @@ export function initCoursePage(): void {
   const copyConfirm = document.getElementById("agent-prompt-confirm");
   if (!page || !enrollNudge || !promptSection || !promptText || !copyButton || !copyConfirm) return;
 
-  const courseTitle = page.dataset.courseTitle ?? "";
+  const { courseName = "", courseTitle = "" } = page.dataset;
+  let studentId: string | undefined;
 
   function onEnrolled(student: CachedStudent): void {
     enrollNudge!.hidden = true;
     promptText!.textContent = buildPrompt(student, { courseTitle });
     copyConfirm!.hidden = true;
     promptSection!.hidden = false;
+    if (student.id === studentId) return;
+    studentId = student.id;
+    // Once the student has completed some of the course, the prompt continues it.
+    subscribeToProgress(student.id, (progress) => {
+      promptText!.textContent = buildPrompt(student, { courseTitle, continuing: hasCompletions(progress, courseName) });
+    });
   }
 
   copyButton.addEventListener("click", async () => {

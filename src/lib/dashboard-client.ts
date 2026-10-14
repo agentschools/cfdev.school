@@ -1,7 +1,7 @@
 import { buildChooseCoursePrompt, buildPrompt } from "./agent-prompt";
 import type { CatalogCourse } from "./course-progress";
 import { buildDashboard, type Dashboard, type DashboardCourse } from "./dashboard";
-import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
+import { type CachedStudent, ENROLLED_EVENT, type EnrolledDetail, readCachedStudent } from "./enroll-client";
 import { subscribeToProgress } from "./progress-client";
 import type { Progress } from "../schemas/progress";
 
@@ -44,9 +44,13 @@ export function initDashboard(): void {
   function render(dashboard: Dashboard): void {
     const { upNext: next } = dashboard;
     const choosing = next.kind === "choose";
-    el("up-next-exercise").hidden = choosing;
+    const welcome = dashboard.welcome && next.kind === "exercise";
+    el("up-next-welcome").hidden = !welcome;
+    el("up-next-exercise").hidden = choosing || welcome;
     el("up-next-choose").hidden = !choosing;
-    el("prompt-caption").hidden = choosing;
+    el("dashboard-prompt").hidden = welcome;
+    el("prompt-caption").hidden = choosing || welcome;
+    el("welcome-description").textContent = welcome ? (next.description ?? "") : "";
 
     if (next.kind === "exercise") {
       el("up-next-eyebrow").textContent =
@@ -55,10 +59,7 @@ export function initDashboard(): void {
       const description = el("up-next-description");
       description.textContent = next.description ?? "";
       description.hidden = !next.description;
-      promptText.textContent = buildPrompt(student!, {
-        courseTitle: next.courseTitle,
-        exerciseTitle: next.exerciseTitle,
-      });
+      promptText.textContent = buildPrompt(student!, { courseTitle: next.courseTitle, continuing: next.continuing });
     } else {
       el("choose-eyebrow").textContent = next.justFinishedAgentSetup ? "Agent setup complete" : "All caught up";
       el("choose-lede").hidden = !next.justFinishedAgentSetup;
@@ -167,9 +168,15 @@ export function initDashboard(): void {
   }
 
   let progressReceived = false;
-  function show(cached: CachedStudent): void {
+  function show(cached: CachedStudent, fresh = false): void {
     student = cached;
     document.documentElement.dataset.enrolled = "";
+    const renderEmpty = () =>
+      render(buildDashboard({ studentId: cached.id, courses: [], externalCourses: [], updatedAt: cached.createdAt }, catalog));
+    // A student who just enrolled has no progress yet, so show the welcome
+    // right away: enroll-client.ts switches the page over inside a view
+    // transition, which captures the page as it is when this returns.
+    if (fresh) renderEmpty();
     subscribeToProgress(cached.id, (progress: Progress) => {
       progressReceived = true;
       render(buildDashboard(progress, catalog));
@@ -177,8 +184,7 @@ export function initDashboard(): void {
     // If progress can't load (e.g. a cached ID the server doesn't know),
     // fall back to the first Agent setup exercise rather than nothing.
     setTimeout(() => {
-      if (progressReceived) return;
-      render(buildDashboard({ studentId: cached.id, courses: [], externalCourses: [], updatedAt: cached.createdAt }, catalog));
+      if (!progressReceived) renderEmpty();
     }, 1500);
   }
 
@@ -194,8 +200,8 @@ export function initDashboard(): void {
 
   // initEnrollment() runs from Layout.astro, usually before this script, so a
   // cached student's ENROLLED_EVENT may already have fired. Check directly too.
-  document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<CachedStudent>) => {
-    if (event.detail.id !== student?.id) show(event.detail);
+  document.addEventListener(ENROLLED_EVENT, ((event: CustomEvent<EnrolledDetail>) => {
+    if (event.detail.id !== student?.id) show(event.detail, event.detail.fresh);
   }) as EventListener);
   const cached = readCachedStudent();
   if (cached && cached.id !== student?.id) show(cached);

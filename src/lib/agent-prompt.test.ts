@@ -8,33 +8,33 @@ beforeEach(() => {
 });
 
 describe("buildPrompt", () => {
-  it("embeds the student's id, points at Agent setup's interview by default, and fetches llms.txt", () => {
+  it("embeds the student's id, points at Agent setup by default, and fetches llms.txt", () => {
     expect(buildPrompt(student)).toBe(
       [
         "I'm enrolled in Cloudflare Dev School as curious-hacker-2019",
         "",
-        'Let\'s work on the "Interview" exercise from the "Agent setup" course together.',
+        'Let\'s work on the "Agent setup" course together.',
         "",
         "Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.",
       ].join("\n"),
     );
   });
 
-  it("names the exercise and its course", () => {
-    const prompt = buildPrompt(student, { courseTitle: "Workers", exerciseTitle: "Deploy a Worker" });
+  it("names the course", () => {
+    const prompt = buildPrompt(student, { courseTitle: "Workers" });
 
-    expect(prompt).toContain('Let\'s work on the "Deploy a Worker" exercise from the "Workers" course together.');
+    expect(prompt).toContain('Let\'s work on the "Workers" course together.');
     expect(prompt).toContain("Fetch https://cloudflare-dev-school.ziki.workers.dev/llms.txt for instructions.");
   });
 
-  it("names just the course when there's no exercise", () => {
-    expect(buildPrompt(student, { courseTitle: "Workers" })).toContain(
-      'Let\'s work on the "Workers" course together.',
+  it("continues a course the student has completed exercises in", () => {
+    expect(buildPrompt(student, { courseTitle: "Workers", continuing: true })).toContain(
+      'Let\'s continue working on the "Workers" course.',
     );
   });
 
   it("asks to redo an exercise the student already completed", () => {
-    const prompt = buildPrompt(student, { courseTitle: "Agent setup", exerciseTitle: "Models", redo: true });
+    const prompt = buildPrompt(student, { courseTitle: "Agent setup", continuing: true, redoExercise: "Models" });
 
     expect(prompt).toContain(
       'Let\'s redo the "Models" exercise from the "Agent setup" course together, even though I\'ve already completed it.',

@@ -9,6 +9,15 @@ export function exerciseCompletions(progress: Progress, course: string, exercise
   );
 }
 
+/** Whether any of a built-in course's exercises has a completion, from any agent. */
+export function hasCompletions(progress: Progress, course: string): boolean {
+  return (
+    progress.courses
+      .find((item) => item.name === course)
+      ?.exercises.some((exercise) => exercise.completions.length > 0) ?? false
+  );
+}
+
 /** What client code needs to know about a built-in course to show a student's progress through it. */
 export interface CatalogCourse {
   name: string;

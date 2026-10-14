@@ -11,6 +11,8 @@ export type UpNext =
       /** Zero-based, like the exercise files: the interview is 0. */
       index: number;
       description?: string;
+      /** Some of the course's exercises have completions, so the prompt continues it. */
+      continuing: boolean;
     }
   | {
       kind: "choose";
@@ -33,6 +35,8 @@ export interface DashboardCourse {
 
 export interface Dashboard {
   upNext: UpNext;
+  /** Nothing started yet (no interview, no completions): welcome the student and lead into the interview. */
+  welcome: boolean;
   /** Started courses, grouped like the sidebar (see groupByTrack). */
   courses: CourseGroup<DashboardCourse>[];
   /** Agents that completed at least one exercise, most exercises first. */
@@ -55,6 +59,7 @@ export function buildDashboard(progress: Progress, catalog: readonly CatalogCour
 
   return {
     upNext: upNext(started, catalog, progress),
+    welcome: started.length === 0,
     courses: groupByTrack(started.map(toDashboardCourse)),
     agents: agents(progress),
     aboutYou: progress.courses.find((course) => course.name === REQUIRED_COURSE)?.interviewSummary,
@@ -74,7 +79,7 @@ function upNext(started: StartedCourse[], catalog: readonly CatalogCourse[], pro
     (latest, course) => (!latest || lastActivity(course) > lastActivity(latest) ? course : latest),
     undefined,
   );
-  if (current) return nextExercise(current.title, current.exercises);
+  if (current) return nextExercise(current.title, current.exercises, lastActivity(current) !== "");
 
   const setup = catalog.find((course) => course.name === REQUIRED_COURSE);
   const setupProgress = progress.courses.find((course) => course.name === REQUIRED_COURSE);
@@ -82,6 +87,7 @@ function upNext(started: StartedCourse[], catalog: readonly CatalogCourse[], pro
     return nextExercise(
       setup.title,
       setup.exercises.map((exercise) => ({ ...exercise, completions: [] })),
+      false,
     );
   }
 
@@ -91,7 +97,7 @@ function upNext(started: StartedCourse[], catalog: readonly CatalogCourse[], pro
   return { kind: "choose", justFinishedAgentSetup: !othersCompleted };
 }
 
-function nextExercise(courseTitle: string, exercises: StartedCourse["exercises"]): UpNext {
+function nextExercise(courseTitle: string, exercises: StartedCourse["exercises"], continuing: boolean): UpNext {
   const index = Math.max(
     exercises.findIndex((exercise) => exercise.completions.length === 0),
     0,
@@ -103,6 +109,7 @@ function nextExercise(courseTitle: string, exercises: StartedCourse["exercises"]
     exerciseTitle: exercise.title,
     index,
     ...(exercise.description ? { description: exercise.description } : {}),
+    continuing,
   };
 }
 

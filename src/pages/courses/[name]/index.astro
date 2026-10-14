@@ -25,7 +25,7 @@ const title = course?.title ?? "Course not found";
           <p>This course doesn't exist.</p>
         </main>
       ) : (
-        <main class="content" data-course-page data-course-title={course.title}>
+        <main class="content" data-course-page data-course-name={course.name} data-course-title={course.title}>
           <header class="header">
             <p class="eyebrow">
               <a href="/courses">Courses</a>
