@@ -91,7 +91,7 @@ Check GET /api/progress/{studentId} first if the student might already have comp
 
 ## Status
 
-Cloudflare Dev School is under active development. Five built-in courses are available: Agent setup, then Publish a website in the projects track, and Workers, Bindings, and Durable Objects in the fundamentals track. Students can also take courses hosted elsewhere. Quiz scoring isn't available: quizzes are conversational only. Don't invent course, exercise, or quiz endpoints that aren't listed above.
+Cloudflare Dev School is under active development. Six built-in courses are available: Agent setup, then Publish a website and Build a guestbook in the projects track, and Workers, Bindings, and Durable Objects in the fundamentals track. Students can also take courses hosted elsewhere. Quiz scoring isn't available: quizzes are conversational only. Don't invent course, exercise, or quiz endpoints that aren't listed above.
 `;
 
 export const GET: APIRoute = () => {

@@ -12,4 +12,4 @@ This is a project course: you start from something you want, a personal site, a 
 
 You'll describe the site to your agent, and it'll recommend a stack that fits: plain HTML and CSS, or something with more room to grow, like Hono, Astro, EmDash, or vinext. You'll build it on your machine until you like it, publish it as a [Worker](https://developers.cloudflare.com/workers/) with [static assets](https://developers.cloudflare.com/workers/static-assets/), and finally put it on your own domain.
 
-The site can stay as simple as you want or get more interactive, depending on what you're going for.
+The site can stay as simple as you want or get more interactive, depending on what you're going for. Want visitors to leave a note? The Build a guestbook course picks up where this one ends.
