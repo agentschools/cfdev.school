@@ -1,6 +1,6 @@
 ---
 name: build-a-guestbook
-description: "Add a guestbook to a website: a form and a list of entries, saved in a D1 database, screened for spam by a decision model, with a notification for each new entry. For students who've finished Agent setup; Publish a website is a good place to start, but not required."
+description: "Add a guestbook to your website that stores entries in a database, screens them for spam, and tells you when someone signs it."
 compatibility: "Requires a Cloudflare account (the Workers Free plan works) and the cf CLI, both set up in the Agent setup course. Email notifications need a domain on Cloudflare; without one, notifications go to a Discord or Slack webhook instead."
 metadata:
   author: Cloudflare Dev School
