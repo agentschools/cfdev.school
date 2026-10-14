@@ -48,8 +48,8 @@ export function initDashboard(): void {
     el("up-next-welcome").hidden = !welcome;
     el("up-next-exercise").hidden = choosing || welcome;
     el("up-next-choose").hidden = !choosing;
-    el("prompt-caption").hidden = choosing;
-    el("prompt-caption-resume").hidden = welcome;
+    el("dashboard-prompt").hidden = welcome;
+    el("prompt-caption").hidden = choosing || welcome;
     el("welcome-description").textContent = welcome ? (next.description ?? "") : "";
 
     if (next.kind === "exercise") {
@@ -59,10 +59,7 @@ export function initDashboard(): void {
       const description = el("up-next-description");
       description.textContent = next.description ?? "";
       description.hidden = !next.description;
-      promptText.textContent = buildPrompt(student!, {
-        courseTitle: next.courseTitle,
-        exerciseTitle: next.exerciseTitle,
-      });
+      promptText.textContent = buildPrompt(student!, { courseTitle: next.courseTitle, continuing: next.continuing });
     } else {
       el("choose-eyebrow").textContent = next.justFinishedAgentSetup ? "Agent setup complete" : "All caught up";
       el("choose-lede").hidden = !next.justFinishedAgentSetup;

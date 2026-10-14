@@ -66,6 +66,7 @@ describe("buildDashboard", () => {
       exerciseTitle: "Interview",
       index: 0,
       description: "Tell your agent about you.",
+      continuing: false,
     });
     expect(dashboard.courses).toEqual([]);
     expect(dashboard.agents).toEqual([]);
@@ -86,7 +87,12 @@ describe("buildDashboard", () => {
       }),
       catalog,
     );
-    expect(dashboard.upNext).toMatchObject({ courseTitle: "Workers", exerciseTitle: "Deploy a Worker", index: 1 });
+    expect(dashboard.upNext).toMatchObject({
+      courseTitle: "Workers",
+      exerciseTitle: "Deploy a Worker",
+      index: 1,
+      continuing: true,
+    });
     expect(dashboard.courses).toEqual([
       {
         id: "start",

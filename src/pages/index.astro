@@ -1,7 +1,7 @@
 ---
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
-import { TRACK_LABELS, TRACKS } from "../data/courses";
+import { REQUIRED_COURSE, TRACK_LABELS, TRACKS } from "../data/courses";
 import { harnesses } from "../data/harnesses";
 import { catalogCourses, getBuiltInCourses } from "../lib/courses";
 import type { HarnessDirectory } from "../lib/dashboard-client";
@@ -20,6 +20,8 @@ const worksWith = harnesses.filter((harness) => harness.id !== "generic" && harn
 
 const courses = await getBuiltInCourses();
 const catalog = catalogCourses(courses);
+// The welcome's button: Agent setup's first exercise, its interview.
+const interviewUrl = catalog.find((course) => course.name === REQUIRED_COURSE)?.exercises[0]?.url;
 const harnessDirectory: HarnessDirectory = Object.fromEntries(
   harnesses.map((harness) => [
     harness.id,
@@ -84,6 +86,10 @@ const trackChoices = TRACKS.map((track) => ({
               <p class="label">First up</p>
               <h2 class="welcome-next-title">A quick interview with your agent</h2>
               <p id="welcome-description" class="welcome-next-description"></p>
+              <div class="welcome-start">
+                <a class="welcome-cta" href={interviewUrl}>Start the interview →</a>
+                <p class="welcome-start-note">Four questions. Your agent asks, you answer.</p>
+              </div>
             </div>
           </div>
           <div id="up-next-exercise">
@@ -121,14 +127,12 @@ const trackChoices = TRACKS.map((track) => ({
             </div>
             <p class="prompt-lead">Not sure? Paste this into your agent and it'll suggest a course based on your interview.</p>
           </div>
-          <div class="prompt">
+          <div id="dashboard-prompt" class="prompt">
             <pre id="dashboard-prompt-text" class="prompt-text"></pre>
             <button id="dashboard-prompt-copy" type="button" class="prompt-copy">Copy</button>
           </div>
           <p id="prompt-caption" class="prompt-caption">
-            Paste this into your agent.<span id="prompt-caption-resume"> It picks up where you left off.</span>&#32;<a
-              href="/agents">What's an agent?</a
-            >
+            Paste this into your agent. It picks up where you left off. <a href="/agents">What's an agent?</a>
           </p>
         </section>
 
@@ -460,8 +464,33 @@ const trackChoices = TRACKS.map((track) => ({
     color: color-mix(in oklch, var(--fg) 80%, var(--bg));
   }
 
-  #up-next-welcome:not([hidden]) ~ .prompt {
-    margin-top: 1.75rem;
+  .welcome-start {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.25rem;
+    margin-top: 2rem;
+  }
+
+  .welcome-cta {
+    display: inline-flex;
+    padding: 0.875rem 1.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    color: #fff;
+    font-weight: 600;
+    line-height: 1.375rem;
+    text-decoration: none;
+  }
+
+  .welcome-cta:hover {
+    filter: brightness(1.08);
+  }
+
+  .welcome-start-note {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--muted-fg);
   }
 
   .tracks {

@@ -1,6 +1,6 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { buildPrompt } from "./agent-prompt";
-import { exerciseCompletions } from "./course-progress";
+import { exerciseCompletions, hasCompletions } from "./course-progress";
 import { subscribeToProgress } from "./progress-client";
 import { setVisible } from "./reveal";
 import type { ExerciseCompletion, Progress } from "../schemas/progress";
@@ -80,7 +80,11 @@ export function initExercisePage(): void {
     const complete = completions.length > 0;
     if (complete) bannerText!.textContent = formatCompletedBanner(completions, harnessNames);
     // Once complete, the prompt asks the agent to redo the exercise.
-    promptText!.textContent = buildPrompt(student!, { courseTitle, exerciseTitle, redo: complete });
+    promptText!.textContent = buildPrompt(student!, {
+      courseTitle,
+      continuing: hasCompletions(progress, courseName),
+      ...(complete ? { redoExercise: exerciseTitle } : {}),
+    });
     setVisible(promptSection!, !complete || redoRequested);
     setVisible(redoButton!, !redoRequested);
     setVisible(banner!, complete);
@@ -91,7 +95,7 @@ export function initExercisePage(): void {
   function onEnrolled(enrolled: CachedStudent): void {
     student = enrolled;
     if (enrollNudge) enrollNudge.hidden = true;
-    promptText!.textContent = buildPrompt(enrolled, { courseTitle, exerciseTitle });
+    promptText!.textContent = buildPrompt(enrolled, { courseTitle });
     copyConfirm!.hidden = true;
     next!.hidden = false;
     subscribeToProgress(enrolled.id, renderProgress);

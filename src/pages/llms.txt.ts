@@ -19,7 +19,7 @@ This school uses \`cf\`, Cloudflare's new CLI (open beta since September 2026), 
 
 ## Starting fast
 
-If the prompt that sent you here asks for Agent setup's interview (a new student's first step), go straight to it: fetch /courses/agent-setup/exercises/00-interview.md and GET /api/students/{id}/interviews in parallel, then follow the exercise. Don't fetch the course list, progress, your harness profile, or the OpenAPI schema first; the interview doesn't need them.
+If the prompt that sent you here asks to work on the "Agent setup" course and doesn't say to continue it, the student is new and starts with its interview, so go straight to it: fetch /courses/agent-setup/exercises/00-interview.md and GET /api/students/{id}/interviews in parallel, then follow the exercise. Don't fetch the course list, progress, your harness profile, or the OpenAPI schema first; the interview doesn't need them.
 
 ## API
 
@@ -51,7 +51,7 @@ After Agent setup, built-in courses are grouped into two tracks, shown as each c
 
 Tracks are groupings only: students complete courses, not tracks, and projects never require a fundamentals course. When a student finishes Agent setup, ask them in conversation which direction they want to go next, suggest a first course from that track based on what they told you in Agent setup's interview (what they want to build or learn), and don't save the answer anywhere. A track can be empty while courses are being written; only suggest courses GET /api/courses lists. When teaching a project, check GET /api/progress/{studentId} for fundamentals courses the student has completed and go lighter on what those covered (someone who finished Workers needs less explanation of Workers), and mention related fundamentals courses for students who want to go deeper.
 
-Once a student gives you their student ID (from the handoff prompt), check GET /api/progress/{studentId} to see what's already done, then work through the course's incomplete exercises in order. If the prompt names a specific course or exercise, start there.
+Once a student gives you their student ID (from the handoff prompt), check GET /api/progress/{studentId} to see what's already done, then work through the course's incomplete exercises in order. The prompt names the course to work on; start at its first incomplete exercise, unless the prompt asks to redo a specific exercise.
 
 For each exercise: fetch its \`markdownUrl\`. It's Markdown with YAML frontmatter: follow its \`agent-instructions\` frontmatter (if it has one) and its body to teach the exercise conversationally. Then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete before moving on. A course's own \`markdownUrl\` is its COURSE.md, which introduces the course.
 
