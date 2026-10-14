@@ -1,5 +1,5 @@
 ---
-description: "Build the guestbook's form and list, backed by a small API that keeps entries in memory for now, and see why that isn't enough."
+description: "Build your guestbook's form and list, with a small API that keeps entries in memory for now."
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 

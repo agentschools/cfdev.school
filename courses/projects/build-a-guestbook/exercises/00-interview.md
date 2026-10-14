@@ -1,5 +1,5 @@
 ---
-description: "Tell your agent where your guestbook will live, what it should feel like, how strict to be about spam, and how you'd like to hear about new entries."
+description: "Tell your agent where your guestbook will live, how it should feel, and how it should handle spam and new entries."
 agent-instructions: |
   This course's interview is four questions. Before asking them:
 
@@ -38,7 +38,7 @@ agent-instructions: |
   interview again.
 
   Use the first two answers in every exercise, the third in
-  "moderate-with-clef" (it sets the threshold), and the fourth in
+  "moderate-messages" (it sets the threshold), and the fourth in
   "get-notified" (it picks the path). Never skip exercises because of
   any of them.
 

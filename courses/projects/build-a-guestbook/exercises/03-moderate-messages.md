@@ -1,5 +1,5 @@
 ---
-description: "Screen every guestbook entry for spam with Clef, a decision model on Workers AI, through AI Gateway, and hold back the ones that look bad."
+description: "Screen new entries with a decision model and hold back the ones that look like spam."
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
@@ -28,7 +28,7 @@ agent-instructions: |
   Out of scope here: an admin page for held entries, sign-in, rate limiting, CAPTCHAs (don't add Turnstile), and fine-tuning Clef.
 ---
 
-# Moderate with Clef
+# Moderate messages
 
 A guestbook on the open internet gets spam, sooner or later. You could write rules for it, but spam changes faster than rules do. In this exercise you'll have a model screen every entry, and hold back the ones that look bad.
 
@@ -45,6 +45,8 @@ There's no reply to parse and nothing to wait for while it reasons, so it's fast
 ## What's Clef?
 
 [Clef](https://developers.cloudflare.com/workers-ai/models/clef-flash/) is a family of decision models trained by Cloudflare, running on [Workers AI](https://developers.cloudflare.com/workers-ai/), with open weights. You'll use Clef-flash, the fast one, which costs $0.038 per million input tokens. A guestbook entry is under 200 tokens, so the [free daily allocation](https://developers.cloudflare.com/workers-ai/platform/pricing/) covers thousands of entries a day.
+
+If you've heard of decision models before, it was probably [Jev](https://developers.cloudflare.com/ai/models/typesafe/jev/), from TypeSafe. Clef follows the same API, and Jev is in Cloudflare's model catalog too, so you can call it the same way through AI Gateway, as `typesafe/jev`. It's billed with [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) rather than the Workers AI free allocation, so this exercise uses Clef.
 
 ## Spam detection in a few lines
 

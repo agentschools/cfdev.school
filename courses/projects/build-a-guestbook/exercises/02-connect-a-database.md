@@ -1,5 +1,5 @@
 ---
-description: "Store guestbook entries in a D1 database, so they're still there after a restart and every visitor sees the same ones, then deploy it."
+description: "Save your guestbook's entries in a database so they last and every visitor sees the same ones."
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
@@ -24,7 +24,7 @@ agent-instructions: |
      Then have the student sign it from their browser. A new deploy can take up to about 30 seconds to start serving; retry before assuming something's wrong. Don't trust the student saying it worked.
   7. Teach the body's "Why it matters" section, briefly. If they took the Durable Objects course: D1 is one database for the whole site, good for queries across everything, while each Durable Object has its own.
   8. Comprehension check: ask the student why the API uses `?` placeholders. (So what visitors type is always data, never part of the SQL: it stops SQL injection.) Gently correct anything off.
-  9. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes. Then move on to "moderate-with-clef".
+  9. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes. Then move on to "moderate-messages".
 
   Out of scope here: moderation (next exercise), D1 read replication, ORMs, and pagination.
 ---

@@ -1,9 +1,9 @@
 ---
-description: "Get a message whenever someone signs your guestbook: an email from your own domain, or a post in Discord or Slack, sent without making the visitor wait."
+description: "Get an email or a chat message whenever someone signs your guestbook."
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  This builds on the guestbook from "moderate-with-clef"; check GET /api/progress/{studentId} first, and read the project's `AGENTS.md` for its stack and commands. Read this course's interview (GET /api/students/{id}/interviews) for how they want to hear about entries, and confirm it with them. Email needs a domain on Cloudflare; without one, use Discord or Slack, or offer to add a domain first (Publish a website's "add-a-domain" exercise).
+  This builds on the guestbook from "moderate-messages"; check GET /api/progress/{studentId} first, and read the project's `AGENTS.md` for its stack and commands. Read this course's interview (GET /api/students/{id}/interviews) for how they want to hear about entries, and confirm it with them. Email needs a domain on Cloudflare; without one, use Discord or Slack, or offer to add a domain first (Publish a website's "add-a-domain" exercise).
 
   Email path (https://developers.cloudflare.com/email-service/):
   1. The domain has to be set up for sending. Check with `cf email-sending subdomains list -z <domain>`. If it's not there, run `cf email-sending subdomains preview -z <domain> --name <domain>` first: it's read-only, and lists the DNS records sending needs (MX, SPF, and DKIM on `cf-bounce`, and DMARC on `_dmarc`) and any conflicts with existing records. Show the student, and if there's a conflict (often an existing DMARC record), ask before changing anything. With their OK, `cf email-sending subdomains create -z <domain> --name <domain>`. (The dashboard's Email Service > Email Sending > Onboard Domain does the same.)
@@ -24,7 +24,7 @@ agent-instructions: |
   Don't suggest ntfy.sh's public server: from a Worker it returned "daily message quota reached", since many Workers share its per-IP limit.
 
   Both paths:
-  - Write one `notify(entry)` function. The message says who signed it, what they wrote, and whether it was approved or held (with the spam score), so held entries don't go unnoticed. Point them to the review commands from "moderate-with-clef" for held ones.
+  - Write one `notify(entry)` function. The message says who signed it, what they wrote, and whether it was approved or held (with the spam score), so held entries don't go unnoticed. Point them to the review commands from "moderate-messages" for held ones.
   - Call it after the insert with `waitUntil(notify(entry))` (`import { waitUntil } from "cloudflare:workers"`), and return the response right away. Catch and log its errors inside `notify`: a failed notification must never fail the visitor's entry. Teach the body's "Don't make the visitor wait" section.
   - Mention Queues, as the body does, but don't build one.
 
@@ -64,5 +64,5 @@ That's plenty for a guestbook. When background work has to survive failures, wit
 
 ## Prerequisites
 
-- You've completed [Moderate with Clef](/courses/build-a-guestbook/moderate-with-clef) and still have that project on disk.
+- You've completed [Moderate messages](/courses/build-a-guestbook/moderate-messages) and still have that project on disk.
 - For email, a domain on Cloudflare. Otherwise, a Discord server or Slack workspace where you can add a webhook.
