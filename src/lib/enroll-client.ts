@@ -21,6 +21,16 @@ export interface CachedStudent {
   createdAt: string;
 }
 
+/** ENROLLED_EVENT's detail. */
+export interface EnrolledDetail extends CachedStudent {
+  /** Enrolled just now with a click, not a cached reload. */
+  fresh: boolean;
+}
+
+// How long the confetti gets to play after a fresh reveal before the page
+// switches over to the welcome. Particles last 0.8s to 1.5s.
+const CELEBRATION_MS = 1300;
+
 function randomChar(real: string): string {
   if (real === "-") return "-";
   if (real >= "0" && real <= "9") return DIGITS[Math.floor(Math.random() * DIGITS.length)];
@@ -147,22 +157,56 @@ export function initEnrollment(): void {
     });
   }
 
-  function showEnrolled(student: CachedStudent, fast: boolean): void {
+  function announce(student: CachedStudent, fresh: boolean): void {
     markTriggersEnrolled();
+    document.dispatchEvent(new CustomEvent<EnrolledDetail>(ENROLLED_EVENT, { detail: { ...student, fresh } }));
+  }
+
+  function showEnrolled(student: CachedStudent): void {
+    announce(student, false);
     if (card && display && celebrationLayer) {
-      card.hidden = false;
-      requestAnimationFrame(() => card.classList.add("is-visible"));
       cancelReveal?.();
-      cancelReveal = cipherReveal(display, student.id, fast, () => {
+      cancelReveal = cipherReveal(display, student.id, true, () => {
         fireCelebration(celebrationLayer);
       });
     }
-    document.dispatchEvent(new CustomEvent<CachedStudent>(ENROLLED_EVENT, { detail: student }));
+  }
+
+  // A fresh enrollment is a moment: the card lifts and shimmers while the
+  // cipher runs, pops with confetti once the ID lands, and only then does the
+  // page switch over (to the dashboard's welcome, on the homepage), with a
+  // view transition that carries the card into its new spot.
+  function showFreshlyEnrolled(student: CachedStudent): void {
+    if (!card || !display || !celebrationLayer) {
+      announce(student, true);
+      return;
+    }
+    const layer = celebrationLayer;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    card.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    card.classList.remove("is-minted");
+    card.classList.add("is-minting");
+    cancelReveal?.();
+    cancelReveal = cipherReveal(display, student.id, false, () => {
+      card.classList.replace("is-minting", "is-minted");
+      fireCelebration(layer);
+      window.setTimeout(() => {
+        card.classList.remove("is-minted");
+        // Start the new page at the top: on narrow screens the card was scrolled
+        // to the middle, and it ends up below the welcome.
+        const switchOver = () => {
+          announce(student, true);
+          window.scrollTo(0, 0);
+        };
+        if (reduceMotion || !document.startViewTransition) switchOver();
+        else document.startViewTransition(switchOver);
+      }, CELEBRATION_MS);
+    });
   }
 
   const cached = readCachedStudent();
   if (cached) {
-    showEnrolled(cached, true);
+    showEnrolled(cached);
   } else if (card && display && celebrationLayer && display.textContent) {
     // Logged-out visitors see a sample ID. Play the same reveal over it on load.
     const layer = celebrationLayer;
@@ -174,22 +218,26 @@ export function initEnrollment(): void {
       const existing = readCachedStudent();
       if (existing) {
         card?.scrollIntoView({ behavior: "smooth", block: "center" });
-        showEnrolled(existing, true);
+        showEnrolled(existing);
         return;
       }
 
       if (isSubmitting) return;
       isSubmitting = true;
       trigger.disabled = true;
+      const label = trigger.textContent;
+      trigger.textContent = "Enrolling…";
 
       try {
         const student = await enroll();
         writeCachedStudent(student);
-        card?.scrollIntoView({ behavior: "smooth", block: "center" });
-        showEnrolled(student, false);
+        trigger.textContent = "Enrolled";
+        trigger.dataset.enrolledState = "";
+        showFreshlyEnrolled(student);
       } catch (error) {
         console.error("Enrollment failed", error);
         trigger.disabled = false;
+        trigger.textContent = label;
       } finally {
         isSubmitting = false;
       }

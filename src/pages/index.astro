@@ -73,6 +73,19 @@ const trackChoices = TRACKS.map((track) => ({
         data-harnesses={JSON.stringify(harnessDirectory)}
       >
         <section id="up-next" class="up-next" data-loading>
+          <div id="up-next-welcome" hidden>
+            <p class="eyebrow">You're enrolled</p>
+            <h1 class="up-next-title">Welcome to Dev&nbsp;School.</h1>
+            <p class="up-next-description">
+              Your student ID is saved in this browser, and your agent uses it to keep track of your progress. No
+              account, no email.
+            </p>
+            <div class="welcome-next">
+              <p class="label">First up</p>
+              <h2 class="welcome-next-title">A quick interview with your agent</h2>
+              <p id="welcome-description" class="welcome-next-description"></p>
+            </div>
+          </div>
           <div id="up-next-exercise">
             <p id="up-next-eyebrow" class="eyebrow"></p>
             <h1 id="up-next-title" class="up-next-title"></h1>
@@ -113,7 +126,9 @@ const trackChoices = TRACKS.map((track) => ({
             <button id="dashboard-prompt-copy" type="button" class="prompt-copy">Copy</button>
           </div>
           <p id="prompt-caption" class="prompt-caption">
-            Paste this into your agent. It picks up where you left off. <a href="/agents">What's an agent?</a>
+            Paste this into your agent.<span id="prompt-caption-resume"> It picks up where you left off.</span>&#32;<a
+              href="/agents">What's an agent?</a
+            >
           </p>
         </section>
 
@@ -238,6 +253,12 @@ const trackChoices = TRACKS.map((track) => ({
   .cta:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  /* Set by enroll-client.ts while the new ID is revealed. */
+  .cta[data-enrolled-state] {
+    opacity: 1;
+    cursor: default;
   }
 
   .fine-print {
@@ -415,6 +436,32 @@ const trackChoices = TRACKS.map((track) => ({
     font-size: 1.125rem;
     line-height: 1.75rem;
     color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+  }
+
+  .welcome-next {
+    margin-top: 2.5rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .welcome-next-title {
+    margin: 0.625rem 0 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 2.125rem;
+    letter-spacing: -0.02em;
+  }
+
+  .welcome-next-description {
+    max-width: 33.75rem;
+    margin: 0.625rem 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.6875rem;
+    color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+  }
+
+  #up-next-welcome:not([hidden]) ~ .prompt {
+    margin-top: 1.75rem;
   }
 
   .tracks {

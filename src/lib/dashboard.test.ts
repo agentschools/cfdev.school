@@ -70,6 +70,12 @@ describe("buildDashboard", () => {
     expect(dashboard.courses).toEqual([]);
     expect(dashboard.agents).toEqual([]);
     expect(dashboard.aboutYou).toBeUndefined();
+    expect(dashboard.welcome).toBe(true);
+  });
+
+  it("stops welcoming the student once the interview starts or anything is completed", () => {
+    expect(buildDashboard(progress({}, { summary: "New to agents." }), catalog).welcome).toBe(false);
+    expect(buildDashboard(progress({ workers: { interview: done("2026-10-01T10:00:00.000Z") } }), catalog).welcome).toBe(false);
   });
 
   it("continues the unfinished course with the most recent completion", () => {

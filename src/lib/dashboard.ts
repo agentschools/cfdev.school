@@ -33,6 +33,8 @@ export interface DashboardCourse {
 
 export interface Dashboard {
   upNext: UpNext;
+  /** Nothing started yet (no interview, no completions): welcome the student and lead into the interview. */
+  welcome: boolean;
   /** Started courses, grouped like the sidebar (see groupByTrack). */
   courses: CourseGroup<DashboardCourse>[];
   /** Agents that completed at least one exercise, most exercises first. */
@@ -55,6 +57,7 @@ export function buildDashboard(progress: Progress, catalog: readonly CatalogCour
 
   return {
     upNext: upNext(started, catalog, progress),
+    welcome: started.length === 0,
     courses: groupByTrack(started.map(toDashboardCourse)),
     agents: agents(progress),
     aboutYou: progress.courses.find((course) => course.name === REQUIRED_COURSE)?.interviewSummary,

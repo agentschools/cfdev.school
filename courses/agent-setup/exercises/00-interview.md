@@ -1,5 +1,5 @@
 ---
-description: "Tell your agent a bit about yourself so it can tailor the course to you."
+description: "Personalize your learning experience by sharing a bit about your existing knowledge, your goals, and your preferred style of learning."
 agent-instructions: |
   This is the first exercise of the Agent setup course: a short
   interview. Ask all the questions at once, not one at a time, so the
