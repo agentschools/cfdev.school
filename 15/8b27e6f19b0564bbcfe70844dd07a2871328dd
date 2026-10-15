@@ -1,0 +1,23 @@
+courses/agent-setup/COURSE.md
+  s_cb515da17e20bd::t_8794a242829885 12-13
+courses/agent-setup/exercises/02-instructions.md
+  s_cb515da17e20bd::t_a868968357a458 89-92
+courses/agent-setup/exercises/05-tools.md
+  s_cb515da17e20bd::t_df07f85be4594e 161-164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "158b27e6f19b0564bbcfe70844dd07a2871328dd",
+  "prompts": {},
+  "sessions": {
+    "s_cb515da17e20bd": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ebf60b361ffeF8pFbsY91rAJ3u",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Thomas Desmond <24610108+thomas-desmond@users.noreply.github.com>"
+    }
+  }
+}
