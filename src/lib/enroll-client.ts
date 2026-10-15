@@ -28,8 +28,9 @@ export interface EnrolledDetail extends CachedStudent {
 }
 
 // How long the confetti gets to play after a fresh reveal before the page
-// switches over to the welcome. Particles last 0.8s to 1.5s.
-const CELEBRATION_MS = 1300;
+// switches over to the welcome. Particles last 0.8s to 1.5s; most are done by
+// this point. Kept short so the whole reveal fits the CTA's "2 seconds".
+const CELEBRATION_MS = 900;
 
 function randomChar(real: string): string {
   if (real === "-") return "-";
@@ -47,8 +48,8 @@ function scramble(target: string): string {
 /** Returns a cancel function, so a reveal in flight (e.g. over the sample ID) can be replaced by another. */
 function cipherReveal(display: HTMLElement, target: string, fast: boolean, onDone?: () => void): () => void {
   const scrambleMs = fast ? 15 : 30;
-  const delayMs = fast ? 150 : 600;
-  const resolveMs = fast ? 45 : 140;
+  const delayMs = fast ? 150 : 250;
+  const resolveMs = fast ? 45 : 60;
   let resolved = 0;
   let resolveInterval: number | undefined;
   display.textContent = scramble(target);
@@ -157,6 +158,14 @@ export function initEnrollment(): void {
     });
   }
 
+  // While a fresh ID is minted, <html data-minting> fades the homepage's CTA
+  // out and dims the rest of the hero, so the card is the only thing moving.
+  // Styles live in src/pages/index.astro.
+  function setMinting(minting: boolean): void {
+    if (minting) document.documentElement.dataset.minting = "";
+    else delete document.documentElement.dataset.minting;
+  }
+
   function announce(student: CachedStudent, fresh: boolean): void {
     markTriggersEnrolled();
     document.dispatchEvent(new CustomEvent<EnrolledDetail>(ENROLLED_EVENT, { detail: { ...student, fresh } }));
@@ -186,6 +195,7 @@ export function initEnrollment(): void {
     card.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
     card.classList.remove("is-minted");
     card.classList.add("is-minting");
+    setMinting(true);
     cancelReveal?.();
     cancelReveal = cipherReveal(display, student.id, false, () => {
       card.classList.replace("is-minting", "is-minted");
@@ -195,6 +205,7 @@ export function initEnrollment(): void {
         // Start the new page at the top: on narrow screens the card was scrolled
         // to the middle, and it ends up below the welcome.
         const switchOver = () => {
+          setMinting(false);
           announce(student, true);
           window.scrollTo(0, 0);
         };
@@ -231,8 +242,6 @@ export function initEnrollment(): void {
       try {
         const student = await enroll();
         writeCachedStudent(student);
-        trigger.textContent = "Enrolled";
-        trigger.dataset.enrolledState = "";
         showFreshlyEnrolled(student);
       } catch (error) {
         console.error("Enrollment failed", error);
