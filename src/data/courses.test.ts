@@ -53,7 +53,7 @@ describe("built-in courses", () => {
       });
 
       // Steps after completion get skipped: agents mark the exercise done and
-      // move on (#115), so try-it steps have to come before it.
+      // move on, so try-it steps have to come before it.
       if (course.track) {
         it("ends every exercise's numbered agent-instructions with Mark complete", () => {
           for (const [file, markdown] of Object.entries(course.exercises)) {
