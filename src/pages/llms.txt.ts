@@ -83,7 +83,7 @@ To run a course's interview, follow its exercise's Markdown:
 
 - Use the course's own interview if it has one. If it doesn't, its interview is Dev School's default, which has you write 2 to 4 short questions from the course's content. The Workers course is one of these. For a course hosted elsewhere, the default interview is at /default-interview.md.
 - Never ask more than 4 questions, and never quiz on an interview. Don't ask again what another interview on file already answers.
-- Ask them all at once, and leave out any the student skips.
+- Ask them all at once, in one numbered plain-text chat message, with short answer choices where they fit, so the student can answer everything in one reply (e.g. "1b, 2a, 3: a todo app"). Don't use a question tool or picker, unless the student's own instructions file asks for one. Leave out any the student skips.
 - Save the answers with PUT /api/students/{id}/interviews: \`{ "course": "<course name or URL>", "responses": [{ "question": "...", "answer": "..." }], "summary": "..." }\`. Each response has the question's text as you asked it, and an \`answer\` that's a string, or an array of strings for a question that allows several choices. Things you detect without asking, like the student's OS, go in as pairs too. \`summary\` is one sentence (max 280 characters) addressed to the student, summarizing their answers. Agent setup's is shown on their homepage.
 - Then mark the interview exercise complete like any other.
 

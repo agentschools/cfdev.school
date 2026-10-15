@@ -15,9 +15,7 @@ agent-instructions: |
 
   Ask the questions the same way the Agent setup interview does: all at
   once, one short line each, with short answer choices where they fit, in
-  a single call to your structured question tool if you have one,
-  otherwise in one numbered plain-text message. Every question is
-  optional.
+  one numbered plain-text message. Every question is optional.
 
   Store the answers with PUT /api/students/{id}/interviews, with this
   course's name (or its URL, for a course hosted elsewhere) as `course`,

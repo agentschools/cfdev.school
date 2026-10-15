@@ -13,9 +13,8 @@ agent-instructions: |
 
   Ask: "What do you already know about bindings?" Offer these choices,
   plus room to answer in their own words: nothing yet / I've used one or
-  two / I use them all the time. Use your structured question tool if you
-  have one, otherwise ask in one plain-text message. It's optional; if
-  they skip it, move on.
+  two / I use them all the time. Ask in one plain-text message. It's
+  optional; if they skip it, move on.
 
   Store it with PUT /api/students/{id}/interviews, with
   `"course": "bindings"`, the question's text exactly as written above,

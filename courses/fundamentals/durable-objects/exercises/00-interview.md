@@ -13,9 +13,8 @@ agent-instructions: |
 
   Ask: "What do you already know about Durable Objects?" Offer these
   choices, plus room to answer in their own words: nothing yet / I've read
-  about them / I've built with them. Use your structured question tool if
-  you have one, otherwise ask in one plain-text message. It's optional; if
-  they skip it, move on.
+  about them / I've built with them. Ask in one plain-text message. It's
+  optional; if they skip it, move on.
 
   Store it with PUT /api/students/{id}/interviews, with
   `"course": "durable-objects"`, the question's text exactly as written

@@ -12,8 +12,7 @@ agent-instructions: |
     build on), and Bindings or Durable Objects (so you can go lighter on
     bindings and storage later).
 
-  Ask all four at once, with your structured question tool if you have
-  one, otherwise in one numbered plain-text message:
+  Ask all four at once, in one numbered plain-text message:
 
   1. "Where should your guestbook live?" Choices: on the site I built in
      Publish a website / in another app I have on Cloudflare / in a new

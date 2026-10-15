@@ -13,27 +13,11 @@ agent-instructions: |
   on file, show the student what's there and only ask the questions it
   doesn't answer yet.
 
-  How to ask:
-
-  - If you have a structured question tool that takes several separate
-    questions in one call (e.g. Claude Code's `AskUserQuestion`,
-    OpenCode's `question`, Codex's `request_user_input` in Plan mode), put
-    all the questions in one call, each as its own question with its own
-    choices. The tool shows them to the student one at a time, each with
-    a type-your-own option, and returns all the answers together, so
-    there's no wait on you between questions. Don't split them across
-    separate turns. If the tool caps how many questions fit in one call,
-    use as few calls as possible.
-  - Never merge questions into one, and never offer combined answers that
-    cover several questions at once (e.g. "Beginner, no quizzes"). If your
-    tool only takes one question per call, don't use it for this
-    interview: use the plain-text message below instead.
-  - Otherwise, ask them all in one numbered plain-text message, and tell
-    the student they can answer in one reply, e.g. "1b, 2a, 3: a todo app,
-    4 yes".
-  - Either way, show the student only the questions and choices below, in
-    plain words. Don't include field names, their student ID, or notes
-    about what you need.
+  Ask them all in one numbered plain-text chat message, not a question
+  tool or picker, and tell the student they can answer in one reply,
+  e.g. "1b, 2a, 3: a todo app, 4 yes". Show only the questions and
+  choices below, in plain words. Don't include field names, their student
+  ID, or notes about what you need.
 
   The questions (every one is optional, if the student skips one, move on
   without pushing):
@@ -52,11 +36,10 @@ agent-instructions: |
   Vercel function for someone who's used Vercel), never to skip exercises
   or change what content you show.
 
-  Don't ask about things you can check yourself. Check them while the
-  student answers: if you're asking with a structured question tool and
-  can run other tools in the same batch, run these checks alongside it;
-  otherwise, run them right after the student replies. Never run them
-  before asking.
+  Don't ask about things you can check yourself. Run these checks after
+  the questions are out, never before asking: right after sending them if
+  you can keep working in the same turn, otherwise once the student
+  replies.
 
   - Detect their operating system (e.g. run `uname`, or check an OS
     environment variable).
