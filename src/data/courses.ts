@@ -4,7 +4,7 @@
  * prefixes the way exercise files do, since a course's `name` matches its
  * directory, so their order lives here.
  */
-export const COURSE_ORDER = ["agent-setup", "publish-a-website", "workers", "bindings", "durable-objects"] as const;
+export const COURSE_ORDER = ["agent-setup", "publish-a-website", "build-a-guestbook", "workers", "bindings", "durable-objects"] as const;
 
 /**
  * Track directories in `courses/`. A course in a track lives in

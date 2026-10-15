@@ -21,6 +21,12 @@ vi.mock("astro:content", () => ({
           data: { name: "publish-a-website", description: "Publish a site." },
         },
         {
+          id: "build-a-guestbook",
+          filePath: "courses/projects/build-a-guestbook/COURSE.md",
+          body: "# Build a guestbook\n",
+          data: { name: "build-a-guestbook", description: "Build a guestbook." },
+        },
+        {
           id: "durable-objects",
           filePath: "courses/fundamentals/durable-objects/COURSE.md",
           body: "# Durable Objects\n",
@@ -45,10 +51,10 @@ describe("GET /api/courses", () => {
     const { GET } = await import("./courses");
     const body = await (await GET(context())).json();
 
-    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "publish-a-website", "workers", "bindings", "durable-objects"]);
+    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "publish-a-website", "build-a-guestbook", "workers", "bindings", "durable-objects"]);
     for (const course of body) expect(courseSchema.parse(course)).toEqual(course);
 
-    const [agentSetup, , workersCourse] = body;
+    const [agentSetup, , , workersCourse] = body;
     expect(agentSetup.url).toBe("https://school.example/courses/agent-setup");
     expect(agentSetup.markdownUrl).toBe("https://school.example/courses/agent-setup/COURSE.md");
     expect(agentSetup.exercises[1]).toEqual({

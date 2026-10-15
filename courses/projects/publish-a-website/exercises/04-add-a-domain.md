@@ -28,7 +28,7 @@ agent-instructions: |
      - A custom domain points the whole hostname at the Worker. Cloudflare manages the DNS record and certificate, and removing the domain from the config (or deleting the Worker) removes them.
      - Their site is now theirs: a domain they control, served from Cloudflare's network.
   6. Comprehension check: ask the student what Cloudflare set up for them when they deployed with the domain in their config. Gently correct anything off.
-  7. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes. This is the last exercise in the course. Suggest what's next, based on what they built: Bindings or Durable Objects to go deeper, or another project.
+  7. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes. This is the last exercise in the course. Suggest what's next, based on what they built: Build a guestbook to let visitors leave a note, Bindings or Durable Objects to go deeper, or another project.
 
   Out of scope here: routes that share a hostname with another service (`triggers.fetch()`), email on the domain, redirecting `www` to the bare domain, and domain transfers beyond mentioning them.
 ---

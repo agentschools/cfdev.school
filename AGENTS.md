@@ -5,7 +5,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
 - No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
 - Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
-- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"), plus one in the projects track: Publish a website (see "Publish a website course"). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
+- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"), plus two in the projects track: Publish a website and Build a guestbook (see "Publish a website course" and "Build a guestbook course"). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
 
 ## Titles
 
@@ -170,11 +170,20 @@ Domains, tested with an earlier version of the course on a throwaway custom doma
 - Wrangler projects use `routes: [{ pattern, custom_domain: true }]` plus `workers_dev: true`, per the docs; not tested.
 - `cf registrar registrations check <domain>...` is read-only and returns availability and price for several names at once. `create <domain> --dry-run` prints the API request without sending it. Without `--dry-run`, `create` charges the account's default payment method after a confirmation prompt (`--force` skips it); the exercise has the student run it in their own terminal. A real purchase wasn't tested, nor what `create` does without a terminal. The account needs a default registrant contact and the Domain Registration Agreement accepted on the dashboard first (Registrar API docs).
 
-From the guestbook exercise this course used to have, until it moves to its own course:
+The course hasn't been taken end to end as a student since the rework.
+
+## Build a guestbook course
+
+`courses/projects/build-a-guestbook/` is the second project course: a four-question interview (where it lives, its feel, how strict to be about spam, and how to be notified), then a form and list on an in-memory array (to show why a variable isn't storage), D1, moderation with Clef, and a notification per entry. It can go on the student's Publish a website site, another app on Cloudflare, or a new Worker, and covers both `cf` and Wrangler projects. No Turnstile, on purpose. Queues are only mentioned, in "get-notified", not built. Tested with `cf` v1.0.0-beta.12 (October 2026) on a throwaway `cfds-lab-guestbook` Worker, locally and deployed, on the `cf` path only:
 
 - `bindings.d1()` with no `id` is created on deploy as `<worker>-db`. `cf d1 migrations apply` only takes a database ID. Locally it needs the ID too (so it goes in the config after the first deploy) plus `--persist-to .cloudflare/state`, which is where `cf dev` keeps state; otherwise `cf dev` says `no such table`. It asks for confirmation and waits if stdin is open; with stdin closed it takes the default, yes. The local apply then prints its result and never exits (reproduced twice); the remote apply exits normally.
+- Clef: `env.AI.run("@cf/cloudflare/clef-flash", { model: "clef-flash", state, questions }, { gateway: { id: "default" } })` returned `answers.spam.noul` of 0.0161 for a friendly entry and 0.9499 for an obvious spam one, about 300 ms warm, and both requests showed up in `cf ai-gateway logs list --gateway-id default`. The result is typed loosely (`answers` is `unknown`), so TypeScript code casts it. The account's `default` gateway already existed, so auto-creating it from the binding wasn't tested.
+- `bindings.ai()` needs `dev: { remote: true }`: without it `cf dev` fails with "Binding AI needs to be run remotely", though the local-development docs say an AI binding without `remote` connects remotely with a warning. With remote bindings and more than one account, `cf dev` stops with "More than one account available" until `accountId` is set at the top level of `defineConfig` (not under a `settings` key; that's rejected).
+- `bindings.sendEmail({ destinationAddress, dev: { remote: true } })` sent from an onboarded domain (ziki.boo) to a verified address, locally and deployed, and returned a `messageId`; `cf email-sending get <messageId>` returned not found for it. Delivery wasn't checked from the agent. `cf email-sending subdomains preview` is read-only and lists the records sending needs, with conflicts; `subdomains create` and `cf email-routing addresses create` weren't run.
+- ntfy.sh's public server returned 429 "daily message quota reached" to a Worker on its first message (shared egress IPs), so the course uses Discord or Slack webhooks instead. Those weren't tested.
+- The Wrangler paths (Astro and EmDash: `d1_databases`, `"ai": { "remote": true }`, `send_email`, `wrangler secret put`) follow the docs and weren't tested.
 
-The course hasn't been taken end to end as a student since the rework.
+The course hasn't been taken end to end as a student.
 
 ## Courses hosted elsewhere
 

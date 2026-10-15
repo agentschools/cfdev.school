@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 // "Titles"): only the first word and proper nouns are capitalized. Acronyms
 // like CLI or AGENTS.md are always allowed. Add new product names here.
 const PROPER_NOUNS = [
+  "AI Gateway",
   "Claude Code",
+  "Clef",
   "Cloudflare",
   "Code Mode",
   "Codex",
