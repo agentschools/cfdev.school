@@ -25,7 +25,9 @@ agent-instructions: |
      student's agent needs goes in `agent-instructions` (or, in a single
      file, in the section, addressed to the agent). Give every exercise a
      concrete check the student's agent can verify itself before marking
-     it complete, and say plainly that completion waits on it.
+     it complete, and say plainly that completion waits on it. Mark the
+     moments where the student takes part (see "Involve the student"),
+     with any try-it steps before completion.
   5. Check the course against the rules in the body: `name` and every
      slug, filename order, a `#` title on every exercise file, and at most
      four interview questions.
@@ -141,6 +143,18 @@ Leave it out and Dev School's default interview has the agent write two to four 
 ## Make every exercise checkable
 
 An exercise is complete when the student's agent says so, so give the agent something concrete to check first: fetch a deployed URL and compare the response, run a command and read its output, or look at a file the student changed. Say what the check is in `agent-instructions`. Students who opted in also get a short quiz after each exercise, which their agent writes from the exercise.
+
+## Involve the student
+
+The student's agent does the work: it runs the commands, writes the code, and deploys. Left to itself, it will do the whole exercise in one go while the student watches, and the student finishes knowing that it works but not why. So point out the moments where the student should take part. Pick what fits each exercise; none of these are required:
+
+- Let the student make the choices: a name, the text a page shows, what to store.
+- Before a command runs, ask the student to predict what it will do.
+- Have the agent show the key change (a config line, a handler) and wait for the student's OK before it ships.
+- Ask a "what would change if…" question that applies the idea to a new case.
+- Give the student something to try once it works: change it and redeploy, or store a few values of their own.
+
+Tell the agent to wait for the student's reply at each of these moments, and put try-it steps before the check that completes the exercise. Agents mark an exercise complete and move on, so anything written after that gets skipped.
 
 ## Examples
 

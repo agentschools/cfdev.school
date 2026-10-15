@@ -52,6 +52,28 @@ describe("built-in courses", () => {
         }
       });
 
+      // Steps after completion get skipped: agents mark the exercise done and
+      // move on, so try-it steps have to come before it.
+      if (course.track) {
+        it("ends every exercise's numbered agent-instructions with Mark complete", () => {
+          for (const [file, markdown] of Object.entries(course.exercises)) {
+            if (exerciseSlugFromFilename(file) === INTERVIEW_SLUG) continue;
+            const instructions = (frontmatter(markdown) as { "agent-instructions"?: string })["agent-instructions"] ?? "";
+            // Top-level steps only; nested lists are indented.
+            const steps = [...instructions.matchAll(/^\d+\. .*$/gm)];
+            const last = steps.at(-1);
+            expect(last?.[0], file).toMatch(/^\d+\. Mark complete/);
+            // Only the out-of-scope note may follow it, not an unnumbered step.
+            // Indented lines continue a wrapped step, so they're skipped.
+            const after = instructions
+              .slice(last!.index + last![0].length)
+              .split("\n")
+              .filter((line) => line.trim() && !/^\s/.test(line));
+            for (const line of after) expect(line, file).toMatch(/^Out of scope/);
+          }
+        });
+      }
+
       it("has exercises with valid, unique slugs and a # title each", () => {
         const slugs = Object.keys(course.exercises).map(exerciseSlugFromFilename);
         expect(slugs).toContain(INTERVIEW_SLUG);
