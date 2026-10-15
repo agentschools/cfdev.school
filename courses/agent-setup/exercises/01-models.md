@@ -65,10 +65,11 @@ agent-instructions: |
      tokens, but quality still drops in very long sessions. Practical
      habit: one task per session, and a fresh session for unrelated work.
 
-  5. Mention Cloudflare as an option, briefly: AI Gateway can route
-     requests to providers like OpenAI and Anthropic through one
-     Cloudflare bill with Unified Billing, and Workers AI runs open models
-     on Cloudflare's network. Neither is required for this course.
+  5. Mention Cloudflare as an option, briefly: AI Gateway gives one API
+     for models from Anthropic, OpenAI, Google, and xAI (Grok), plus
+     open-weights models like Kimi, GLM, and DeepSeek, all paid for
+     through the student's Cloudflare account with Unified Billing. It
+     isn't required for this course.
 
   This exercise has no file-system verification step. Before marking it
   complete, have the student switch models once with their harness's
@@ -104,7 +105,4 @@ Every model has a context window: the amount of text it can consider at once, me
 
 ## Cloudflare as a model provider
 
-If you already have a Cloudflare account, two options are worth knowing about, though neither is required for this course:
-
-- [AI Gateway](https://developers.cloudflare.com/ai-gateway/) is a proxy in front of providers like OpenAI, Anthropic, and others. With [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/), you can pay for several providers through one Cloudflare bill.
-- [Workers AI](https://developers.cloudflare.com/workers-ai/) runs a curated set of open-source models on Cloudflare's network.
+If you already have a Cloudflare account, [AI Gateway](https://developers.cloudflare.com/ai-gateway/) is worth knowing about, though it isn't required for this course. Its [REST API](https://developers.cloudflare.com/ai-gateway/usage/rest-api/) reaches models from Anthropic, OpenAI, Google, and xAI (Grok), plus open-weights models like Kimi, GLM, and DeepSeek, all through the same endpoints. With [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/), you load credits into your Cloudflare account and pay for all of them there, with no separate provider accounts or API keys.
