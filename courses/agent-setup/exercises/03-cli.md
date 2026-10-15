@@ -34,7 +34,8 @@ agent-instructions: |
 
        npm i -g cf
 
-     Confirm with `cf --version`. If it's already installed, skip ahead.
+     Confirm with `cf --version`. If it's already installed, say so and
+     go on to step 4; only the install is skipped, not the steps after it.
 
   4. Authenticate with `cf auth login`. This starts an OAuth flow and opens
      a browser window where the student signs in to their Cloudflare
@@ -90,7 +91,7 @@ agent-instructions: |
 
 `cf` is Cloudflare's new command-line interface. It's generated directly from Cloudflare's API schema, so it covers the whole platform (over 3,000 operations, compared to Wrangler's roughly 280), returns JSON by default so agents can filter its output, and includes `cf cli search` so your agent can find the right command by describing what it wants to do. It's in open beta as of September 2026 and is the recommended CLI for new projects.
 
-This exercise is just installation and authentication. You'll use `cf` to build and deploy something in [Deploy a Worker](/courses/workers/deploy-a-worker), in the Workers course.
+This exercise is just installation and authentication.
 
 ## Why not Wrangler?
 
@@ -139,3 +140,7 @@ Wrangler is only for projects that already use it – a `wrangler.jsonc`, `wrang
 ```
 
 Your agent will do this for you as part of the exercise.
+
+## Where you'll use this
+
+In [Deploy a Worker](/courses/workers/deploy-a-worker), in the Workers course, your agent uses `cf init`, `cf dev`, and `cf deploy` to put your first Worker online. Every course after that builds and deploys with `cf` too, except Wrangler projects like an Astro or EmDash site in [Publish a website](/courses/publish-a-website).

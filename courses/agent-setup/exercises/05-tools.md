@@ -158,6 +158,10 @@ Ask your agent something harmless, like "List the Workers on my Cloudflare accou
 
 Use `cf` (from the CLI exercise) to build and deploy projects from your terminal. Use the MCP server to query and manage account resources through the API, and for anything `cf` doesn't cover yet. Your agent has both. Because `execute` can change real resources, expect your agent to check with you before it writes or deletes anything.
 
+## Where you'll use this
+
+Whenever a later exercise needs to look at your account rather than your project, your agent can use the MCP server alongside `cf`. After [Add a binding](/courses/workers/add-a-binding), for example, you could ask it to show you the KV namespace you created and the keys you stored in it.
+
 ## What's next
 
 This is the last exercise in Agent setup. From here there are two directions: projects, where you build something you want and pick up Cloudflare products along the way, and fundamentals, which cover one concept or product at a time. Your agent will ask which you'd like, or you can see what's available on the [courses](/courses) page.
