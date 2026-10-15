@@ -152,13 +152,29 @@ The course was taken end to end as a student on production in October 2026 (a Pi
 
 ## Publish a website course
 
-`courses/projects/publish-a-website/` is the first project course: a two-question interview (what site, and whether they have a domain), then the student's own site as static assets with a 404 page, a guestbook on D1, and a custom domain. Its outline was written without a planning conversation, so review it like a draft. Tested with `cf` v1.0.0-beta.12 (October 2026), locally and deployed on a personal account, with a throwaway custom domain on one of its zones:
+`courses/projects/publish-a-website/` is the first project course: a four-question interview (what the site is and who it's for, its pages and features, its look, and whether they have a domain), then choose a stack, build locally, deploy, and add a domain. The site stays as simple or gets as dynamic as the student wants. Every stack runs on Workers, never Pages. The stack choice is recorded in the student's project `AGENTS.md`, which later exercises read for its commands.
 
-- Files in a `cf init` project's `public/` are the static assets. With a Worker entrypoint, unmatched paths run the Worker, so `assets: { notFoundHandling: "404-page" }` only works if the Worker passes requests to `env.ASSETS.fetch(request)` (`ASSETS: bindings.assets()`).
-- `bindings.d1()` with no `id` is created on deploy as `<worker>-db`. `cf d1 migrations apply` only takes a database ID. Locally it needs the ID too (so it goes in the config after the first deploy) plus `--persist-to .cloudflare/state`, which is where `cf dev` keeps state; otherwise `cf dev` says `no such table`. It asks for confirmation and waits if stdin is open; with stdin closed it takes the default, yes. The local apply then prints its result and never exits (reproduced twice); the remote apply exits normally.
+The stacks in "choose-your-stack" were each scaffolded, run locally, and deployed to a throwaway `cfds-lab-` Worker with `cf` v1.0.0-beta.12 and Wrangler 4.151.0 (October 2026):
+
+- Plain HTML and CSS: `cf init`'s template has no `public/`; files put there are the static assets. With a Worker entrypoint, unmatched paths run the Worker, so `assets: { notFoundHandling: "404-page" }` only works if the Worker passes requests to `env.ASSETS.fetch(request)` (`ASSETS: bindings.assets()`).
+- Hono with JSX: `cf init`, `npm i hono`, rename the entrypoint to `.tsx` (and its import in `cloudflare.config.ts`), and set `jsx`/`jsxImportSource` in `tsconfig.json`. Files in `public/` are served without an `ASSETS` binding, and `app.notFound(... , 404)` gives a real 404. Typechecks after `cf workers types`.
+- Astro (7.3): `cf init .` detects it but runs `astro add cloudflare`, which writes `wrangler.jsonc`, and then `cf build` fails ("no root config found at .cloudflare/output/v0/config.json"). That's the docs' "Astro 6 and later does not build with `cf` during the beta". So Astro is taught as a Wrangler project: `npx astro add cloudflare`, `npx wrangler deploy`, and never `cf init`/`dev`/`build`/`deploy` in it. A static Astro site deploys assets-only, and a missing page is an empty 404 until `"not_found_handling": "404-page"` is added to `assets`. `npm create astro` writes its own `AGENTS.md` and `CLAUDE.md`.
+- EmDash: `npm create emdash@latest -- --platform cloudflare ... --yes` is non-interactive, writes `wrangler.jsonc` with the names `my-emdash-site`/`my-emdash-media` whatever the directory, and `npm run deploy` (`astro build && wrangler deploy`) creates the D1 database, R2 bucket, and a SESSION KV namespace. The deployed site's admin redirects to an open setup wizard until someone completes it, so the deploy exercise has the student do it right away. Cleaning up needs `wrangler delete`, `wrangler d1 delete`, `wrangler r2 bucket delete`, and `wrangler kv namespace delete`.
+- vinext: `npx create-vinext-app@latest <dir> --platform cloudflare --yes` writes `cloudflare.config.ts` (it uses `cf` unless given `--legacy-wrangler-cloudflare-init`), and `cf deploy` works. `app/not-found.tsx` gives a 404 with the custom page.
+- Wrangler doesn't share `cf`'s login (`npx wrangler login`), and with more than one account it stops in non-interactive mode until `account_id` is set.
+- With npm's `min-release-age=7` (as on this machine), fresh scaffolds fail with `ETARGET`; testing used `NPM_CONFIG_MIN_RELEASE_AGE=0` in a throwaway directory. Students without that setting don't hit it.
+
+Domains, tested with an earlier version of the course on a throwaway custom domain:
+
 - `domains: ["<hostname>"]` publishes a custom domain, and turns off workers.dev unless `workersDev: true` is set (the warning says "Wrangler file"). The domain served within a minute. Deleting the Worker removed its DNS record. macOS cached "not found" for the hostname after a check made before the record existed, so plain curl kept failing while `dig @1.1.1.1` resolved it; the exercise explains how to check around that.
-- `cf registrar registrations check <domain>` is read-only and returns availability and price. Buying wasn't tested.
-- Taken end to end as a student on the PR #105 preview (fresh enrollment, deleted afterward), including a custom domain. That run found the local migration and DNS cache issues above.
+- Wrangler projects use `routes: [{ pattern, custom_domain: true }]` plus `workers_dev: true`, per the docs; not tested.
+- `cf registrar registrations check <domain>...` is read-only and returns availability and price for several names at once. `create <domain> --dry-run` prints the API request without sending it. Without `--dry-run`, `create` charges the account's default payment method after a confirmation prompt (`--force` skips it); the exercise has the student run it in their own terminal. A real purchase wasn't tested, nor what `create` does without a terminal. The account needs a default registrant contact and the Domain Registration Agreement accepted on the dashboard first (Registrar API docs).
+
+From the guestbook exercise this course used to have, until it moves to its own course:
+
+- `bindings.d1()` with no `id` is created on deploy as `<worker>-db`. `cf d1 migrations apply` only takes a database ID. Locally it needs the ID too (so it goes in the config after the first deploy) plus `--persist-to .cloudflare/state`, which is where `cf dev` keeps state; otherwise `cf dev` says `no such table`. It asks for confirmation and waits if stdin is open; with stdin closed it takes the default, yes. The local apply then prints its result and never exits (reproduced twice); the remote apply exits normally.
+
+The course hasn't been taken end to end as a student since the rework.
 
 ## Courses hosted elsewhere
 
