@@ -259,10 +259,31 @@ const trackChoices = TRACKS.map((track) => ({
     cursor: not-allowed;
   }
 
-  /* Set by enroll-client.ts while the new ID is revealed. */
-  .cta[data-enrolled-state] {
-    opacity: 1;
-    cursor: default;
+  /* Set by enroll-client.ts while a fresh ID is revealed: the CTA fades out
+     (without collapsing, so the card doesn't shift where it stacks below the
+     copy) and the rest of the hero dims around the card. */
+  .hero-copy .visitor-only > :global(*),
+  .harnesses {
+    transition:
+      opacity 0.4s ease,
+      visibility 0.4s;
+  }
+
+  :global(:root[data-minting]) .hero-copy .visitor-only > :global(*),
+  :global(:root[data-minting]) .harnesses {
+    opacity: 0.25;
+  }
+
+  :global(:root[data-minting]) .hero-copy .visitor-only > .cta-block {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-copy .visitor-only > :global(*),
+    .harnesses {
+      transition: none;
+    }
   }
 
   .fine-print {
