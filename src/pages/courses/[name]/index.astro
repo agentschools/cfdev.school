@@ -1,6 +1,7 @@
 ---
 import { render } from "astro:content";
 import AgentPrompt from "../../../components/AgentPrompt.astro";
+import EnrollBanner from "../../../components/EnrollBanner.astro";
 import Layout from "../../../layouts/Layout.astro";
 import { exercisePath } from "../../../data/courses";
 import { getBuiltInCourse } from "../../../lib/courses";
@@ -34,9 +35,7 @@ const title = course?.title ?? "Course not found";
             <p class="description">{course.description}</p>
           </header>
 
-          <div id="course-enroll-nudge" class="enroll-nudge" hidden>
-            <a href="/">Enroll for free</a> to track your progress through the course.
-          </div>
+          <EnrollBanner id="course-enroll-nudge" />
 
           <AgentPrompt />
 
@@ -115,20 +114,6 @@ const title = course?.title ?? "Course not found";
     color: var(--muted-fg);
     font-size: 1.1rem;
     margin: 0;
-  }
-
-  .enroll-nudge {
-    margin: 0 0 2rem;
-    padding: 0.85rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.6rem;
-    color: var(--muted-fg);
-    font-size: 0.95rem;
-  }
-
-  .enroll-nudge a {
-    color: var(--accent);
-    font-weight: 600;
   }
 
   .exercises-heading {
