@@ -64,7 +64,11 @@ describe("built-in courses", () => {
             const last = steps.at(-1);
             expect(last?.[0], file).toMatch(/^\d+\. Mark complete/);
             // Only the out-of-scope note may follow it, not an unnumbered step.
-            const after = instructions.slice(last!.index + last![0].length).split("\n").filter((line) => line.trim());
+            // Indented lines continue a wrapped step, so they're skipped.
+            const after = instructions
+              .slice(last!.index + last![0].length)
+              .split("\n")
+              .filter((line) => line.trim() && !/^\s/.test(line));
             for (const line of after) expect(line, file).toMatch(/^Out of scope/);
           }
         });
