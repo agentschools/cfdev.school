@@ -1,6 +1,6 @@
 ---
 name: publish-a-website
-description: "Describe a website you actually want, pick the right stack for it, build it on your machine, publish it on Cloudflare, and put it on your own domain. For students who've finished Agent setup; no other course required."
+description: "Describe a website you actually want, pick the right stack for it, build it on your machine, publish it on Cloudflare, and put it on your own domain."
 compatibility: "Requires a Cloudflare account (the Workers Free plan works) and the cf CLI, both set up in the Agent setup course. A domain is optional: use one you have, buy one, or skip that part."
 metadata:
   author: Cloudflare Dev School
