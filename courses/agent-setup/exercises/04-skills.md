@@ -130,3 +130,7 @@ Agents can miss a relevant skill, though. To make sure one is used, invoke it by
 | GitHub Copilot CLI | `/skill-name`       | `/workers-best-practices`       |
 | OpenCode           | `/skill-name`       | `/workers-best-practices`       |
 | Cursor             | `/skill-name`       | `/workers-best-practices`       |
+
+## Where you'll use this
+
+Skills come in whenever you build. Your agent can load one on its own when it recognizes a skill that fits, or you can invoke one explicitly, which is the surest way to get it used. When you write your first Worker in [Deploy a Worker](/courses/workers/deploy-a-worker), `workers-best-practices` fits, and in the [Durable Objects](/courses/durable-objects) course, `durable-objects` does. Invoke one yourself whenever you want to be sure it's used, or when an answer looks out of date.

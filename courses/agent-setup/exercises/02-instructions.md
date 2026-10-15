@@ -86,3 +86,7 @@ Your agent also adds a short section with your student ID and this site's addres
 ## AGENTS.md is a cross-tool standard
 
 Increasingly, agent harnesses treat `AGENTS.md` as the de facto standard filename for project-level instructions. It's read directly by Claude Code, Codex, OpenCode, Pi, and others, specifically so one file can work across every tool a project uses instead of a different file per tool. If your harness supports it, prefer `AGENTS.md` for any new project-level instructions file over a harness-specific name.
+
+## Where you'll use this
+
+Your global file applies in every project from now on, so your agent follows these defaults without being told. You'll also see a project-level `AGENTS.md` at work: in [Choose your stack](/courses/publish-a-website/choose-your-stack), your agent writes down your site's stack and commands in one, and every later exercise in that course reads it back.

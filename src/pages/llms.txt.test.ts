@@ -60,6 +60,13 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("before you mark it complete");
   });
 
+  it("keeps teaching an exercise whose setup is already done (#113)", async () => {
+    const text = await (await GET({} as APIContext)).text();
+    expect(text).toContain("Already set up isn't the same as already taught");
+    expect(text).toContain(`"Where you'll use this" section, cover it before you mark the exercise complete`);
+    expect(text).toContain("don't say a later exercise will use something unless the section says it does");
+  });
+
   it("describes the tracks and the fork after Agent setup", async () => {
     const text = await (await GET({} as APIContext)).text();
     expect(text).toContain("`projects`");

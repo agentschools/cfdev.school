@@ -106,3 +106,7 @@ Every model has a context window: the amount of text it can consider at once, me
 ## Cloudflare as a model provider
 
 If you already have a Cloudflare account, [AI Gateway](https://developers.cloudflare.com/ai-gateway/) is worth knowing about, though it isn't required for this course. Its [REST API](https://developers.cloudflare.com/ai-gateway/usage/rest-api/) reaches models from Anthropic, OpenAI, Google, and xAI (Grok), plus open-weights models like Kimi, GLM, and DeepSeek, all through the same endpoints. With [Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/), you load credits into your Cloudflare account and pay for all of them there, with no separate provider accounts or API keys.
+
+## Where you'll use this
+
+The model you picked does the work in every course from here. A short, well-defined exercise like [Deploy a Worker](/courses/workers/deploy-a-worker) is a good fit for your default. A bigger build that spans several exercises, like [Build a guestbook](/courses/build-a-guestbook), is where switching to a more capable model can pay off.
