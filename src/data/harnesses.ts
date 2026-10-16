@@ -546,10 +546,10 @@ export const harnesses: HarnessProfile[] = [
     subscriptionBilling: {
       supportsSubscriptionLogin: true,
       thirdPartyRoutingHonorsPlanLimits: true,
-      headline: "Free Hobby plan with limited usage. Pro is $20/month.",
-      plans: [{ plan: "Cursor (Hobby, Pro, Pro+, Ultra)", signIn: true, countsAgainstPlan: true }],
+      headline: "Free plan with limited usage. Plus is $8/month, Premium $30/month.",
+      plans: [{ plan: "Cursor (Free, Plus, Premium, Super, Ultra)", signIn: true, countsAgainstPlan: true, notes: "Third-party models (Claude, GPT, Gemini) need Premium or above and are paid from prepaid credit at API list price." }],
       summary:
-        "cursor-agent login signs in with your Cursor account and draws from the same usage pools as the editor: Hobby is free with limited usage, then Pro ($20/mo), Pro+ ($60/mo), and Ultra ($200/mo) each add a Cursor Models pool (Composer, Grok) plus an Other Models pool for third-party frontier models (Claude, GPT, Gemini) at API-equivalent rates. A CURSOR_API_KEY env var switches to standalone per-token billing outside the subscription pools. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
+        "cursor-agent login signs in with your Cursor account and draws from the same usage as the editor: Free has limited usage, then Plus ($8/mo), Premium ($30/mo), Super ($100/mo), and Ultra ($200/mo) each add a weekly pool for Cursor models (Composer 2.5, Grok). Third-party frontier models (Claude, GPT, Gemini) aren't in that pool: Premium and above can use them at API list price, Free and Plus can't. A CURSOR_API_KEY env var switches to standalone per-token billing outside the subscription pools. Native first-party CLI, so there's no third-party-routing restriction to worry about.",
     },
     models: [
       {
@@ -565,7 +565,7 @@ export const harnesses: HarnessProfile[] = [
     sources: [
       {
         url: "https://cursor.com/pricing",
-        note: "Verified 2026-10-11 for subscriptionBilling.headline: Hobby is free with limited agent requests, Pro is $20/month.",
+        note: "Verified 2026-10-15: plans are Free $0, Plus $8, Premium $30, Super $100, Ultra $200 per month (Teams $30+/seat), replacing the earlier Hobby/Pro/Pro+/Ultra names and prices. cursor.com/docs/models-and-pricing and cursor.com/help/account-and-billing/pricing agree. Third-party models need Premium or above. The Cursor Models pool covers Grok 4.7 ($2/$6, 256k context), Grok 4.6, Grok 4.5, and Composer 2.5 ($0.50/$2.50); Grok models aren't listed in models because their vision support wasn't confirmed.",
       },
       {
         url: "https://cursor.com/docs/models-and-pricing",
