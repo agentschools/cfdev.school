@@ -16,27 +16,28 @@ agent-instructions: |
 
   1. The models they have. Start from the model they're already using:
      tell the student which model has been answering them through the
-     interview and this exercise (the same `model` you report with
-     completions). The point of this exercise is to pick one on purpose.
-     Then say what this step is for, in a sentence, before any command:
-     by the end they'll know where the model is chosen in the app they're
-     actually using, what's in it, and which one they'd use for what.
+     interview and this exercise. If you can't tell (an auto-router, for
+     example), say so, and have them check what their app shows. The
+     point of this exercise is to pick one on purpose. Before any
+     command, say what this step is for: by the end they'll know where
+     the model is chosen in the app they're actually using, what's in
+     it, and which one they'd use for what.
 
      Show them the models their harness offers on their plan, as a short
-     list: name, what it's for (from `bestFor`), and how to switch to it.
-     Then help them find where they see and change the current model
-     themselves (`/model` in most harnesses; check yours). If you know
-     the way in for their app, offer it. If you don't, or it doesn't
-     work, ask them to look for a model picker, selector, or setting in
-     their app, or to tell you how they got there. If they can't find
-     one, that's fine: list the models together and carry on. The
-     comparison is the point, not the command.
+     list: name and what it's for (from `bestFor`). Then help them find
+     where they see and change the current model themselves (`/model`
+     in most harnesses; check yours). If you know the way in for their
+     app, offer it. If you don't, or it doesn't work, ask them to look
+     for a model picker, selector, or setting in their app, or to tell
+     you how they got there. If they can't find one, that's fine: list
+     the models together and carry on. The comparison is the point, not
+     the command.
 
-     Once they're looking at the list, give them a task, and wait for
-     their reply: which model is the most capable, which is the cheapest
-     or fastest, and which would they use for a one-line typo fix versus
-     a new feature across several files? Use their answer to lead into
-     step 2.
+     Then give them a task, and wait for their reply: which model is the
+     most capable, which is the cheapest or fastest, and which would they
+     use for a one-line typo fix versus a new feature across several
+     files? Use their answer to lead into step 2, and come back to their
+     picks there: confirm them, or explain why you'd choose differently.
 
   2. When each is worth it. Explain the tradeoffs with their models as
      the examples, not abstract tiers:
@@ -94,10 +95,10 @@ agent-instructions: |
      isn't required for this course.
 
   This exercise has no file-system verification step. Before marking it
-  complete, check that the student knows where their model is chosen
-  (or another way to change it, if their app has no picker), and has
-  picked a model for a small task and one for a big task, each with a
-  reason. They don't need to switch back and forth. Then confirm
+  complete, check that the student has looked for where their model is
+  chosen (found it, or listed the models with you if they couldn't),
+  and has picked a model for a small task and one for a big task, each
+  with a reason. They don't need to switch back and forth. Then confirm
   understanding conversationally (or via the quiz, if they opted in).
 ---
 
@@ -111,7 +112,7 @@ Each agent offers its own lineup, usually from fast and cheap to slow and most c
 
 You've been using a model this whole time: it's what's been answering you. Your agent will tell you which one, then help you choose on purpose.
 
-Most agents let you see and switch models with a `/model` command. The goal here is to find where your app picks the model, compare what's in it (which models are more capable, which are faster or cheaper), and choose one for a quick fix and one for a bigger task. If `/model` doesn't work in your app, look for a model picker or a setting instead, or ask your agent. Finding the picker matters more than the exact command.
+Most agents let you see and switch models with a `/model` command. The goal here is to find where your app picks the model, compare what's in it (which models are more capable, which are faster or cheaper), and choose one for a quick fix and one for a bigger task. If `/model` doesn't work in your app, look for a model picker or a setting instead, or ask your agent. Comparing what's there matters more than the exact command.
 
 ## Bigger isn't always better
 
