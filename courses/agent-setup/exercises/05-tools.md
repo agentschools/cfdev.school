@@ -65,11 +65,19 @@ agent-instructions: |
 
      Prefer the agent's own add command over hand-editing config files.
      When you do edit a file, merge into what's there; don't overwrite
-     the student's other servers. Make sure to tell the student that the
-     OAuth screen lets them choose which permissions to grant, and that
+     the student's other servers. If that config could contain secrets
+     for other servers, have the student make the edit in their app or
+     editor instead; don't read it into the conversation. Never open
+     credential files or print tokens to check or debug MCP sign-in,
+     even with your own redaction. Use the app's connection status or a
+     documented status command that does not return secrets, or ask the
+     student whether it shows connected. Make sure to tell the student
+     that the OAuth screen lets them choose which permissions to grant, and that
      they should grant only what they need (read-only is fine to start).
      An API token is a fallback (https://dash.cloudflare.com/profile/api-tokens),
      but tokens with Client IP Address Filtering aren't supported.
+     If a token is needed, the student enters it directly in the tool's
+     secure credential UI, never in chat or in a command you capture.
 
   3. Restart or reload as needed. Most agents need a restart (or `/mcp`
      reload) before a newly added server's tools appear. If the student

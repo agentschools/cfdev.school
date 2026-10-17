@@ -38,6 +38,9 @@ agent-instructions: |
      agents, and confirm those are listed too. If yours is missing,
      rerun with `--agent <id>` for it (`claude-code`, `codex`,
      `opencode`, `pi`, `cursor`, `github-copilot`).
+     Use the install/list output or specific skill files to verify this;
+     don't recursively search agent config directories or open credential
+     files to discover which agents are installed.
 
   4. Make the new skills available in the current session. Use your
      harness profile's `skills.restartBehavior` (GET
