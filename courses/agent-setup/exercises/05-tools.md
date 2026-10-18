@@ -19,11 +19,20 @@ agent-instructions: |
      cost about 1,100 tokens in total, around 0.5% of what individual
      tools would, and the full API is still reachable.
 
+     Distinguish a server and its connection from the individual tools it
+     exposes. For Claude app users, explain the "connectors" terminology
+     below; don't confuse the app's Connectors settings with the Claude
+     Code CLI's MCP commands.
+
   2. Add the server, named `cloudflare`, using the student's agent.
      Use the OAuth option (the server redirects to Cloudflare to
      authorize and pick permissions), not an API token. Use the steps
      for the agent you are:
 
+     - Claude app (claude.ai or Claude Desktop): follow the linked
+       custom-connectors guide below to add the remote server through
+       Connectors, then connect with OAuth and enable it for the chat.
+       Team/Enterprise users may need an owner to add it first.
      - Claude Code:
          claude mcp add --transport http --scope user cloudflare https://mcp.cloudflare.com/mcp
        then run `/mcp` and follow the browser steps to log in.
@@ -109,6 +118,12 @@ agent-instructions: |
 # Tools
 
 MCP (Model Context Protocol) is how an agent gets extra tools from an outside server. Cloudflare's [MCP server](https://github.com/cloudflare/mcp) gives your agent access to the whole Cloudflare API, so it can look things up and manage your account without you copy-pasting from the dashboard.
+
+## Tools, servers, and connectors
+
+A **tool** is an individual action your agent can call, such as `search` or `execute`. An **MCP server** provides those tools. Connecting to one server can make several tools available; the connection and the tools are not the same thing.
+
+In the **Claude app** (claude.ai or Claude Desktop), remote MCP integrations appear as **connectors**. Look under **Customize > Connectors** to manage them or add a custom connector using the server's URL. See [Anthropic's custom-connectors guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) for the current steps and any organization requirements. For direct setup in the **Claude Code terminal CLI**, use its MCP commands shown below.
 
 ## Why Code Mode matters
 
