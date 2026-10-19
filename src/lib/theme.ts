@@ -1,28 +1,39 @@
 // Colors follow the 18 named families in agentschools/opencode.school.
-// Fills use darker shades so white labels remain readable, including yellow.
+// Fills use bright shades for pop; `onSolid` is the text color (white or near-
+// black) that clears WCAG AA on each fill, `textLight`/`textDark` are the link
+// colors on light/dark page backgrounds. All verified in theme.test.ts.
 export const THEME_STORAGE_KEY = "cfDevSchool.themeColor";
 export const DEFAULT_THEME = "default";
-export const schoolTheme = { name: DEFAULT_THEME, label: "School orange", solid: "#ff5e1f", hover: "#c2410c", textDark: "#fdba74" } as const;
+export const DARK_TEXT = "#1a1a1a";
+export const schoolTheme = {
+  name: DEFAULT_THEME,
+  label: "School orange",
+  solid: "#ff5e1f",
+  hover: "#c2410c",
+  onSolid: "#ffffff",
+  textLight: "#c2410c",
+  textDark: "#fdba74",
+} as const;
 
 export const themeColors = [
-  { name: "red", label: "Red", solid: "#b91c1c", hover: "#991b1b", textDark: "#fca5a5" },
-  { name: "orange", label: "Orange", solid: "#c2410c", hover: "#9a3412", textDark: "#fdba74" },
-  { name: "amber", label: "Amber", solid: "#92400e", hover: "#78350f", textDark: "#fcd34d" },
-  { name: "yellow", label: "Yellow", solid: "#a16207", hover: "#854d0e", textDark: "#fde047" },
-  { name: "lime", label: "Lime", solid: "#4d7c0f", hover: "#3f6212", textDark: "#bef264" },
-  { name: "green", label: "Green", solid: "#15803d", hover: "#166534", textDark: "#86efac" },
-  { name: "emerald", label: "Emerald", solid: "#047857", hover: "#065f46", textDark: "#6ee7b7" },
-  { name: "teal", label: "Teal", solid: "#0f766e", hover: "#115e59", textDark: "#5eead4" },
-  { name: "cyan", label: "Cyan", solid: "#0e7490", hover: "#155e75", textDark: "#67e8f9" },
-  { name: "sky", label: "Sky", solid: "#0369a1", hover: "#075985", textDark: "#7dd3fc" },
-  { name: "blue", label: "Blue", solid: "#1d4ed8", hover: "#1e40af", textDark: "#93c5fd" },
-  { name: "indigo", label: "Indigo", solid: "#4338ca", hover: "#3730a3", textDark: "#a5b4fc" },
-  { name: "violet", label: "Violet", solid: "#6d28d9", hover: "#5b21b6", textDark: "#c4b5fd" },
-  { name: "purple", label: "Purple", solid: "#7e22ce", hover: "#6b21a8", textDark: "#d8b4fe" },
-  { name: "fuchsia", label: "Fuchsia", solid: "#a21caf", hover: "#86198f", textDark: "#f0abfc" },
-  { name: "pink", label: "Pink", solid: "#be185d", hover: "#9d174d", textDark: "#f9a8d4" },
-  { name: "rose", label: "Rose", solid: "#be123c", hover: "#9f1239", textDark: "#fda4af" },
-  { name: "slate", label: "Slate", solid: "#475569", hover: "#334155", textDark: "#cbd5e1" },
+  { name: "red", label: "Red", solid: "#ef4444", hover: "#dc2626", onSolid: DARK_TEXT, textLight: "#b91c1c", textDark: "#fca5a5" },
+  { name: "orange", label: "Orange", solid: "#f97316", hover: "#ea580c", onSolid: DARK_TEXT, textLight: "#c2410c", textDark: "#fdba74" },
+  { name: "amber", label: "Amber", solid: "#f59e0b", hover: "#d97706", onSolid: DARK_TEXT, textLight: "#b45309", textDark: "#fcd34d" },
+  { name: "yellow", label: "Yellow", solid: "#eab308", hover: "#ca8a04", onSolid: DARK_TEXT, textLight: "#a16207", textDark: "#fde047" },
+  { name: "lime", label: "Lime", solid: "#84cc16", hover: "#65a30d", onSolid: DARK_TEXT, textLight: "#4d7c0f", textDark: "#bef264" },
+  { name: "green", label: "Green", solid: "#22c55e", hover: "#16a34a", onSolid: DARK_TEXT, textLight: "#15803d", textDark: "#86efac" },
+  { name: "emerald", label: "Emerald", solid: "#10b981", hover: "#059669", onSolid: DARK_TEXT, textLight: "#047857", textDark: "#6ee7b7" },
+  { name: "teal", label: "Teal", solid: "#14b8a6", hover: "#0d9488", onSolid: DARK_TEXT, textLight: "#0f766e", textDark: "#5eead4" },
+  { name: "cyan", label: "Cyan", solid: "#06b6d4", hover: "#0891b2", onSolid: DARK_TEXT, textLight: "#0e7490", textDark: "#67e8f9" },
+  { name: "sky", label: "Sky", solid: "#0ea5e9", hover: "#0284c7", onSolid: DARK_TEXT, textLight: "#0369a1", textDark: "#7dd3fc" },
+  { name: "blue", label: "Blue", solid: "#3b82f6", hover: "#2563eb", onSolid: DARK_TEXT, textLight: "#1d4ed8", textDark: "#93c5fd" },
+  { name: "indigo", label: "Indigo", solid: "#4f46e5", hover: "#4338ca", onSolid: "#ffffff", textLight: "#4338ca", textDark: "#a5b4fc" },
+  { name: "violet", label: "Violet", solid: "#7c3aed", hover: "#6d28d9", onSolid: "#ffffff", textLight: "#6d28d9", textDark: "#c4b5fd" },
+  { name: "purple", label: "Purple", solid: "#9333ea", hover: "#7e22ce", onSolid: "#ffffff", textLight: "#7e22ce", textDark: "#d8b4fe" },
+  { name: "fuchsia", label: "Fuchsia", solid: "#d946ef", hover: "#c026d3", onSolid: DARK_TEXT, textLight: "#a21caf", textDark: "#f0abfc" },
+  { name: "pink", label: "Pink", solid: "#ec4899", hover: "#db2777", onSolid: DARK_TEXT, textLight: "#be185d", textDark: "#f9a8d4" },
+  { name: "rose", label: "Rose", solid: "#f43f5e", hover: "#e11d48", onSolid: DARK_TEXT, textLight: "#be123c", textDark: "#fda4af" },
+  { name: "slate", label: "Slate", solid: "#64748b", hover: "#475569", onSolid: "#ffffff", textLight: "#334155", textDark: "#cbd5e1" },
 ] as const;
 
 export function resolveTheme(value: string | null | undefined) {
@@ -53,11 +64,11 @@ export const themeStyles = schoolThemeStyles + themeColors.map((theme) => `
     --brand-cloud-dark: ${theme.solid};
     --accent: ${theme.solid};
     --accent-hover: ${theme.hover};
-    --accent-text: light-dark(${theme.hover}, ${theme.textDark});
-    --accent-contrast: #fff;
-    --button-gradient: linear-gradient(180deg, ${theme.solid}, ${theme.hover});
+    --accent-text: light-dark(${theme.textLight}, ${theme.textDark});
+    --accent-contrast: ${theme.onSolid};
+    --button-gradient: ${theme.solid};
     --card-gradient: linear-gradient(135deg, ${theme.solid}, ${theme.hover});
-    --card-text: #fff;
+    --card-text: ${theme.onSolid};
     --card-text-shadow: none;
     --card-glow: color-mix(in srgb, ${theme.solid} 50%, transparent);
   }

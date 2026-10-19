@@ -6,14 +6,17 @@ import ThemePalette from "./ThemePalette.astro";
 import { themeColors } from "../lib/theme";
 
 describe("color selector", () => {
-  it("groups all named swatches as native radios with an explicit school-default control", async () => {
+  it("groups all named swatches as native radios, with no school-default control or borders", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(ColorSelector);
     expect(html).toContain("<fieldset");
     expect(html).toContain("Choose your color</legend>");
     expect(html.match(/type="radio"/g)).toHaveLength(18);
     expect(html.match(/ checked/g)).toBeNull();
-    expect(html).toContain('aria-pressed="true"');
+    // No separate "use school orange" reset and no description copy.
+    expect(html).not.toContain("data-default-color");
+    expect(html).not.toContain("Use school orange");
+    expect(html).not.toContain("whole school");
     for (const theme of themeColors) {
       expect(html).toContain(`aria-label="${theme.label}"`);
       expect(html).toContain(`value="${theme.name}"`);

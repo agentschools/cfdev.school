@@ -140,13 +140,12 @@ export function initEnrollment(): void {
   const card = document.getElementById("student-id-card");
   const display = document.getElementById("student-id-display");
   const celebrationLayer = document.getElementById("celebration-layer");
-  const triggers = document.querySelectorAll<HTMLButtonElement>("[data-enroll-trigger]");
+  const picker = document.querySelector<HTMLElement>("[data-enroll-colors]");
   const starts = document.querySelectorAll<HTMLButtonElement>("[data-enroll-start]");
-  if (triggers.length === 0 && starts.length === 0) return;
+  if (starts.length === 0 && !picker) return;
 
   starts.forEach((start) => {
     start.addEventListener("click", () => {
-      const picker = document.querySelector<HTMLElement>("[data-enroll-colors]");
       if (!picker) {
         window.location.assign("/?enroll");
         return;
@@ -160,17 +159,14 @@ export function initEnrollment(): void {
   let isSubmitting = false;
   let cancelReveal: (() => void) | undefined;
 
-  // The ID card only exists on the homepage. Trigger buttons (e.g. the header's,
-  // or the homepage's own cta-block) can appear on any page, so hiding them must
-  // not depend on the card. Once enrolled, there's nothing left for an "Enroll"
-  // button to do, so the whole trigger (or its cta-block wrapper, marked with
-  // data-enroll-container) just disappears rather than relabeling to "Enrolled".
-  function markTriggersEnrolled(): void {
+  // The ID card only exists on the homepage. "Enroll" start buttons (e.g. the
+  // header's, or the homepage's own cta-block) can appear on any page, so hiding
+  // them must not depend on the card. Once enrolled, there's nothing left for an
+  // "Enroll" button to do, so the whole button (or its cta-block wrapper, marked
+  // with data-enroll-container) just disappears rather than relabeling.
+  function markEnrolled(): void {
     starts.forEach((start) => {
-      start.hidden = true;
-    });
-    triggers.forEach((trigger) => {
-      const container = trigger.closest<HTMLElement>("[data-enroll-container]") ?? trigger;
+      const container = start.closest<HTMLElement>("[data-enroll-container]") ?? start;
       container.hidden = true;
     });
   }
@@ -184,7 +180,7 @@ export function initEnrollment(): void {
   }
 
   function announce(student: CachedStudent, fresh: boolean): void {
-    markTriggersEnrolled();
+    markEnrolled();
     document.dispatchEvent(new CustomEvent<EnrolledDetail>(ENROLLED_EVENT, { detail: { ...student, fresh } }));
   }
 
@@ -232,6 +228,27 @@ export function initEnrollment(): void {
     });
   }
 
+  async function runEnrollment(): Promise<void> {
+    const existing = readCachedStudent();
+    if (existing) {
+      card?.scrollIntoView({ behavior: "smooth", block: "center" });
+      showEnrolled(existing);
+      return;
+    }
+
+    if (isSubmitting) return;
+    isSubmitting = true;
+    try {
+      const student = await enroll();
+      writeCachedStudent(student);
+      showFreshlyEnrolled(student);
+    } catch (error) {
+      console.error("Enrollment failed", error);
+    } finally {
+      isSubmitting = false;
+    }
+  }
+
   const cached = readCachedStudent();
   if (cached) {
     showEnrolled(cached);
@@ -243,32 +260,14 @@ export function initEnrollment(): void {
 
   if (!cached && new URLSearchParams(window.location.search).has("enroll")) starts[0]?.click();
 
-  triggers.forEach((trigger) => {
-    trigger.addEventListener("click", async () => {
-      const existing = readCachedStudent();
-      if (existing) {
-        card?.scrollIntoView({ behavior: "smooth", block: "center" });
-        showEnrolled(existing);
-        return;
-      }
-
-      if (isSubmitting) return;
-      isSubmitting = true;
-      trigger.disabled = true;
-      const label = trigger.textContent;
-      trigger.textContent = "Enrolling…";
-
-      try {
-        const student = await enroll();
-        writeCachedStudent(student);
-        showFreshlyEnrolled(student);
-      } catch (error) {
-        console.error("Enrollment failed", error);
-        trigger.disabled = false;
-        trigger.textContent = label;
-      } finally {
-        isSubmitting = false;
-      }
-    });
+  // Picking a color is the enrollment action. This listener sits on the picker,
+  // an ancestor of the color selector, so theme-client's change handler (on the
+  // selector) runs first and the chosen palette is saved and applied before the
+  // reveal and confetti play.
+  picker?.addEventListener("change", (event) => {
+    const radio = event.target;
+    if (radio instanceof HTMLInputElement && radio.checked && radio.name === "student-color") {
+      void runEnrollment();
+    }
   });
 }

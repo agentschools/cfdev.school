@@ -5,7 +5,6 @@ import { themeColors } from "../lib/theme";
 <div class="color-selector" data-color-selector>
   <fieldset>
     <legend>Choose your color</legend>
-    <p>For your student ID and the whole school. <span data-color-label>School orange (default)</span></p>
     <div class="swatches">
       {themeColors.map((theme) => (
         <label class="color-option" title={theme.label} style={`--swatch:${theme.solid}`}>
@@ -14,67 +13,34 @@ import { themeColors } from "../lib/theme";
         </label>
       ))}
     </div>
-    <button class="reset-color" type="button" data-default-color aria-pressed="true">Use school orange</button>
   </fieldset>
 </div>
 
 <style>
-  .color-selector {
-    max-width: 24rem;
-  }
-
   fieldset {
     min-width: 0;
     margin: 0;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
+    padding: 0;
+    border: none;
   }
 
   legend {
-    padding: 0 0.35rem;
+    padding: 0;
+    margin: 0 0 0.75rem;
     font-weight: 600;
-  }
-
-  p {
-    margin: 0 0 1rem;
-    color: var(--muted-fg);
-    font-size: 0.875rem;
-  }
-
-  [data-color-label] {
-    display: block;
-    margin-top: 0.25rem;
-    color: var(--fg);
-  }
-
-  .reset-color {
-    margin-top: 1rem;
-    padding: 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: 0.4rem;
-    background: var(--bg);
-    color: var(--fg);
-    font: inherit;
-    cursor: pointer;
-  }
-
-  .reset-color:focus-visible {
-    outline: 2px solid var(--accent-text);
-    outline-offset: 3px;
   }
 
   .swatches {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0.6rem;
   }
 
   .color-option {
     position: relative;
     display: grid;
     min-width: 0;
-    height: 2.75rem;
+    aspect-ratio: 1;
     cursor: pointer;
   }
 
@@ -91,20 +57,28 @@ import { themeColors } from "../lib/theme";
   .swatch {
     display: grid;
     place-items: center;
-    border-radius: 0.5rem;
+    border-radius: 0.6rem;
     background: var(--swatch);
     color: #fff;
-    border: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
     pointer-events: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .color-option:hover .swatch,
+  input:focus-visible + .swatch {
+    transform: scale(1.12);
   }
 
   .selected-check {
     visibility: hidden;
     font-size: 1.2rem;
     font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
   }
 
   input:checked + .swatch {
+    transform: scale(1.12);
     box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg);
   }
 
@@ -113,8 +87,6 @@ import { themeColors } from "../lib/theme";
   }
 
   input:focus-visible + .swatch {
-    outline: 3px dashed var(--fg);
-    outline-offset: 3px;
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg);
   }
-
 </style>

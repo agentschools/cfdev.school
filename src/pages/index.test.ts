@@ -33,7 +33,6 @@ describe("homepage", () => {
     expect(html).not.toMatch(/id="student-id-card"[^>]*hidden/);
     expect(html).toContain("smooth-operator-4629");
     expect(html).toContain(">Dev School</a>");
-    expect(html.match(/data-enroll-trigger/g)).toHaveLength(1);
   });
 
   it("renders the sidebar with Agent setup's exercises and the track courses linked", async () => {
@@ -63,14 +62,16 @@ describe("homepage", () => {
     expect(html.match(/<a[^>]*href="\/agents"[^>]*>(What(?:&#39;|')s an agent\?|Works with)<\/a>/g)).toHaveLength(2);
   });
 
-  it("offers colors inside enrollment, without a shared header selector", async () => {
+  it("offers colors inside enrollment as the enroll action, without a shared header selector", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);
     const header = html.match(/<header[\s\S]*?<\/header>/)![0];
     expect(header).not.toContain("data-color-selector");
     expect(html).toMatch(/data-enroll-colors[^>]*hidden/);
     expect(html).toContain("data-enroll-start");
-    expect(html).toContain("Get my student ID");
+    // Picking a color is the enrollment action; no separate confirm button.
+    expect(html).not.toContain("data-enroll-trigger");
+    expect(html).not.toContain("Get my student ID");
   });
 
   it("offers the tracks after Agent setup, available ones first", async () => {

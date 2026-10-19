@@ -41,8 +41,8 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
     </div>
     <script>
       import { initEnrollment } from "../lib/enroll-client";
-      // Runs on every page so [data-enroll-trigger] elements anywhere (e.g. the
-      // header's button) reflect enrolled state. Despite this tag being placed
+      // Runs on every page so [data-enroll-start] buttons anywhere (e.g. the
+      // header's) reflect enrolled state. Despite this tag being placed
       // after <slot /> in the source, Astro hoists it ahead of page-level
       // scripts in the rendered HTML, so it actually runs BEFORE e.g. the
       // homepage's initAgentPrompt(). Anything that needs to react to an

@@ -65,11 +65,10 @@ const trackChoices = TRACKS.map((track) => ({
         </p>
         <div class="cta-block" data-enroll-container>
           <button class="cta" type="button" data-enroll-start>Enroll — it takes 2 seconds</button>
-          <div data-enroll-colors hidden>
+          <div class="enroll-colors" data-enroll-colors hidden>
             <ColorSelector />
-            <button class="cta confirm-enrollment" type="button" data-enroll-trigger>Get my student ID</button>
           </div>
-          <p class="fine-print">Free forever. No account required.</p>
+          <p class="fine-print">Free forever. No account required. Pick a color to enroll.</p>
         </div>
       </div>
 
@@ -235,9 +234,14 @@ const trackChoices = TRACKS.map((track) => ({
   .cta-block {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
-    width: fit-content;
+    width: 100%;
+    max-width: 27.5rem;
+  }
+
+  .enroll-colors {
+    width: 100%;
   }
 
   .cta-block[hidden] {
@@ -247,10 +251,6 @@ const trackChoices = TRACKS.map((track) => ({
   .cta[hidden],
   [data-enroll-colors][hidden] {
     display: none;
-  }
-
-  .confirm-enrollment {
-    margin-top: 1rem;
   }
 
   .cta {

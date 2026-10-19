@@ -10,9 +10,6 @@ export function initColorSelectors(): void {
       selector.querySelectorAll<HTMLInputElement>('input[name="student-color"]').forEach((radio) => {
         radio.checked = radio.value === theme.name;
       });
-      const label = selector.querySelector<HTMLElement>("[data-color-label]");
-      if (label) label.textContent = theme.name === DEFAULT_THEME ? "School orange (default)" : theme.label;
-      selector.querySelector("[data-default-color]")?.setAttribute("aria-pressed", String(theme.name === DEFAULT_THEME));
     });
   }
 
@@ -33,7 +30,6 @@ export function initColorSelectors(): void {
       const radio = event.target;
       if (radio instanceof HTMLInputElement && radio.checked) save(radio.value);
     });
-    selector.querySelector("[data-default-color]")?.addEventListener("click", () => save(DEFAULT_THEME));
   });
   window.addEventListener("storage", (event) => {
     if (event.key === THEME_STORAGE_KEY || event.key === null) apply(event.newValue);

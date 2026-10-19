@@ -31,11 +31,13 @@ describe("student colors", () => {
     for (const theme of themeColors) expect(resolveTheme(theme.name)).toBe(theme);
   });
 
-  it.each(themeColors)("keeps $name labels and links above WCAG AA text contrast", (theme) => {
-    expect(contrast(theme.solid, "#ffffff")).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(theme.hover, "#ffffff")).toBeGreaterThanOrEqual(4.5);
-    // Include conservative tinted badge/banner surfaces, beyond the page backgrounds.
-    expect(contrast(theme.hover, "#dedede")).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(theme.textDark, "#303030")).toBeGreaterThanOrEqual(4.5);
+  it.each(themeColors)("keeps $name fills and links above WCAG AA text contrast", (theme) => {
+    // Buttons and badges paint onSolid text on the flat fill.
+    expect(contrast(theme.solid, theme.onSolid)).toBeGreaterThanOrEqual(4.5);
+    // The ID card gradient runs solid -> hover; its large ID text clears AA Large (3:1).
+    expect(contrast(theme.hover, theme.onSolid)).toBeGreaterThanOrEqual(3);
+    // Link/eyebrow colors on the light and dark page backgrounds.
+    expect(contrast(theme.textLight, "#fcfcfc")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(theme.textDark, "#0b0b0b")).toBeGreaterThanOrEqual(4.5);
   });
 });
