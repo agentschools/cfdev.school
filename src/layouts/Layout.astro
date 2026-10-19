@@ -49,6 +49,8 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
       // already-cached student can't rely on script order or solely on the
       // ENROLLED_EVENT this dispatches — check readCachedStudent() directly too
       // (see src/pages/index.astro for an example).
+      import { initColorSelectors } from "../lib/theme-client";
+      initColorSelectors();
       initEnrollment();
     </script>
   </body>

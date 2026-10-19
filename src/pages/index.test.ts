@@ -63,6 +63,16 @@ describe("homepage", () => {
     expect(html.match(/<a[^>]*href="\/agents"[^>]*>(What(?:&#39;|')s an agent\?|Works with)<\/a>/g)).toHaveLength(2);
   });
 
+  it("offers colors inside enrollment, without a shared header selector", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Index);
+    const header = html.match(/<header[\s\S]*?<\/header>/)![0];
+    expect(header).not.toContain("data-color-selector");
+    expect(html).toMatch(/data-enroll-colors[^>]*hidden/);
+    expect(html).toContain("data-enroll-start");
+    expect(html).toContain("Get my student ID");
+  });
+
   it("offers the tracks after Agent setup, available ones first", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Index);

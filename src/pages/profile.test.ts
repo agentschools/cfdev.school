@@ -20,6 +20,16 @@ describe("/profile", () => {
     expect(html).toContain("&quot;generic&quot;:&quot;Unknown agent&quot;");
   });
 
+  it("keeps later color changes in collapsed appearance settings, outside the header", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(Profile);
+    expect(html).toMatch(/<details class="appearance-settings"[^>]*>/);
+    expect(html).not.toMatch(/<details class="appearance-settings"[^>]*open/);
+    expect(html).toContain("Appearance settings</summary>");
+    expect(html).toContain("data-color-selector");
+    expect(html.match(/<header[\s\S]*?<\/header>/)![0]).not.toContain("data-color-selector");
+  });
+
   it("links to itself from the sidebar's Account section", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Profile, { request: new Request("https://school.example/profile") });

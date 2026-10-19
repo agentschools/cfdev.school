@@ -1,101 +1,67 @@
 ---
-import { DEFAULT_THEME, themeColors } from "../lib/theme";
+import { themeColors } from "../lib/theme";
 ---
 
-<details class="color-selector" data-color-selector>
-  <summary><span class="current-swatch" aria-hidden="true"></span>Color<span class="current-color" data-color-label>: Orange</span></summary>
+<div class="color-selector" data-color-selector>
   <fieldset>
     <legend>Choose your color</legend>
-    <p>For your student ID and the whole school.</p>
+    <p>For your student ID and the whole school. <span data-color-label>School orange (default)</span></p>
     <div class="swatches">
       {themeColors.map((theme) => (
         <label class="color-option" title={theme.label} style={`--swatch:${theme.solid}`}>
-          <input type="radio" name="student-color" value={theme.name} aria-label={theme.label} checked={theme.name === DEFAULT_THEME} />
+          <input type="radio" name="student-color" value={theme.name} aria-label={theme.label} />
           <span class="swatch" aria-hidden="true"><span class="selected-check">✓</span></span>
         </label>
       ))}
     </div>
+    <button class="reset-color" type="button" data-default-color aria-pressed="true">Use school orange</button>
   </fieldset>
-</details>
-
-<script>
-  import { initColorSelector } from "../lib/theme-client";
-  initColorSelector();
-</script>
+</div>
 
 <style>
   .color-selector {
-    position: relative;
-    font-size: 0.875rem;
-  }
-
-  summary {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.4rem 0.5rem;
-    border-radius: 0.4rem;
-    cursor: pointer;
-    list-style: none;
-    white-space: nowrap;
-  }
-
-  summary::-webkit-details-marker {
-    display: none;
-  }
-
-  summary:hover {
-    background: var(--card-bg);
-  }
-
-  summary:focus-visible {
-    outline: 2px solid var(--accent-text);
-    outline-offset: 3px;
-  }
-
-  .current-swatch {
-    width: 0.9rem;
-    height: 0.9rem;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 1px solid var(--accent-text);
-  }
-
-  .current-color {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
+    max-width: 24rem;
   }
 
   fieldset {
-    position: absolute;
-    top: calc(100% + 0.6rem);
-    right: 0;
-    z-index: 10;
-    width: min(19rem, calc(100vw - 2rem));
+    min-width: 0;
     margin: 0;
     padding: 1rem;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
-    background: var(--bg);
-    color: var(--fg);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
   }
 
   legend {
-    float: left;
-    width: 100%;
-    padding: 0;
+    padding: 0 0.35rem;
     font-weight: 600;
   }
 
   p {
-    clear: both;
-    margin: 0 0 0.8rem;
+    margin: 0 0 1rem;
     color: var(--muted-fg);
-    font-size: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  [data-color-label] {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--fg);
+  }
+
+  .reset-color {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.4rem;
+    background: var(--bg);
+    color: var(--fg);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .reset-color:focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 3px;
   }
 
   .swatches {
@@ -151,15 +117,4 @@ import { DEFAULT_THEME, themeColors } from "../lib/theme";
     outline-offset: 3px;
   }
 
-  @media (max-width: 640px) {
-    fieldset {
-      position: fixed;
-      top: 4.5rem;
-      left: 1rem;
-      right: 1rem;
-      width: auto;
-      max-height: calc(100dvh - 6rem);
-      overflow-y: auto;
-    }
-  }
 </style>

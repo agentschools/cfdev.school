@@ -6,18 +6,19 @@ import ThemePalette from "./ThemePalette.astro";
 import { themeColors } from "../lib/theme";
 
 describe("color selector", () => {
-  it("groups all named swatches as native radios with one default selection", async () => {
+  it("groups all named swatches as native radios with an explicit school-default control", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(ColorSelector);
     expect(html).toContain("<fieldset");
     expect(html).toContain("Choose your color</legend>");
     expect(html.match(/type="radio"/g)).toHaveLength(18);
-    expect(html.match(/ checked/g)).toHaveLength(1);
+    expect(html.match(/ checked/g)).toBeNull();
+    expect(html).toContain('aria-pressed="true"');
     for (const theme of themeColors) {
       expect(html).toContain(`aria-label="${theme.label}"`);
       expect(html).toContain(`value="${theme.name}"`);
     }
-    expect(html).toContain("<summary");
+    expect(html).not.toContain("<summary");
   });
 
   it("applies valid saved colors before paint, falling back safely with unavailable or invalid storage", async () => {
@@ -35,7 +36,7 @@ describe("color selector", () => {
           },
         },
       });
-      expect(dataset.themeColor).toBe(themeColors.some((theme) => theme.name === value) ? value : "orange");
+      expect(dataset.themeColor).toBe(themeColors.some((theme) => theme.name === value) ? value : "default");
     }
   });
 });

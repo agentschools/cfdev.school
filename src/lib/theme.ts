@@ -1,7 +1,8 @@
 // Colors follow the 18 named families in agentschools/opencode.school.
 // Fills use darker shades so white labels remain readable, including yellow.
 export const THEME_STORAGE_KEY = "cfDevSchool.themeColor";
-export const DEFAULT_THEME = "orange";
+export const DEFAULT_THEME = "default";
+export const schoolTheme = { name: DEFAULT_THEME, label: "School orange", solid: "#ff5e1f", hover: "#c2410c", textDark: "#fdba74" } as const;
 
 export const themeColors = [
   { name: "red", label: "Red", solid: "#b91c1c", hover: "#991b1b", textDark: "#fca5a5" },
@@ -25,15 +26,35 @@ export const themeColors = [
 ] as const;
 
 export function resolveTheme(value: string | null | undefined) {
-  return themeColors.find((theme) => theme.name === value) ?? themeColors.find((theme) => theme.name === DEFAULT_THEME)!;
+  return themeColors.find((theme) => theme.name === value) ?? schoolTheme;
 }
 
-export const themeStyles = themeColors.map((theme) => `
-  ${theme.name === DEFAULT_THEME ? ":root," : ""}
+// No saved choice uses main's original orange. A saved named orange remains a
+// deliberate palette preference; resetting removes the key instead of saving it.
+export const schoolThemeStyles = `
+  :root, :root[data-theme-color="default"] {
+    --accent: oklch(0.687 0.208 38.8);
+    --accent-hover: #ff5e1f;
+    --accent-text: light-dark(#c2410c, #ff8f57);
+    --accent-contrast: #171717;
+    --button-gradient: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    --card-gradient: linear-gradient(135deg, #ff8f45 0%, #ff5e1f 48%, #b83200 100%);
+    --card-text: #fff;
+    --card-text-shadow: 0 1px 3px #632000, 0 0 1px #632000;
+    --card-glow: rgb(255 110 40 / 0.5);
+  }
+`;
+
+export const themeStyles = schoolThemeStyles + themeColors.map((theme) => `
   :root[data-theme-color="${theme.name}"] {
     --accent: ${theme.solid};
     --accent-hover: ${theme.hover};
     --accent-text: light-dark(${theme.hover}, ${theme.textDark});
     --accent-contrast: #fff;
+    --button-gradient: linear-gradient(180deg, ${theme.solid}, ${theme.hover});
+    --card-gradient: linear-gradient(135deg, ${theme.solid}, ${theme.hover});
+    --card-text: #fff;
+    --card-text-shadow: none;
+    --card-glow: color-mix(in srgb, ${theme.solid} 50%, transparent);
   }
 `).join("\n");

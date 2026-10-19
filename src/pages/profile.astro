@@ -1,4 +1,5 @@
 ---
+import ColorSelector from "../components/ColorSelector.astro";
 import Layout from "../layouts/Layout.astro";
 import { coursePath, REQUIRED_COURSE } from "../data/courses";
 import { harnesses } from "../data/harnesses";
@@ -32,6 +33,10 @@ const harnessNames = Object.fromEntries(
       </p>
 
       <div id="profile-courses"></div>
+      <details class="appearance-settings">
+        <summary>Appearance settings</summary>
+        <ColorSelector />
+      </details>
     </main>
   </div>
 </Layout>
@@ -42,6 +47,22 @@ const harnessNames = Object.fromEntries(
 </script>
 
 <style>
+  .appearance-settings {
+    margin-top: 3rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+  }
+
+  .appearance-settings summary {
+    cursor: pointer;
+    margin-bottom: 1rem;
+  }
+
+  .appearance-settings summary:focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 3px;
+  }
+
   .page {
     max-width: 1100px;
     margin: 0 auto;

@@ -1,4 +1,5 @@
 ---
+import ColorSelector from "../components/ColorSelector.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { REQUIRED_COURSE, TRACK_LABELS, TRACKS } from "../data/courses";
@@ -63,7 +64,11 @@ const trackChoices = TRACKS.map((track) => ({
           with Cloudflare. Then start building for real.
         </p>
         <div class="cta-block" data-enroll-container>
-          <button class="cta" type="button" data-enroll-trigger>Enroll — it takes 2 seconds</button>
+          <button class="cta" type="button" data-enroll-start>Enroll — it takes 2 seconds</button>
+          <div data-enroll-colors hidden>
+            <ColorSelector />
+            <button class="cta confirm-enrollment" type="button" data-enroll-trigger>Get my student ID</button>
+          </div>
           <p class="fine-print">Free forever. No account required.</p>
         </div>
       </div>
@@ -239,14 +244,23 @@ const trackChoices = TRACKS.map((track) => ({
     display: none;
   }
 
+  .cta[hidden],
+  [data-enroll-colors][hidden] {
+    display: none;
+  }
+
+  .confirm-enrollment {
+    margin-top: 1rem;
+  }
+
   .cta {
     display: inline-flex;
     align-items: center;
     padding: 1.125rem 1.875rem;
     border: none;
     border-radius: 9999px;
-    background: linear-gradient(180deg, var(--accent), var(--accent-hover));
-    color: #fff;
+    background: var(--button-gradient);
+    color: var(--accent-contrast);
     font-family: inherit;
     font-weight: 600;
     font-size: 1.125rem;
@@ -497,8 +511,8 @@ const trackChoices = TRACKS.map((track) => ({
     display: inline-flex;
     padding: 0.875rem 1.5rem;
     border-radius: 9999px;
-    background: linear-gradient(180deg, var(--accent), var(--accent-hover));
-    color: #fff;
+    background: var(--button-gradient);
+    color: var(--accent-contrast);
     font-weight: 600;
     line-height: 1.375rem;
     text-decoration: none;
@@ -618,8 +632,8 @@ const trackChoices = TRACKS.map((track) => ({
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 9999px;
-    background: linear-gradient(180deg, var(--accent), var(--accent-hover));
-    color: #fff;
+    background: var(--button-gradient);
+    color: var(--accent-contrast);
     font: inherit;
     font-size: 0.875rem;
     font-weight: 600;

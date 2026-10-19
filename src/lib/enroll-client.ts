@@ -141,7 +141,21 @@ export function initEnrollment(): void {
   const display = document.getElementById("student-id-display");
   const celebrationLayer = document.getElementById("celebration-layer");
   const triggers = document.querySelectorAll<HTMLButtonElement>("[data-enroll-trigger]");
-  if (triggers.length === 0) return;
+  const starts = document.querySelectorAll<HTMLButtonElement>("[data-enroll-start]");
+  if (triggers.length === 0 && starts.length === 0) return;
+
+  starts.forEach((start) => {
+    start.addEventListener("click", () => {
+      const picker = document.querySelector<HTMLElement>("[data-enroll-colors]");
+      if (!picker) {
+        window.location.assign("/?enroll");
+        return;
+      }
+      start.hidden = true;
+      picker.hidden = false;
+      (picker.querySelector<HTMLInputElement>('input:checked') ?? picker.querySelector<HTMLInputElement>('input'))?.focus();
+    });
+  });
 
   let isSubmitting = false;
   let cancelReveal: (() => void) | undefined;
@@ -152,6 +166,9 @@ export function initEnrollment(): void {
   // button to do, so the whole trigger (or its cta-block wrapper, marked with
   // data-enroll-container) just disappears rather than relabeling to "Enrolled".
   function markTriggersEnrolled(): void {
+    starts.forEach((start) => {
+      start.hidden = true;
+    });
     triggers.forEach((trigger) => {
       const container = trigger.closest<HTMLElement>("[data-enroll-container]") ?? trigger;
       container.hidden = true;
@@ -223,6 +240,8 @@ export function initEnrollment(): void {
     const layer = celebrationLayer;
     cancelReveal = cipherReveal(display, display.textContent.trim(), true, () => fireCelebration(layer));
   }
+
+  if (!cached && new URLSearchParams(window.location.search).has("enroll")) starts[0]?.click();
 
   triggers.forEach((trigger) => {
     trigger.addEventListener("click", async () => {

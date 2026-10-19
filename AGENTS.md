@@ -77,7 +77,7 @@ Zod-schema-first ("ship types, not docs", https://shiptypes.com/): schemas are t
 
 ## Student colors
 
-The header's `ColorSelector.astro` is available to visitors and returning students on every page. Its 18 native radio swatches set `cfDevSchool.themeColor` in localStorage (default orange). `theme.ts` defines the palettes; `ThemePalette.astro` emits their CSS and validates/applies the preference in the head before paint. `theme-client.ts` updates controls, handles Escape, cross-tab storage changes, and back/forward cache restoration. Blocked storage keeps the current page usable.
+`ColorSelector.astro` appears after the homepage Enroll click and behind Profile's Appearance settings for later changes. Its 18 native radio swatches set `cfDevSchool.themeColor` in localStorage. No saved preference uses main's original school orange fills/card/button gradients; a saved named orange remains the existing palette. Use school orange clears the preference rather than saving a named color. `theme.ts` defines the palettes; `ThemePalette.astro` emits their CSS and validates/applies the preference in the head before paint. `theme-client.ts` updates controls, cross-tab storage changes, and back/forward cache restoration. Blocked storage keeps the current page usable.
 
 Use `--accent` / `--accent-hover` for fills with `--accent-contrast` labels, and `--accent-text` for text, links and focus rings (light/dark aware). The ID card, celebration particles, buttons, progress checks/bars, badges and track choices all follow the palette. Preserve semantic error/warning colors and the Cloudflare logo's brand colors. Color is a browser appearance preference, separate from enrollment and D1.
 

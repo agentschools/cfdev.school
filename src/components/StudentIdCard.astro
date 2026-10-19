@@ -37,8 +37,9 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-    color: #fff;
+    background: var(--card-gradient);
+    color: var(--card-text);
+    text-shadow: var(--card-text-shadow);
     rotate: -4deg;
     overflow: hidden;
     box-shadow:
@@ -82,7 +83,7 @@
     box-shadow:
       0 24px 48px rgb(0 0 0 / 0.16),
       0 6px 14px rgb(0 0 0 / 0.08),
-      0 0 56px color-mix(in srgb, var(--accent) 50%, transparent);
+      0 0 56px var(--card-glow);
   }
 
   :global(::view-transition-group(student-id-card)) {
