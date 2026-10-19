@@ -23,6 +23,8 @@ describe("student colors", () => {
     expect(resolveTheme("orange").name).toBe("orange");
     expect(resolveTheme(null).name).toBe("default");
     expect(schoolThemeStyles).toContain("oklch(0.687 0.208 38.8)");
+    expect(schoolThemeStyles).toContain("--brand-cloud-light: #FF9910");
+    expect(schoolThemeStyles).toContain("--brand-cloud-dark: #FF5F08");
     expect(schoolThemeStyles).toContain("linear-gradient(180deg, #ff6b2e, #ff5e1f)");
     expect(schoolThemeStyles).toContain("linear-gradient(135deg, #ff8f45 0%, #ff5e1f 48%, #b83200 100%)");
     expect(schoolThemeStyles).toContain("rgb(255 110 40 / 0.5)");

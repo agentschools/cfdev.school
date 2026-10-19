@@ -33,6 +33,8 @@ export function resolveTheme(value: string | null | undefined) {
 // deliberate palette preference; resetting removes the key instead of saving it.
 export const schoolThemeStyles = `
   :root, :root[data-theme-color="default"] {
+    --brand-cloud-light: #FF9910;
+    --brand-cloud-dark: #FF5F08;
     --accent: oklch(0.687 0.208 38.8);
     --accent-hover: #ff5e1f;
     --accent-text: light-dark(#c2410c, #ff8f57);
@@ -47,6 +49,8 @@ export const schoolThemeStyles = `
 
 export const themeStyles = schoolThemeStyles + themeColors.map((theme) => `
   :root[data-theme-color="${theme.name}"] {
+    --brand-cloud-light: ${theme.textDark};
+    --brand-cloud-dark: ${theme.solid};
     --accent: ${theme.solid};
     --accent-hover: ${theme.hover};
     --accent-text: light-dark(${theme.hover}, ${theme.textDark});
