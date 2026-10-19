@@ -1,5 +1,6 @@
 ---
 import CurriculumSidebar from "../components/CurriculumSidebar.astro";
+import ThemePalette from "../components/ThemePalette.astro";
 import Header from "../components/Header.astro";
 
 interface Props {
@@ -16,6 +17,7 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <ThemePalette />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site ?? Astro.url)} />
@@ -55,10 +57,6 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
 <style is:global>
   :root {
     color-scheme: light dark;
-
-    /* Cloudflare brand accent, measured from developers.cloudflare.com. Same in both themes. */
-    --accent: oklch(0.687 0.208 38.8);
-    --accent-contrast: oklch(0.99 0.009 78.3);
 
     /* Light theme, measured from developers.cloudflare.com. */
     --bg: oklch(0.99 0 0);
@@ -163,7 +161,7 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
   }
 
   .prose a {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .prose pre {

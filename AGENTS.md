@@ -75,6 +75,12 @@ Zod-schema-first ("ship types, not docs", https://shiptypes.com/): schemas are t
 - `src/lib/openapi.ts` builds the OpenAPI document with `zod-openapi`'s `createDocument`, reusing the same schemas. Served at `/api/openapi.json` via `src/pages/api/openapi.json.ts`.
 - API routes live under `src/pages/api/*.ts` as Astro endpoints (`export const POST/GET: APIRoute = ...`), reading bindings via `import { env } from "cloudflare:workers"` (typed in `src/env.d.ts`), the same pattern OpenCode School uses. Astro's built-in CSRF check rejects same-origin-looking `POST` requests without a matching `Origin` header (e.g. plain `curl -X POST`); this is expected, real browser `fetch()` calls send `Origin` automatically. Add `export const prerender = false;` to every API route, they must run per-request, not at build time.
 
+## Student colors
+
+The header's `ColorSelector.astro` is available to visitors and returning students on every page. Its 18 native radio swatches set `cfDevSchool.themeColor` in localStorage (default orange). `theme.ts` defines the palettes; `ThemePalette.astro` emits their CSS and validates/applies the preference in the head before paint. `theme-client.ts` updates controls, handles Escape, cross-tab storage changes, and back/forward cache restoration. Blocked storage keeps the current page usable.
+
+Use `--accent` / `--accent-hover` for fills with `--accent-contrast` labels, and `--accent-text` for text, links and focus rings (light/dark aware). The ID card, celebration particles, buttons, progress checks/bars, badges and track choices all follow the palette. Preserve semantic error/warning colors and the Cloudflare logo's brand colors. Color is a browser appearance preference, separate from enrollment and D1.
+
 ## Enrollment
 
 `src/lib/student-id.ts` and the cipher-reveal/confetti animation in `src/lib/enroll-client.ts` are adapted from opencodeschool/opencode.school (Apache-2.0): this app copies OpenCode School's enrollment flow wholesale. Keep the copyright headers when touching these files. The student ID format (`adjective-noun-1234`) and the two word lists are copied verbatim; don't change them without a reason, exercises and docs may reference the format.

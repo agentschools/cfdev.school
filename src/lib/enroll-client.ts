@@ -11,7 +11,7 @@
 const STORAGE_KEY = "cfDevSchool.student";
 const CHARS = "abcdefghijklmnopqrstuvwxyz";
 const DIGITS = "0123456789";
-const CELEBRATION_COLORS = ["#f6821f", "#faad3f", "#c026d3", "#7c3aed", "#2563eb"];
+const CELEBRATION_COLORS = ["var(--accent)", "var(--accent-hover)", "var(--accent-text)"];
 
 /** Dispatched on `document` whenever the student's ID is shown, on fresh enrollment or a cached reload. */
 export const ENROLLED_EVENT = "cfDevSchool:enrolled";

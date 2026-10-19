@@ -260,12 +260,12 @@ const sections: Section[] = [
 
   .item-list a[aria-current="page"] {
     background: color-mix(in oklch, var(--accent) 12%, transparent);
-    color: var(--accent);
+    color: var(--accent-text);
     font-weight: 600;
   }
 
   .item-list a[aria-current="page"] .index {
-    color: color-mix(in oklch, var(--accent) 70%, transparent);
+    color: var(--accent-text);
   }
 
   .title {
@@ -326,7 +326,7 @@ const sections: Section[] = [
   }
 
   .more-toggle:focus-visible ~ .more {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-text);
     border-radius: 0.25rem;
   }
 

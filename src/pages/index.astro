@@ -245,7 +245,7 @@ const trackChoices = TRACKS.map((track) => ({
     padding: 1.125rem 1.875rem;
     border: none;
     border-radius: 9999px;
-    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    background: linear-gradient(180deg, var(--accent), var(--accent-hover));
     color: #fff;
     font-family: inherit;
     font-weight: 600;
@@ -402,7 +402,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   :global(:root[data-enrolled]) .hero-visual :global(.id-card) {
-    width: 21.25rem;
+    width: min(21.25rem, 100%);
   }
 
   :global(:root[data-enrolled]) .hero-visual :global(.id-card-face) {
@@ -440,7 +440,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   .eyebrow {
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
   }
 
   .label {
@@ -497,7 +497,7 @@ const trackChoices = TRACKS.map((track) => ({
     display: inline-flex;
     padding: 0.875rem 1.5rem;
     border-radius: 9999px;
-    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    background: linear-gradient(180deg, var(--accent), var(--accent-hover));
     color: #fff;
     font-weight: 600;
     line-height: 1.375rem;
@@ -534,11 +534,11 @@ const trackChoices = TRACKS.map((track) => ({
 
   .track.is-available {
     border: 1.5px solid var(--accent);
-    background: light-dark(#fff7f0, #2a1c15);
+    background: color-mix(in oklch, var(--accent) 8%, var(--bg));
   }
 
   .track.is-available:hover {
-    background: light-dark(#ffefe2, #33211a);
+    background: color-mix(in oklch, var(--accent) 14%, var(--bg));
   }
 
   .track-label {
@@ -552,7 +552,7 @@ const trackChoices = TRACKS.map((track) => ({
 
   .is-available .track-label,
   .is-available .track-start {
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
   }
 
   .track-pitch {
@@ -618,7 +618,7 @@ const trackChoices = TRACKS.map((track) => ({
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 9999px;
-    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    background: linear-gradient(180deg, var(--accent), var(--accent-hover));
     color: #fff;
     font: inherit;
     font-size: 0.875rem;
@@ -638,7 +638,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   .prompt-caption a {
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
     text-decoration: none;
   }
 
@@ -661,7 +661,7 @@ const trackChoices = TRACKS.map((track) => ({
 
   .section-head a {
     font-size: 0.875rem;
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
     text-decoration: none;
   }
 
@@ -701,7 +701,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   .course-rows :global(.course-row:hover .course-row-title) {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .course-rows :global(.course-row-text) {
@@ -838,7 +838,7 @@ const trackChoices = TRACKS.map((track) => ({
 
   @media (max-width: 700px) {
     :global(:root[data-enrolled]) .hero {
-      padding: 3rem 1.5rem;
+      padding: 4.5rem 1.5rem 3rem;
     }
 
     .tracks {

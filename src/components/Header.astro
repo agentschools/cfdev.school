@@ -1,6 +1,8 @@
 ---
+import ColorSelector from "./ColorSelector.astro";
+
 interface Props {
-  /** GitHub link only, floated over the page's top-right corner. No Enroll button, no bottom border. */
+  /** Color selector and GitHub link, floated over the page's top-right corner. No Enroll button, no bottom border. */
   minimal?: boolean;
 }
 
@@ -9,6 +11,7 @@ const { minimal = false } = Astro.props;
 
 <header class:list={["header", { minimal }]}>
   <div class="menu">
+    <ColorSelector />
     <a class="icon-link" href="https://github.com/zeke/cloudflare-dev-school" aria-label="View source on GitHub">
       <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
         <path
