@@ -4,7 +4,7 @@
 // OpenCode School's enrollment flow wholesale.
 //
 // Copyright (c) 2026 Cloudflare, Inc.
-// Licensed under the Apache 2.0 license found in the LICENSE file or at:
+// Licensed under the Apache 2.0 license found in LICENSES/Apache-2.0.txt or at:
 //     https://opensource.org/licenses/Apache-2.0
 
 // Also read by the inline script at the top of src/pages/index.astro, which can't import this module.

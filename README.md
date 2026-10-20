@@ -9,3 +9,10 @@ The school is organized into courses, each a short series of exercises the stude
 Anyone can write a course in the same format and host it anywhere, as a git repo or a single Markdown file. Students take it by giving their agent its URL, and their progress counts on Dev School like it does for the built-in courses. The site's `/authors` page has a prompt that has an author's own agent help them plan, write, and test one.
 
 See [`AGENTS.md`](./AGENTS.md) for the stack, scripts, and conventions. Plans and decisions live in GitHub issues.
+
+## License
+
+Original project material is proposed under the [MIT license](./LICENSE), subject
+to rights-holder approval before adoption. Third-party material keeps its own
+terms, including the Apache-2.0 enrollment code; see
+[third-party notices](./THIRD_PARTY_NOTICES.md).
