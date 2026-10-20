@@ -2,81 +2,113 @@ name: Preview Deployment
 
 on:
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
-      - closed
+    types: [opened, reopened, synchronize, ready_for_review, closed]
 
 permissions:
   contents: read
-  deployments: write
 
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  # Serialize deploy and close cleanup; never orphan a resource by cancellation.
+  cancel-in-progress: false
 
 jobs:
+  build-preview:
+    # No pull_request_target, fork execution, or privileged PR build.
+    if: >-
+      github.event.action != 'closed' &&
+      !github.event.pull_request.draft &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref != 'chore/refresh-harnesses'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit --no-fund
+      - run: npm run build
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: preview-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            dist/
+            migrations/*.sql
+          if-no-files-found: error
+          retention-days: 1
+
   deploy-preview:
-    if: github.event.action != 'closed'
+    needs: build-preview
+    if: >-
+      github.event.action != 'closed' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
       deployments: write
       pull-requests: write
-
     steps:
-      # Last checked 2026-09-09: actions/checkout@v7.0.1, actions/setup-node@v7.0.0
+      # The controller, its imports, package and lockfile are from trusted base.
+      # This change must land on main before this controller can be exercised.
       - uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 1
-
-      - uses: actions/setup-node@v7.0.0
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22
-          cache: npm
-
-      - run: npm ci --prefer-offline --no-audit --no-fund
-
-      - run: npm run preview:deploy
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: preview-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: preview-artifact
+      # Fail safely while the base still has the old production-backed controller.
+      - run: test -f scripts/preview-resources.mjs
+      # Never run the artifact's scripts, dependencies or Wrangler config.
+      - run: node scripts/preview-env.mjs deploy
         env:
           PREVIEW_PR_NUMBER: ${{ github.event.pull_request.number }}
           PREVIEW_SHA: ${{ github.event.pull_request.head.sha }}
-          PREVIEW_REF: ${{ github.event.pull_request.head.ref }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
   destroy-preview:
-    if: github.event.action == 'closed'
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
       deployments: write
-
     steps:
-      # Last checked 2026-09-09: actions/checkout@v7.0.1, actions/setup-node@v7.0.0
       - uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ github.event.repository.default_branch }}
-          fetch-depth: 1
-
-      - uses: actions/setup-node@v7.0.0
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22
-          cache: npm
-
-      - run: npm ci --prefer-offline --no-audit --no-fund
-
-      - run: npm run preview:destroy
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: test -f scripts/preview-resources.mjs
+      - run: node scripts/preview-env.mjs destroy
         env:
           PREVIEW_PR_NUMBER: ${{ github.event.pull_request.number }}
           PREVIEW_SHA: ${{ github.event.pull_request.head.sha }}
-          PREVIEW_REF: ${{ github.event.pull_request.head.ref }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

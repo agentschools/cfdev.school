@@ -1,16 +1,8 @@
-// Preview deployment strategy: SHARED PRODUCTION RESOURCES.
-// Preview Workers use the same D1 database and SESSION KV namespace as
-// production (both are pinned by ID in wrangler.jsonc). There is no app
-// data or schema yet, so isolation doesn't matter today. Revisit this
-// once a lesson/enrollment ticket introduces real writes: switch to
-// empty or seeded per-PR D1 resources at that point (see
-// zeke/preview-deployments-skill's resource-strategies reference).
-
 import { spawn } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile, readdir, lstat, access } from "node:fs/promises";
+import { resourceManager, previewIdentity } from "./preview-resources.mjs";
 import { previewPaths, updateBody } from "./preview-links.mjs";
 
-const appName = "cloudflare-dev-school";
 const workersSubdomain = "ziki";
 
 const action = process.argv[2];
@@ -24,7 +16,8 @@ const githubServerUrl = process.env.GITHUB_SERVER_URL || "https://github.com";
 requiredEnv("CLOUDFLARE_ACCOUNT_ID");
 requiredEnv("CLOUDFLARE_API_TOKEN");
 
-const workerName = `${appName}-pr-${prNumber}`;
+const workerName = previewIdentity(prNumber).worker;
+const resources = resourceManager(cloudflareApi, prNumber);
 const environment = `preview/pr-${prNumber}`;
 const environmentUrl = `https://${workerName}.${workersSubdomain}.workers.dev`;
 const logUrl = `${githubServerUrl}/${repo}/actions/runs/${githubRunId}`;
@@ -42,12 +35,12 @@ async function deploy() {
   await createDeploymentStatus(deployment.id, "in_progress", "Creating preview.");
 
   try {
-    // Shared production resources strategy (see AGENTS.md): previews use the
-    // same D1 database as production, so apply migrations against it here too.
-    await wrangler(["d1", "migrations", "apply", "cloudflare-dev-school", "--remote"]);
-    await run("npx", ["astro", "build"]);
-    await removeRoutes();
-    await wrangler(["deploy", "--name", workerName]);
+    if (!(await isCurrentPullRequestHead())) throw new Error("PR is closed, foreign, or superseded");
+    await validateArtifact();
+    const config = await resources.provision();
+    await writeFile("preview-artifact/preview.wrangler.json", JSON.stringify(config));
+    await wrangler(["d1", "migrations", "apply", "DB", "--remote", "--config", "preview-artifact/preview.wrangler.json"]);
+    await wrangler(["deploy", "--config", "preview-artifact/preview.wrangler.json"]);
 
     if (!(await isCurrentPullRequestHead())) {
       await createDeploymentStatus(deployment.id, "inactive", "Superseded by a newer commit.");
@@ -71,14 +64,19 @@ async function deploy() {
   }
 }
 
-// The built config inherits wrangler.jsonc's cfdev.school custom domain;
-// a preview deploy must not move it off production.
-async function removeRoutes() {
-  const path = "dist/server/wrangler.json";
-  const config = JSON.parse(await readFile(path, "utf8"));
-  delete config.routes;
-  delete config.route;
-  await writeFile(path, JSON.stringify(config));
+async function validateArtifact() {
+  async function walk(path) {
+    for (const entry of await readdir(path)) {
+      const child = `${path}/${entry}`;
+      const stat = await lstat(child);
+      if (stat.isSymbolicLink() || (!stat.isFile() && !stat.isDirectory())) throw new Error("Unsafe artifact entry");
+      if (stat.isDirectory()) await walk(child);
+    }
+  }
+  await walk("preview-artifact");
+  await access("preview-artifact/dist/server/entry.mjs");
+  await access("preview-artifact/dist/client");
+  if (!(await readdir("preview-artifact/migrations")).some(file => file.endsWith(".sql"))) throw new Error("Missing migrations");
 }
 
 async function updatePullRequestLinks() {
@@ -99,13 +97,8 @@ async function updatePullRequestLinks() {
 }
 
 async function destroy() {
-  const results = await Promise.allSettled([
-    wrangler(["delete", "--name", workerName], { allowFailure: true, input: "y\n" }),
-    markDeploymentsInactive(),
-  ]);
-
-  const failure = results.find((result) => result.status === "rejected");
-  if (failure) throw failure.reason;
+  await resources.destroy();
+  await markDeploymentsInactive();
 }
 
 async function createDeployment() {
@@ -142,7 +135,7 @@ async function markDeploymentsInactive(excludeDeploymentId) {
     `/repos/${repo}/deployments?environment=${encodeURIComponent(environment)}&per_page=100`,
   );
 
-  await Promise.allSettled(
+  await Promise.all(
     deployments
       .filter((deployment) => deployment.id !== excludeDeploymentId)
       .map((deployment) => createDeploymentStatus(deployment.id, "inactive", "Preview destroyed.")),
@@ -151,7 +144,19 @@ async function markDeploymentsInactive(excludeDeploymentId) {
 
 async function isCurrentPullRequestHead() {
   const pull = await githubApi(`/repos/${repo}/pulls/${prNumber}`);
-  return pull.head?.sha === previewSha;
+  return pull.state === "open" && pull.base?.ref === "main" && pull.head?.sha === previewSha && pull.head?.repo?.full_name === repo;
+}
+
+async function cloudflareApi(path, options = {}) {
+  const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${requiredEnv("CLOUDFLARE_ACCOUNT_ID")}${path}`, {
+    method: options.method || "GET",
+    headers: { Authorization: `Bearer ${requiredEnv("CLOUDFLARE_API_TOKEN")}`, "Content-Type": "application/json" },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  if (response.status === 404 && options.missingOK) return undefined;
+  const result = await response.json();
+  if (!response.ok || !result.success) throw new Error(`Cloudflare request failed: ${response.status} ${JSON.stringify(result.errors)}`);
+  return result.result;
 }
 
 async function githubApi(path, options = {}) {
@@ -176,7 +181,7 @@ async function githubApi(path, options = {}) {
 }
 
 async function wrangler(args, options = {}) {
-  return run("npx", ["wrangler", ...args], options);
+  return run(process.execPath, ["node_modules/wrangler/bin/wrangler.js", ...args], options);
 }
 
 async function run(command, args, options = {}) {
@@ -202,7 +207,7 @@ async function run(command, args, options = {}) {
 
     child.on("error", reject);
     child.on("close", (code) => {
-      if (code === 0 || options.allowFailure) {
+      if (code === 0) {
         resolve({ stdout, stderr, code });
       } else {
         reject(new Error(`${command} ${args.join(" ")} exited with ${code}`));
