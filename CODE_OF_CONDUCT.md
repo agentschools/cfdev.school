@@ -1,8 +1,8 @@
 # Contributor Covenant code of conduct
 
-> Draft: before adoption, maintainers must choose and verify a private reporting
-> channel and confirm who is responsible for enforcement. The placeholder below
-> is unresolved. Do not submit confidential reports through public issues or PRs.
+> Draft: the maintainer supplied the temporary private reporting contact below.
+> Before adoption, confirm reporting coverage and who is responsible for
+> enforcement. Do not submit confidential reports through public issues or PRs.
 
 ## Our pledge
 
@@ -40,7 +40,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at **[TODO: verified private enforcement contact — maintainer decision required]**. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at [zeke@sikelianos.com](mailto:zeke@sikelianos.com), the temporary reporting contact. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 

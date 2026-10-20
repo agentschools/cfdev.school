@@ -13,5 +13,6 @@ See [`AGENTS.md`](./AGENTS.md) for the stack, scripts, and conventions. Plans an
 ## Community conduct
 
 See the proposed [Contributor Covenant code of conduct](./CODE_OF_CONDUCT.md).
-The draft requires a verified private enforcement contact before adoption;
-please do not post confidential reports in public issues or PRs.
+The draft uses a maintainer-supplied temporary private reporting contact while
+enforcement coverage is finalized. Please do not post confidential reports in
+public issues or PRs.
