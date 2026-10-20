@@ -8,10 +8,7 @@ See [`AGENTS.md`](./AGENTS.md) for the stack, scripts, and conventions. Plans an
 
 ## Contributing
 
-Start with [CONTRIBUTING.md](./CONTRIBUTING.md) for Node.js 22.12.0+, npm setup,
-local D1 development, checks, and the PR process. The
-[newcomer guide](./docs/newcomer-guide.md) walks through a first contribution
-without a Cloudflare account or production credentials.
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Community conduct
 
