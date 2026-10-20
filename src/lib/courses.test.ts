@@ -12,6 +12,12 @@ const collections = vi.hoisted(() => ({
       data: { name: "publish-a-website", description: "Publish a site." },
     },
     {
+      id: "run-a-blog-with-emdash",
+      filePath: "courses/projects/run-a-blog-with-emdash/COURSE.md",
+      body: "\n# Run a blog with EmDash\n",
+      data: { name: "run-a-blog-with-emdash", description: "Run a blog with EmDash." },
+    },
+    {
       id: "build-a-guestbook",
       filePath: "courses/projects/build-a-guestbook/COURSE.md",
       body: "\n# Build a guestbook\n",
@@ -44,6 +50,7 @@ describe("getBuiltInCourses", () => {
     expect(courses.map((course) => [course.name, course.title])).toEqual([
       ["agent-setup", "Agent setup"],
       ["publish-a-website", "Publish a website"],
+      ["run-a-blog-with-emdash", "Run a blog with EmDash"],
       ["build-a-guestbook", "Build a guestbook"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
@@ -57,6 +64,7 @@ describe("getBuiltInCourses", () => {
     expect(courses.map((course) => [course.name, course.track])).toEqual([
       ["agent-setup", undefined],
       ["publish-a-website", "projects"],
+      ["run-a-blog-with-emdash", "projects"],
       ["build-a-guestbook", "projects"],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
@@ -95,7 +103,7 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, publishAWebsite, buildAGuestbook, workers, , durableObjects] = courses;
+    const [agentSetup, publishAWebsite, , buildAGuestbook, workers, , durableObjects] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
@@ -104,8 +112,8 @@ describe("nextStep", () => {
     });
     expect(nextStep(courses, durableObjects, durableObjects.exercises.length - 1).url).toBe("/courses");
     expect(nextStep(courses, publishAWebsite, publishAWebsite.exercises.length - 1)).toMatchObject({
-      url: "/courses/build-a-guestbook",
-      label: "Next course: Build a guestbook →",
+      url: "/courses/run-a-blog-with-emdash",
+      label: "Next course: Run a blog with EmDash →",
     });
     // The last course in Projects doesn't continue into Fundamentals.
     expect(nextStep(courses, buildAGuestbook, buildAGuestbook.exercises.length - 1).url).toBe("/courses");

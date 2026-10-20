@@ -12,6 +12,7 @@ const PROPER_NOUNS = [
   "Codex",
   "Dev School",
   "Durable Objects",
+  "EmDash",
   "OpenCode",
   "Pi",
   "Worker",
