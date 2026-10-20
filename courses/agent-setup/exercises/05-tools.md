@@ -164,4 +164,4 @@ Whenever a later exercise needs to look at your account rather than your project
 
 ## What's next
 
-This is the last exercise in Agent setup. From here there are two directions: projects, where you build something you want and pick up Cloudflare products along the way, and fundamentals, which cover one concept or product at a time. Your agent will ask which you'd like, or you can see what's available on the [courses](/courses) page.
+This is the last exercise in Agent setup. Ready to return to the project you described in your interview? Tell your agent you'd like to work on it together. If you'd prefer a guided project course or related fundamentals, which cover one concept or product at a time, ask your agent to suggest a course from the [courses](/courses) page. Your agent will use your interview answers to help you choose your next step.
