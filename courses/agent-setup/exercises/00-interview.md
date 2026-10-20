@@ -115,6 +115,12 @@ In this exercise, your agent asks you a few quick questions so it can tailor the
 
 Your agent asks all the questions at once, and each one takes a few words to answer. Every question is optional. Skip any you'd rather not answer.
 
+## What happens next
+
+Answer the questions in your coding-agent app. Your agent also runs read-only checks for your operating system, installed tools, Cloudflare login status, and an existing instructions file. These checks don't install tools or change your setup.
+
+Depending on your app and its permissions, you may see prompts to allow commands or web requests. Read what each prompt allows before approving it. Your agent needs access to this site's API to save your answers and mark the interview complete; if that access is waiting for permission, the save is still pending. Once saving succeeds, your homepage shows a summary of your answers and the interview is marked complete. Then you'll continue to Models.
+
 ## What gets saved
 
 This is saved with your student ID so your agent can pick up where you left off in later exercises:
@@ -140,5 +146,3 @@ To clear your progress, or to forget your student ID in this browser, use the [D
 ## Changing your answers
 
 You can change any answer at any time, in any exercise, just by telling your agent. For example: "turn off quizzes," "I've used AWS before, too," or "I want to focus on building APIs now." Nothing you say here locks you in.
-
-Early in the course, your agent may ask for permission before running commands or making web requests. Approving those prompts is normal here: it needs to reach this site's API to save your answers and track your progress.
