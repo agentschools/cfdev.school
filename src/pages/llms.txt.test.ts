@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { APIContext } from "astro";
 import { describe, expect, it } from "vitest";
 import { rawCourses } from "../lib/course-files";
@@ -71,6 +72,19 @@ describe("GET /llms.txt", () => {
     const text = await (await GET({} as APIContext)).text();
     expect(text).toContain("`projects`");
     expect(text).toContain("`fundamentals`");
-    expect(text).toContain("When a student finishes Agent setup, ask them");
+    expect(text).toContain("use their recorded Agent setup interview");
+    expect(text).toContain("explicitly invite them to return to it");
+    expect(text).toContain("work on that project with you, take a guided project course from the catalog, or study related fundamentals");
+    expect(text).toContain("If they didn't name a project");
+    expect(text).toContain("only suggest courses GET /api/courses lists");
+    expect(text).toContain("don't save this choice anywhere");
+  });
+  it("offers the original project and catalog alternatives in the last setup exercise", () => {
+    const tools = readFileSync(new URL("../../courses/agent-setup/exercises/05-tools.md", import.meta.url), "utf8");
+    const next = tools.split("## What's next")[1];
+    expect(next).toContain("return to the project you described in your interview");
+    expect(next).toContain("work on it together");
+    expect(next).toContain("guided project course or related fundamentals");
+    expect(next).toContain("[courses](/courses)");
   });
 });
