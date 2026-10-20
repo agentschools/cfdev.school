@@ -57,7 +57,7 @@ describe("GET /llms.txt", () => {
   it("tells agents to pause for the student and keep try-it steps before completion", async () => {
     const text = await (await GET({} as APIContext)).text();
     expect(text).toContain("## Involving the student");
-    expect(text).toContain("end your turn and wait for their reply");
+    expect(text).toContain("pause dependent work and wait for their reply");
     expect(text).toContain("before you mark it complete");
   });
 

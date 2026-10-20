@@ -10,14 +10,12 @@ agent-instructions: |
 
   Before asking anything, GET /api/students/{id}/interviews (fetch it
   alongside this file if you can). If Agent setup's interview is already
-  on file, show the student what's there and only ask the questions it
-  doesn't answer yet.
+  on file, show the student what's there and ask about changes only when
+  relevant or requested; omitted optional answers aren't unfinished intake.
 
-  Ask them all in one numbered plain-text chat message, not a question
-  tool or picker, and tell the student they can answer in one reply,
-  e.g. "1b, 2a, 3: a todo app, 4 yes". Show only the questions and
-  choices below, in plain words. Don't include field names, their student
-  ID, or notes about what you need.
+  Follow /llms.txt's "Asking and answering questions" policy for
+  presentation and answer handling. Keep the question text and answer
+  types below.
 
   The questions (every one is optional, if the student skips one, move on
   without pushing):
@@ -36,10 +34,8 @@ agent-instructions: |
   Vercel function for someone who's used Vercel), never to skip exercises
   or change what content you show.
 
-  Don't ask about things you can check yourself. Run these checks after
-  the questions are out, never before asking: right after sending them if
-  you can keep working in the same turn, otherwise once the student
-  replies.
+  Don't ask about things you can check yourself. Follow the shared
+  policy's timing and guarded setup checks; never check before asking.
 
   - Detect their operating system (e.g. run `uname`, or check an OS
     environment variable).

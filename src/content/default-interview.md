@@ -13,9 +13,9 @@ agent-instructions: |
   interview is already on file, show the student their answers and only
   ask about what they'd like to change.
 
-  Ask the questions the same way the Agent setup interview does: all at
-  once, one short line each, with short answer choices where they fit, in
-  one numbered plain-text message. Every question is optional.
+  Follow /llms.txt's "Asking and answering questions" policy for
+  presentation, partial replies, and intentional skips. Every question is
+  optional.
 
   Store the answers with PUT /api/students/{id}/interviews, with this
   course's name (or its URL, for a course hosted elsewhere) as `course`,
