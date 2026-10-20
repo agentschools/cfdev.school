@@ -1,5 +1,6 @@
 import type { Element, ElementContent } from "hast";
-import type { ShikiTransformer, ThemeRegistration } from "shiki";
+import type { LanguageRegistration, ShikiTransformer, ThemeRegistration } from "shiki";
+import yaml from "shiki/langs/yaml.mjs";
 
 // Code block colors are CSS variables (set in Layout.astro), so highlighting
 // follows the student's color and light/dark mode with no per-theme CSS:
@@ -38,7 +39,7 @@ export const codeTheme: ThemeRegistration = {
     },
     { scope: ["string", "punctuation.definition.string", "markup.inline.raw"], settings: { foreground: color("string") } },
     {
-      scope: ["meta.template.expression", "support.type.property-name", "string.unquoted.argument"],
+      scope: ["meta.template.expression", "support.type.property-name", "entity.name.tag.yaml", "string.unquoted.argument"],
       settings: { foreground: color("fg") },
     },
     {
@@ -49,6 +50,10 @@ export const codeTheme: ThemeRegistration = {
     { scope: ["markup.italic"], settings: { fontStyle: "italic" } },
   ],
 };
+
+// Grammars loaded up front: Markdown blocks only highlight their frontmatter
+// when YAML is already loaded, since Shiki loads embedded grammars lazily.
+export const codeLangs: LanguageRegistration[] = [...yaml];
 
 const TERMINAL_LANGS = new Set(["sh", "bash", "shell", "zsh", "console"]);
 

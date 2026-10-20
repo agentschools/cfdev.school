@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
-import { codeTheme, codeTitleTransformer } from './src/lib/code-highlighting';
+import { codeLangs, codeTheme, codeTitleTransformer } from './src/lib/code-highlighting';
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,6 +11,6 @@ export default defineConfig({
   markdown: {
     // ```text blocks (diagrams like file trees) stay plain.
     syntaxHighlight: { type: 'shiki', excludeLangs: ['math', 'text'] },
-    shikiConfig: { theme: codeTheme, wrap: true, transformers: [codeTitleTransformer] },
+    shikiConfig: { langs: codeLangs, theme: codeTheme, wrap: true, transformers: [codeTitleTransformer] },
   },
 });
