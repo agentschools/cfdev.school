@@ -8,6 +8,11 @@ import { execFileSync } from 'node:child_process';
 import { parse } from 'yaml';
 import { ACTIONS_APP_ID, BRANCH, DATA, REPO, REPO_ID, candidatePR, canonicalData, currentCI, dataOnly, identity, main as runAutomation, protectedMain, provenance, substantive } from './harness-refresh.mjs';
 
+vi.mock('node:fs', async importOriginal => {
+  const actual = await importOriginal();
+  return { ...actual, readFileSync: vi.fn((...args) => actual.readFileSync(...args)) };
+});
+
 const bot = { id: 42, login: 'harness-research[bot]', type: 'Bot', appId: 99 };
 const main = 'a'.repeat(40), sha = 'b'.repeat(40);
 const clone = value => structuredClone(value);
@@ -163,5 +168,107 @@ describe('native merge orchestration', () => {
     await expect(runAutomation('enable')).rejects.toThrow(/native refused/);
     expect(calls.filter(c => c.path === '/check-runs/555')).toHaveLength(0);
     expect(calls.some(c => c.path.includes('/merge'))).toBe(false);
+  });
+});
+
+
+describe('publisher lifecycle with a retained protected branch', () => {
+  afterEach(async () => {
+    vi.unstubAllEnvs(); vi.unstubAllGlobals();
+    const actual = await vi.importActual('node:fs');
+    vi.mocked(readFileSync).mockImplementation((...args) => actual.readFileSync(...args));
+  });
+  function publisher() {
+    let base = main, branch = null, before = canonicalData('[{"id":"pi"}]'), candidate = canonicalData('[{"id":"codex"}]');
+    let nextSHA = sha;
+    const calls = [], prs = [], commits = new Map(), contents = new Map([[main, before]]);
+    const [oldCommit, , , generation] = origin();
+    generation.workflow_id = 10;
+    const state = { associated: null, race: false, ancestry: 'identical', generation, workflow: { id: 10 }, files: [{ filename: DATA, status: 'modified', changes: 2 }] };
+    for (const [key, value] of Object.entries({ HARNESS_APP_BOT_ID: '42', HARNESS_APP_ID: '99', HARNESS_APP_BOT_LOGIN: bot.login, GITHUB_REPOSITORY: REPO, GITHUB_REF: 'refs/heads/main', GITHUB_SHA: base, GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '1', GH_TOKEN: 'app', GH_READ_TOKEN: 'reader' })) vi.stubEnv(key, value);
+    vi.mocked(readFileSync).mockImplementation(path => {
+      if (path === DATA) return before;
+      if (path === 'candidate/harnesses.json') return candidate;
+      throw new Error(`Unexpected publisher file read ${path}`);
+    });
+    vi.stubGlobal('fetch', vi.fn(async (url, options = {}) => {
+      const path = String(url).replace(`https://api.github.com/repos/${REPO}`, '').replace('https://api.github.com', '');
+      const body = options.body ? JSON.parse(options.body) : undefined;
+      const method = options.method ?? 'GET';
+      calls.push({ path, body, method, token: options.headers?.Authorization });
+      let value;
+      if (path === '') value = { id: REPO_ID };
+      else if (path === '/git/ref/heads/main') value = { object: { sha: base } };
+      else if (path.startsWith('/pulls?state=open')) value = prs.filter(p => p.state === 'open');
+      else if (path === `/git/ref/heads/${BRANCH}`) {
+        if (!branch) return new Response('{}', { status: 404 });
+        if (state.race && calls.some(c => c.path === `/compare/${prs[0].merge_commit_sha}...${base}`)) branch = 'e'.repeat(40);
+        value = { object: { sha: branch } };
+      } else if (path === '/git/refs' && method === 'POST') { branch = body.sha; value = {}; }
+      else if (path === `/git/refs/heads/${BRANCH}` && method === 'PATCH') { branch = body.sha; value = {}; }
+      else if (path === '/graphql') {
+        expect(body.query).toContain('createCommitOnBranch');
+        expect(body.variables.input.expectedHeadOid).toBe(base);
+        expect(branch).toBe(base);
+        const text = Buffer.from(body.variables.input.fileChanges.additions[0].contents, 'base64').toString();
+        const commit = clone(oldCommit);
+        commit.parents = [{ sha: base }];
+        commit.commit.message = body.variables.input.message.headline + '\n\n' + body.variables.input.message.body;
+        commits.set(nextSHA, commit); contents.set(nextSHA, text); branch = nextSHA;
+        value = { data: { createCommitOnBranch: { commit: { oid: nextSHA } } } };
+      } else if (path === '/pulls' && method === 'POST') {
+        const created = clone(pr()); created.number += prs.length; created.head.sha = branch;
+        prs.push(created); value = created;
+      } else if (path === `/commits/${sha}/pulls`) throw new Error('Missing pagination bound');
+      else if (path === `/commits/${sha}/pulls?per_page=100`) value = state.associated ?? prs;
+      else if (path === '/pulls/137') value = prs[0];
+      else if (path.startsWith('/commits/')) value = commits.get(path.slice('/commits/'.length));
+      else if (path === '/actions/runs/123') value = generation;
+      else if (path === '/actions/workflows/refresh-harnesses.yml') value = state.workflow;
+      else if (path.startsWith(`/contents/${DATA}?ref=`)) value = { type: 'file', encoding: 'base64', content: Buffer.from(contents.get(path.split('?ref=')[1])).toString('base64') };
+      else if (path === `/compare/${'c'.repeat(40)}...${base}`) value = { status: state.ancestry };
+      else if (path.startsWith('/compare/')) value = { total_commits: 1, status: 'ahead', files: state.files };
+      if (!value) throw new Error(`Unexpected publisher API ${method} ${path}`);
+      return new Response(JSON.stringify(value), { status: 200 });
+    }));
+    return {
+      calls, prs, commits, contents, state,
+      mergeFirst() {
+        Object.assign(prs[0], { state: 'closed', merged: true, merged_at: '2026-10-20T00:00:00Z', merge_commit_sha: 'c'.repeat(40) });
+        base = prs[0].merge_commit_sha; before = contents.get(sha); contents.set(base, before);
+        candidate = canonicalData('[{"id":"cursor"}]'); nextSHA = 'd'.repeat(40);
+        vi.stubEnv('GITHUB_SHA', base); vi.stubEnv('GITHUB_RUN_ID', '124'); calls.length = 0;
+      },
+    };
+  }
+  it('publishes a second PR after the first merges while its protected branch remains', async () => {
+    const fixture = publisher();
+    await runAutomation('publish');
+    expect(fixture.prs).toHaveLength(1);
+    fixture.mergeFirst();
+    await runAutomation('publish');
+    expect(fixture.prs).toHaveLength(2);
+    expect(fixture.prs[1].head.sha).toBe('d'.repeat(40));
+    expect(fixture.calls.find(c => c.path === `/git/refs/heads/${BRANCH}`)).toMatchObject({ method: 'PATCH', body: { sha: 'c'.repeat(40), force: true } });
+    expect(fixture.calls.filter(c => c.path.startsWith('/actions/')).every(c => c.token === 'Bearer reader')).toBe(true);
+  });
+  it.each([
+    ['unknown branch', f => f.state.associated = []],
+    ['unmerged closed PR', f => f.prs[0].merged = false],
+    ['legacy bot', f => f.prs[0].user.id++],
+    ['different head', f => f.prs[0].head.sha = 'e'.repeat(40)],
+    ['fork head', f => f.prs[0].head.repo.id++],
+    ['unsigned head', f => f.commits.get(sha).commit.verification.verified = false],
+    ['tampered digest', f => f.contents.set(sha, canonicalData('[{"id":"tampered"}]'))],
+    ['unsuccessful generation', f => f.state.generation.conclusion = 'failure'],
+    ['wrong workflow', f => f.state.workflow.id++],
+    ['mixed diff', f => f.state.files.push({ filename: 'script.mjs', status: 'modified', changes: 2 })],
+    ['merge outside main', f => f.state.ancestry = 'diverged'],
+    ['branch changed during verification', f => f.state.race = true],
+  ])('does not mutate a retained branch with %s', async (_label, mutate) => {
+    const fixture = publisher(); await runAutomation('publish'); fixture.mergeFirst(); mutate(fixture);
+    await expect(runAutomation('publish')).rejects.toThrow();
+    expect(fixture.calls.every(c => c.method === 'GET')).toBe(true);
+    expect(fixture.prs).toHaveLength(1);
   });
 });

@@ -56,10 +56,20 @@ CI reports `harness-policy` for ordinary PRs so requiring this context does not
 block them. On the reserved generator branch CI uses a different, skipped name;
 only the trusted gate reports its required policy result.
 
+A generator branch retained after merge is reusable only when its unchanged head
+is the exact head of one merged App-owned PR with verified signed generation
+provenance and a substantive JSON-only diff, and that merge is in current main
+history. Unknown, legacy, unmerged, altered, or unverifiable heads stop publication.
+The branch SHA is re-read immediately before reset; branch auto-deletion is not
+required. Historical workflow reads use the publisher job's read-only Actions token;
+the App receives no extra permissions.
+
 Publication and merge decisions share one concurrency group. Publication refuses
 an already armed PR. App-only protection on the generator branch prevents another
 writer replacing its content after qualification. Native protection still applies
-if main changes after qualification; the next refresh can regenerate stale data.
+if main changes after qualification. An armed PR that becomes stale requires an
+owner to manually disable its native auto-merge before the next refresh can
+regenerate it. The publisher never disarms or replaces an armed PR automatically.
 
 ## Setup requires separate approval
 

@@ -38,11 +38,15 @@ export function dataOnly(files) {
   requireSafe(files.length === 1 && files[0].filename === DATA && files[0].status === 'modified' && !files[0].previous_filename && files[0].changes > 0,
     'Refusing anything except a nonempty modification of harnesses.json.');
 }
-export function candidatePR(pr, bot) {
-  requireSafe(pr.state === 'open' && !pr.draft && !pr.merged && sameBot(pr.user, bot), 'PR must be open, ready, and authored by the configured App bot.');
+function expectedPR(pr, bot) {
+  requireSafe(sameBot(pr.user, bot), 'PR must be authored by the configured App bot.');
   requireSafe(pr.base?.repo?.id === REPO_ID && pr.head?.repo?.id === REPO_ID && pr.base.repo.full_name === REPO && pr.head.repo.full_name === REPO,
     'PR must have the exact expected repository on both sides.');
   requireSafe(pr.base.ref === 'main' && pr.head.ref === BRANCH, 'Unexpected PR base or generator branch.');
+}
+export function candidatePR(pr, bot) {
+  requireSafe(pr.state === 'open' && !pr.draft && !pr.merged, 'PR must be open and ready.');
+  expectedPR(pr, bot);
 }
 export function protectedMain(repo, bot) {
   const rule = repo.ref?.branchProtectionRule;
@@ -99,6 +103,34 @@ async function maybeRef() {
   requireSafe(response.ok, `Cannot inspect generator branch: ${response.status}`);
   return response.json();
 }
+async function retainedMergedBranch(previous, bot, base) {
+  const sha = previous.object.sha;
+  const associated = await rest(`/commits/${sha}/pulls?per_page=100`);
+  requireSafe(associated.length < 100, 'Incomplete retained-branch PR history; refusing reuse.');
+  const merged = associated.filter(pr => pr.head?.sha === sha && pr.state === 'closed' && pr.merged_at);
+  requireSafe(merged.length === 1, 'Generator branch has no unique merged generated PR. Review and retire unknown/legacy branches manually.');
+  const pr = await rest(`/pulls/${merged[0].number}`);
+  expectedPR(pr, bot);
+  requireSafe(pr.state === 'closed' && pr.merged === true && pr.merged_at && pr.head.sha === sha && pr.merge_commit_sha,
+    'Retained branch must still match the merged App PR head.');
+  const commit = await rest(`/commits/${sha}`);
+  requireSafe(commit.parents.length === 1, 'Retained head must have exactly one generation base.');
+  const historicalBase = commit.parents[0].sha;
+  const runId = /^Harness-run: ([1-9]\d*)$/m.exec(commit.commit.message)?.[1];
+  requireSafe(runId && process.env.GH_READ_TOKEN, 'Missing retained generation provenance or read-only workflow token.');
+  // Keep Actions read on the job token, not on the minimum-permission App.
+  const generation = await api(`/repos/${REPO}/actions/runs/${runId}`, {}, process.env.GH_READ_TOKEN);
+  const workflow = await api(`/repos/${REPO}/actions/workflows/refresh-harnesses.yml`, {}, process.env.GH_READ_TOKEN);
+  requireSafe(generation.workflow_id === workflow.id, 'Wrong retained generator workflow identity.');
+  const text = await content(sha);
+  requireSafe(text === canonicalData(text) && substantive(await content(historicalBase), text), 'Retained data must be canonical and substantive.');
+  provenance(commit, bot, historicalBase, generation, hash(text));
+  const comparison = await rest(`/compare/${historicalBase}...${sha}`);
+  requireSafe(comparison.total_commits === 1 && comparison.status === 'ahead', 'Retained head must be exactly one generated commit.');
+  dataOnly(comparison.files);
+  const ancestry = await rest(`/compare/${pr.merge_commit_sha}...${base}`);
+  requireSafe(['ahead', 'identical'].includes(ancestry.status), 'Merged generated PR is not in current main history.');
+}
 async function publish() {
   const bot = identity();
   const repo = await rest('');
@@ -116,9 +148,9 @@ async function publish() {
     requireSafe(!state.repository.pullRequest.autoMergeRequest, 'Existing PR has auto-merge armed; let it finish or disarm it manually before refreshing.');
   }
   const previous = await maybeRef();
-  requireSafe(!previous || prs.length === 1, 'Generator branch exists without an App-owned open PR. Review and retire the legacy branch/PR before activation.');
-  // Reset only an unarmed, App-owned PR to the generation base. The shared
-  // workflow concurrency group serializes publication and auto-merge decisions.
+  if (previous && prs.length === 0) await retainedMergedBranch(previous, bot, base);
+  // Reset only an unarmed App-owned PR or a verified retained merged head.
+  // The shared workflow concurrency group serializes publication and merge decisions.
   if (previous) {
     requireSafe((await maybeRef()).object.sha === previous.object.sha, 'Generator branch changed during publication.');
     await rest(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: base, force: true }) });
