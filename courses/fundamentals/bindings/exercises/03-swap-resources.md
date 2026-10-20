@@ -50,13 +50,13 @@ Your code always says `env.NOTES`. What that points at depends on how you run it
 
 A remote binding is one setting on the binding. It needs the namespace's ID:
 
-```ts
+```ts title="cloudflare.config.ts"
 NOTES: bindings.kv({ id: "<namespace id>", dev: { remote: true } }),
 ```
 
 And since `cloudflare.config.ts` is TypeScript, it can take a function of the mode. Give staging its own Worker name, and it gets its own namespace:
 
-```ts
+```ts title="cloudflare.config.ts"
 export default defineConfig(({ mode }) => ({
   worker: {
     name: mode === "staging" ? "my-worker-staging" : "my-worker",

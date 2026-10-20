@@ -41,7 +41,7 @@ The same guestbook, with its entries stored in [D1](https://developers.cloudflar
 
 A migration is a numbered SQL file that changes your database's schema. They run in order, each one only once, so you can change the table later without losing what's in it:
 
-```sql
+```sql title="migrations/0001_create_entries.sql"
 CREATE TABLE entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,

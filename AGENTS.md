@@ -249,9 +249,13 @@ Once a student is enrolled, the homepage (`src/pages/index.astro`) turns from th
 
 `/llms.txt` (`src/pages/llms.txt.ts`, prerendered, format modeled on OpenCode School's) only documents API endpoints that actually exist today. When a ticket adds a new API route students' agents need to know about (interview, progress, etc.), update this file in the same PR, don't let it drift ahead of or behind the real API.
 
-## Code block copy buttons
+## Code blocks
 
-`src/lib/code-copy-client.ts` (`initCodeCopyButtons`, called from the exercise page and `/authors` scripts) wraps every `.prose pre` (one-liners included) in `.code-block` and adds an icon-only copy button on the right that flips to a check + "Copied" for 2s. Blocks fenced as ```` ```text ```` (diagrams like file trees) get no button, so fence anything nobody would paste that way. Styles for these and for all rendered Markdown (`.prose`: headings, lists, code blocks, tables) live in the global block in `src/layouts/Layout.astro`, shared by exercise pages, course pages, and `/authors`; don't re-scope them to one page.
+Fenced code is highlighted at build time by Astro's Shiki with the theme in `src/lib/code-highlighting.ts` (#143, design "Code — A (Accent keywords)" in Paper's cfdev.school file). Its colors are CSS variables (`--code-fg`, `--code-muted`, `--code-keyword`, `--code-string`, set in `Layout.astro`): grayscale plus the student's link color, so code follows the palette and light/dark mode. `theme.test.ts` checks every palette's code colors at WCAG AA on `--card-bg`; keep its mirror of those variables in sync. ```` ```text ```` fences are excluded from highlighting (`excludeLangs` in `astro.config.mjs`).
+
+The same file's transformer puts a label at the top of a block: the fence's `title` (```` ```ts title="src/index.ts" ````), or "Terminal" for `sh`/`bash` blocks. Give a block a title when the prose makes clear which file it belongs in, and leave illustrative fragments without one. Prefer `ts` over `js` in content, except where JavaScript is required (Dynamic Worker modules must be `.js` or `.py`).
+
+`src/lib/code-copy-client.ts` (`initCodeCopyButtons`, called from the exercise page and `/authors` scripts) wraps every `.prose pre` (one-liners included) in `.code-block` and adds an icon-only copy button on the right that flips to a check + "Copied" for 2s. It copies the `<code>` only, not the label. Blocks fenced as ```` ```text ```` (diagrams like file trees) get no button, so fence anything nobody would paste that way. Styles for these and for all rendered Markdown (`.prose`: headings, lists, code blocks, tables) live in the global block in `src/layouts/Layout.astro`, shared by exercise pages, course pages, and `/authors`; don't re-scope them to one page.
 
 ## Disenroll
 

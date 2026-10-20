@@ -63,7 +63,7 @@ const value = await db.get("content");
 
 On Cloudflare, you declare the binding in `cloudflare.config.ts`:
 
-```ts
+```ts title="cloudflare.config.ts"
 env: {
   GREETING: bindings.text("Hello"),
   API_TOKEN: bindings.secret(),
@@ -73,7 +73,7 @@ env: {
 
 Then `env.NOTES` arrives already connected. There's nothing to set up:
 
-```ts
+```ts title="src/index.ts"
 import { env } from "cloudflare:workers";
 
 export default {

@@ -55,7 +55,7 @@ Private repos, and courses in a subdirectory of a repo, aren't supported yet.
 
 ## COURSE.md
 
-```markdown
+```markdown title="COURSE.md"
 ---
 name: durable-objects
 description: "Build stateful apps on Cloudflare with Durable Objects, for developers who've deployed a Worker."
@@ -94,7 +94,7 @@ durable-objects-course/
 - Title: the file's first `#` heading.
 - Frontmatter is optional: a one-line `description`, and `agent-instructions`, which only the student's agent reads.
 
-```markdown
+```markdown title="exercises/01-first-object.md"
 ---
 description: "Create a Durable Object and call it from a Worker."
 agent-instructions: |
@@ -110,7 +110,7 @@ What the student will build and why, written for the student.
 
 In a single file, each `##` section of `COURSE.md` is an exercise, in order. Its title is the heading's text and its slug is the heading's GitHub-style anchor, so `## Your first object` is `your-first-object`. There's no frontmatter per exercise, so address any notes for the agent in the section itself.
 
-```markdown
+```markdown title="COURSE.md"
 ---
 name: kv-in-ten-minutes
 description: "Store and read data with Workers KV, for developers who've deployed a Worker."
