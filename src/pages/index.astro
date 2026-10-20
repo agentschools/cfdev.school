@@ -1,4 +1,5 @@
 ---
+import ColorSelector from "../components/ColorSelector.astro";
 import StudentIdCard from "../components/StudentIdCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { REQUIRED_COURSE, TRACK_LABELS, TRACKS } from "../data/courses";
@@ -63,8 +64,11 @@ const trackChoices = TRACKS.map((track) => ({
           with Cloudflare. Then start building for real.
         </p>
         <div class="cta-block" data-enroll-container>
-          <button class="cta" type="button" data-enroll-trigger>Enroll — it takes 2 seconds</button>
-          <p class="fine-print">Free forever. No account required.</p>
+          <button class="cta" type="button" data-enroll-start>Enroll — it takes 2 seconds</button>
+          <div class="enroll-colors" data-enroll-colors hidden>
+            <ColorSelector />
+          </div>
+          <p class="fine-print">Free forever. No account required. Pick a color to enroll.</p>
         </div>
       </div>
 
@@ -230,12 +234,22 @@ const trackChoices = TRACKS.map((track) => ({
   .cta-block {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
-    width: fit-content;
+    width: 100%;
+    max-width: 27.5rem;
+  }
+
+  .enroll-colors {
+    width: 100%;
   }
 
   .cta-block[hidden] {
+    display: none;
+  }
+
+  .cta[hidden],
+  [data-enroll-colors][hidden] {
     display: none;
   }
 
@@ -245,7 +259,7 @@ const trackChoices = TRACKS.map((track) => ({
     padding: 1.125rem 1.875rem;
     border: none;
     border-radius: 9999px;
-    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
+    background: var(--button-gradient);
     color: #fff;
     font-family: inherit;
     font-weight: 600;
@@ -402,7 +416,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   :global(:root[data-enrolled]) .hero-visual :global(.id-card) {
-    width: 21.25rem;
+    width: min(21.25rem, 100%);
   }
 
   :global(:root[data-enrolled]) .hero-visual :global(.id-card-face) {
@@ -440,7 +454,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   .eyebrow {
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
   }
 
   .label {
@@ -497,8 +511,8 @@ const trackChoices = TRACKS.map((track) => ({
     display: inline-flex;
     padding: 0.875rem 1.5rem;
     border-radius: 9999px;
-    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
-    color: #fff;
+    background: var(--button-gradient);
+    color: var(--accent-contrast);
     font-weight: 600;
     line-height: 1.375rem;
     text-decoration: none;
@@ -534,11 +548,11 @@ const trackChoices = TRACKS.map((track) => ({
 
   .track.is-available {
     border: 1.5px solid var(--accent);
-    background: light-dark(#fff7f0, #2a1c15);
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg));
   }
 
   .track.is-available:hover {
-    background: light-dark(#ffefe2, #33211a);
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg));
   }
 
   .track-label {
@@ -552,7 +566,7 @@ const trackChoices = TRACKS.map((track) => ({
 
   .is-available .track-label,
   .is-available .track-start {
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
   }
 
   .track-pitch {
@@ -618,8 +632,8 @@ const trackChoices = TRACKS.map((track) => ({
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 9999px;
-    background: linear-gradient(180deg, #ff6b2e, #ff5e1f);
-    color: #fff;
+    background: var(--button-gradient);
+    color: var(--accent-contrast);
     font: inherit;
     font-size: 0.875rem;
     font-weight: 600;
@@ -638,7 +652,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   .prompt-caption a {
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
     text-decoration: none;
   }
 
@@ -661,7 +675,7 @@ const trackChoices = TRACKS.map((track) => ({
 
   .section-head a {
     font-size: 0.875rem;
-    color: light-dark(#c2410c, #ff8f57);
+    color: var(--accent-text);
     text-decoration: none;
   }
 
@@ -701,7 +715,7 @@ const trackChoices = TRACKS.map((track) => ({
   }
 
   .course-rows :global(.course-row:hover .course-row-title) {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .course-rows :global(.course-row-text) {
@@ -838,7 +852,7 @@ const trackChoices = TRACKS.map((track) => ({
 
   @media (max-width: 700px) {
     :global(:root[data-enrolled]) .hero {
-      padding: 3rem 1.5rem;
+      padding: 4.5rem 1.5rem 3rem;
     }
 
     .tracks {

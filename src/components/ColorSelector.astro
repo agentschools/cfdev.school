@@ -1,0 +1,92 @@
+---
+import { themeColors } from "../lib/theme";
+---
+
+<div class="color-selector" data-color-selector>
+  <fieldset>
+    <legend>Choose your color</legend>
+    <div class="swatches">
+      {themeColors.map((theme) => (
+        <label class="color-option" title={theme.label} style={`--swatch:${theme.solid}`}>
+          <input type="radio" name="student-color" value={theme.name} aria-label={theme.label} />
+          <span class="swatch" aria-hidden="true"><span class="selected-check">✓</span></span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+</div>
+
+<style>
+  fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+
+  legend {
+    padding: 0;
+    margin: 0 0 0.75rem;
+    font-weight: 600;
+  }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0.6rem;
+  }
+
+  .color-option {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    aspect-ratio: 1;
+    cursor: pointer;
+  }
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .swatch {
+    display: grid;
+    place-items: center;
+    border-radius: 0.6rem;
+    background: var(--swatch);
+    color: #fff;
+    pointer-events: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .color-option:hover .swatch,
+  input:focus-visible + .swatch {
+    transform: scale(1.12);
+  }
+
+  .selected-check {
+    visibility: hidden;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+  }
+
+  input:checked + .swatch {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg);
+  }
+
+  input:checked + .swatch .selected-check {
+    visibility: visible;
+  }
+
+  input:focus-visible + .swatch {
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg);
+  }
+</style>

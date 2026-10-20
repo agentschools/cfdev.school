@@ -10,6 +10,12 @@ async function render(path = "/"): Promise<string> {
 }
 
 describe("CurriculumSidebar", () => {
+  it("keeps both cloud shapes colored by the student's two-tone palette", async () => {
+    const html = await render();
+    expect(html).toContain('fill="var(--brand-cloud-light)"');
+    expect(html).toContain('fill="var(--brand-cloud-dark)"');
+  });
+
   it("shows Agent setup with its exercises, then each track with its courses", async () => {
     const html = await render();
 

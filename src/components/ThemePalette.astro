@@ -1,0 +1,17 @@
+---
+import { DEFAULT_THEME, THEME_STORAGE_KEY, themeColors, themeStyles } from "../lib/theme";
+const themeNames = themeColors.map((theme) => theme.name);
+---
+
+<style is:global set:html={themeStyles} />
+<!-- Apply the saved palette before body paint, without waiting for a module. -->
+<script is:inline define:vars={{ themeNames, storageKey: THEME_STORAGE_KEY, defaultTheme: DEFAULT_THEME }}>
+  let theme = defaultTheme;
+  try {
+    const saved = localStorage.getItem(storageKey);
+    if (themeNames.includes(saved)) theme = saved;
+  } catch {
+    // Storage may be blocked. The default palette still works.
+  }
+  document.documentElement.dataset.themeColor = theme;
+</script>
