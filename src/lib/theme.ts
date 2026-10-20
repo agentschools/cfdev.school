@@ -61,7 +61,8 @@ export const schoolThemeStyles = `
 
 export const themeStyles = schoolThemeStyles + themeColors.map((theme) => `
   :root[data-theme-color="${theme.name}"] {
-    --brand-cloud-light: ${theme.textDark};
+    /* Lighter cloud tone, pulled toward the solid so it isn't washed out. */
+    --brand-cloud-light: color-mix(in srgb, ${theme.textDark}, ${theme.solid} 45%);
     --brand-cloud-dark: ${theme.solid};
     --accent: ${theme.solid};
     --accent-hover: ${theme.hover};
