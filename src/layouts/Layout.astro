@@ -82,6 +82,13 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
        Retro" wordmark (which is plain system-ui at font-weight 900, not a
        custom webfont). Body copy stays on Inter for readability. */
     --heading-font: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    /* Syntax highlighting (src/lib/code-highlighting.ts): grayscale plus the
+       student's link color, all at WCAG AA on --card-bg (theme.test.ts). */
+    --code-fg: var(--fg);
+    --code-muted: light-dark(#6b6b6b, #8f8987);
+    /* Nudged toward --fg so yellow's link color clears AA on --card-bg too. */
+    --code-keyword: color-mix(in srgb, var(--accent-text) 90%, var(--code-fg));
+    --code-string: color-mix(in srgb, var(--code-keyword) 40%, var(--code-muted));
   }
 
   * {
@@ -183,6 +190,18 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
     font-size: inherit;
   }
 
+  .prose pre .code-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: -1.25rem -1.25rem 1.25rem;
+    padding: 0.625rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted-fg);
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
   .prose code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.9em;
@@ -232,6 +251,15 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
   .code-block > pre {
     margin: 0 !important;
     padding-right: 3rem !important;
+  }
+
+  .code-block > pre .code-title {
+    margin-right: -3rem;
+    padding-right: 3rem;
+  }
+
+  .code-block:has(.code-title) > .code-copy {
+    top: 0.15rem;
   }
 
   .code-copy {

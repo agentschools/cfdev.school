@@ -10,6 +10,7 @@ const RESET_MS = 2000;
  * one-line commands) in a container with an icon-only copy button on the right.
  * After a click the button briefly shows a check and "Copied". Blocks fenced
  * as ```text (diagrams like file trees, nothing to paste) get no button.
+ * Only the <code> is copied, not a block's filename label.
  */
 export function initCodeCopyButtons(root: ParentNode = document): void {
   for (const pre of root.querySelectorAll<HTMLPreElement>(".prose pre")) {
@@ -32,7 +33,7 @@ export function initCodeCopyButtons(root: ParentNode = document): void {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     button.addEventListener("click", async () => {
-      const text = (pre.textContent ?? "").replace(/\n$/, "");
+      const text = (pre.querySelector("code")?.textContent ?? "").replace(/\n$/, "");
       try {
         await navigator.clipboard.writeText(text);
       } catch (error) {

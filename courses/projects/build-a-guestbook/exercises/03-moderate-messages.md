@@ -52,12 +52,12 @@ If you've heard of decision models before, it was probably [Jev](https://develop
 
 Here's the whole idea, in a Worker that checks one entry:
 
-```js
+```ts
 import { env } from "cloudflare:workers";
 
 export default {
-  async fetch(request) {
-    const { name, message } = await request.json();
+  async fetch(request: Request) {
+    const { name, message } = await request.json<{ name: string; message: string }>();
 
     const { answers } = await env.AI.run(
       "@cf/cloudflare/clef-flash",
@@ -74,7 +74,7 @@ export default {
       { gateway: { id: "default" } },
     );
 
-    const spam = answers.spam.noul; // from 0 to 1
+    const spam = (answers as { spam: { noul: number } }).spam.noul; // from 0 to 1
     return Response.json({ spam, held: spam > 0.8 });
   },
 };

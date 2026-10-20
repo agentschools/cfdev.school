@@ -43,7 +43,7 @@ Dynamic Workers need the Workers Paid plan once deployed, so you'll run this one
 
 You could hand the sandbox your whole KV namespace, but you don't have to. Instead, you write a small class that wraps it and exposes only what you choose: two methods, and only keys with a prefix the caller can't change.
 
-```ts
+```ts title="src/index.ts"
 export class Notebook extends WorkerEntrypoint<Env, { prefix: string }> {
   async write(key: string, value: string) {
     await this.env.NOTES.put(`${this.ctx.props.prefix}:${key}`, value);
@@ -68,7 +68,7 @@ export default {
 
 A [Worker Loader](https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/) binding, `env.LOADER`, starts that code in its own sandbox. You decide exactly what goes on its `env`:
 
-```ts
+```ts title="src/index.ts"
 const worker = env.LOADER.load({
   compatibilityDate: "2026-10-01",
   mainModule: "main.js",

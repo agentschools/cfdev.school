@@ -41,7 +41,7 @@ Then you'll check that nothing else can reach the greeter, and think about what 
 
 The greeter exports a class with a method on it:
 
-```ts
+```ts title="src/index.ts"
 import { WorkerEntrypoint } from "cloudflare:workers";
 
 export default class extends WorkerEntrypoint<Env, { caller: string }> {
@@ -53,7 +53,7 @@ export default class extends WorkerEntrypoint<Env, { caller: string }> {
 
 Your first Worker binds to it in `cloudflare.config.ts`, saying who's calling with `props`:
 
-```ts
+```ts title="cloudflare.config.ts"
 env: {
   GREETER: bindings.worker({ worker: greeter, props: { caller: "my-worker" } }),
 },

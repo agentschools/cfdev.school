@@ -41,3 +41,32 @@ describe("student colors", () => {
     expect(contrast(theme.textDark, "#0b0b0b")).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+// Mirrors the --code-* variables in Layout.astro: keywords are the link color
+// mixed 90% with the text color, strings that mixed 40% with muted, on --card-bg.
+function mixSrgb(first: string, second: string, weight: number): string {
+  const a = first.slice(1).match(/../g)!.map((value) => parseInt(value, 16));
+  const b = second.slice(1).match(/../g)!.map((value) => parseInt(value, 16));
+  return `#${a.map((value, i) => Math.round(value * weight + b[i] * (1 - weight)).toString(16).padStart(2, "0")).join("")}`;
+}
+
+const CODE_MODES = [
+  { mode: "light", card: "#f3f3f3", fg: "#181818", muted: "#6b6b6b" },
+  { mode: "dark", card: "#1d1c1c", fg: "#f0e3de", muted: "#8f8987" },
+] as const;
+
+const codeLinkColors = [
+  { name: DEFAULT_THEME, light: "#c2410c", dark: "#ff8f57" },
+  ...themeColors.map((theme) => ({ name: theme.name, light: theme.textLight, dark: theme.textDark })),
+];
+
+describe("syntax highlighting colors", () => {
+  it.each(codeLinkColors)("keeps $name code tokens above WCAG AA on code blocks", (theme) => {
+    for (const { mode, card, fg, muted } of CODE_MODES) {
+      const keyword = mixSrgb(theme[mode], fg, 0.9);
+      for (const color of [fg, muted, keyword, mixSrgb(keyword, muted, 0.4)]) {
+        expect(contrast(color, card)).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+});
