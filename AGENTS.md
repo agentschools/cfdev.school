@@ -258,7 +258,7 @@ Once a student is enrolled, the homepage (`src/pages/index.astro`) turns from th
 `/disenroll` (`src/pages/disenroll.astro`, client logic in `src/lib/disenroll-client.ts`) copies OpenCode School's disenroll page layout: two options, not one.
 
 - **Reset progress**: `DELETE /api/progress/{studentId}` (same file as the other progress routes) deletes the student's rows from `course_exercise_completions` and `course_completions` but keeps the `students`, `interviews`, and `external_courses` rows. This is a real server-side delete, unlike everything else on this page.
-- **Disenroll completely**: purely client-side, clears the `cfDevSchool.student` localStorage key and redirects home. It never calls the server; per this app's no-accounts model there's no student data to delete server-side on request, only progress (handled by the option above).
+- **Disenroll completely**: purely client-side, clears the `cfDevSchool.student` and `cfDevSchool.themeColor` localStorage keys and redirects home. It never calls the server; per this app's no-accounts model there's no student data to delete server-side on request, only progress (handled by the option above).
 
 The page shows an enroll nudge instead of the two options for logged-out visitors. The sidebar (`CurriculumSidebar.astro`) only shows the "Account" section (containing the Profile and Disenroll links) once enrolled, `curriculum-sidebar-client.ts` toggles it both on load and reactively on the `cfDevSchool:enrolled` event, so it appears immediately after a fresh enrollment click without a reload.
 
