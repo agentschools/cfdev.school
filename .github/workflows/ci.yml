@@ -51,3 +51,13 @@ jobs:
       - run: npm ci --prefer-offline --no-audit --no-fund
 
       - run: npm run test
+
+  # Main's required policy context must also be satisfied for ordinary PRs.
+  # Reserve it on the generator branch for the trusted workflow_run gate.
+  harness-policy:
+    name: ${{ github.head_ref == 'chore/refresh-harnesses' && 'harness-policy-reserved' || 'harness-policy' }}
+    if: github.head_ref != 'chore/refresh-harnesses'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: echo 'Ordinary PR; normal required checks and review rules apply.'

@@ -19,7 +19,8 @@ concurrency:
 
 jobs:
   deploy-preview:
-    if: github.event.action != 'closed'
+    # Drafts and scheduled data changes do not need production-backed previews.
+    if: github.event.action != 'closed' && !github.event.pull_request.draft && github.event.pull_request.head.ref != 'chore/refresh-harnesses'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
