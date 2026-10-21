@@ -111,6 +111,14 @@ Time to first question matters: it's the first thing a new student waits on. `/l
 
 Verify the interview API end to end with `npm run verify:interview` (a "scripted fake-agent": it fetches `/llms.txt`, then exercises the exact HTTP contract llms.txt documents against a real running Worker, it isn't simulating an LLM conversation). It saves interviews for both courses, re-sends one, and checks the new summary arrives over the progress WebSocket. Run it against `npm run dev:worker` after touching this code, and again against a PR preview (`BASE_URL=https://cloudflare-dev-school-pr-N.ziki.workers.dev`) before merging. Delete the rows it creates from D1 afterward, it's a real enrollment against whatever database `BASE_URL` points at.
 
+## Optional web interview
+
+Agent setup and Publish a website offer a four-step optional web form below the existing agent prompt on their interview pages. Their `interview-questions` frontmatter is the single source for question texts, choices, hints, and answer types, validated by `interviewQuestionSchema`. Other interviews keep their existing agent flow. Course landing pages link to the form; this is not enrollment.
+
+`WebInterview.astro` / `web-interview-client.ts` save each answered or explicitly skipped step through the existing interview PUT, preserving other responses (including agent-detected OS). An empty answer array records an explicit web skip. A pair with `pending: true` and answer `[]` records an unfinished web question; remove `pending` when answered or explicitly skipped. Legacy omitted questions retain their intentional-skip meaning. Closing discards the current unsaved edits; saved steps resume from the first pending question. The form never writes progress or reports an agent/model. Agents read these answers, ask only pending questions, preserve skips, and run remaining checks before completing the exercise.
+
+Forms use conditional PUT headers: quoted `updatedAt` in `If-Match`, or `If-None-Match: *` for creation. Atomic conditional SQL rejects concurrent changes with 412; reload before editing again. Legacy agent PUT remains a full replacement. Interview responses use `Cache-Control: no-store`. Access still relies on possession of the anonymous student ID, not authentication; never treat it as private account storage or use production student data for QA. No database migration is needed for the form.
+
 ## Courses and exercises
 
 Built-in courses live in `courses/<name>/` at the repo root, or `courses/<track>/<name>/` for a course in a track (`TRACKS` in `src/data/courses.ts`, in display order: `projects` then `fundamentals`, labeled by `TRACK_LABELS`; Agent setup stays at the top level). URLs never include the track, so course names must be unique across tracks. The track directory is the only place a track is recorded: `getBuiltInCourses()` derives each course's `track` from its entry's `filePath`, and `GET /api/courses` exposes it. Tracks are groupings only, students complete courses, not tracks, and projects never require a fundamentals course. Only built-in courses have tracks. Built-in courses are in the same format courses hosted elsewhere use (see "Courses hosted elsewhere"): the COURSE.md format from `@agentschools/course-spec` (see "Course spec"), which loosely follows the Agent Skills spec (https://agentskills.io/specification). Dev School's additions:
@@ -239,7 +247,7 @@ Verify with `npm run verify:external-course` against `npm run dev:worker` or a P
 The COURSE.md format (frontmatter schemas, ordering, slug, title, and interview-first rules, the `SPEC.md` prose, and the `create-course` skill) lives in https://github.com/agentschools/course-spec, a school-agnostic repo installed as a git dependency pinned to a commit SHA: `"@agentschools/course-spec": "github:agentschools/course-spec#<sha>"`. It ships TypeScript source, which Vite and Vitest compile from `node_modules`.
 
 - Format changes go to course-spec first. Then bump the SHA here with `npm i --save-exact github:agentschools/course-spec#<sha>`, in a PR that also updates anything here that depends on the change.
-- Anything Dev School-specific (default interview, Agent setup, quizzes, tracks, the progress API) stays here, not in course-spec.
+- Anything Dev School-specific (default interview, Agent setup, quizzes, tracks, the progress API) stays here, not in course-spec. That includes `interview-questions` (see "Optional web interview"): `src/schemas/course.ts` extends the shared exercise frontmatter schema with it for built-in courses only, so courses hosted elsewhere can't rely on it.
 - `/authors.md` and the skill link to course-spec's `main` branch, while `/authors` and `/course-spec.md` show the pinned version. Keep the pin current so they agree.
 
 ## Live progress
