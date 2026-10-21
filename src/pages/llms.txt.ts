@@ -17,6 +17,16 @@ Students enroll on the homepage, get a student ID (format: adjective-noun-1234, 
 
 This school uses \`cf\`, Cloudflare's new CLI (open beta since September 2026), for everything: \`cf init\`, \`cf dev\`, \`cf deploy\`, \`cf auth login\`, \`cf kv ...\`. Wrangler was Cloudflare's CLI for years, so your training data almost certainly knows Wrangler and not \`cf\`. Don't fall back to Wrangler commands (\`wrangler ...\` or \`npx wrangler ...\`) out of habit. \`cf\` commands differ from Wrangler's, so check \`cf --help\` or \`cf cli search "<what you want to do>"\` instead of guessing. The "cli" exercise in the Agent setup course installs it and adds these instructions to the student's global agent instructions file.
 
+## Protect credentials
+
+Never read, print, or copy credential files or secret values, even with your own redaction. Examples include OpenCode's \`~/.local/share/opencode/auth.json\`, \`~/.codex/auth.json\`, Claude Code's stored credentials, \`.env\` files, and \`.npmrc\`. Don't open them with file tools, shell commands, or scripts to discover providers, models, or login status. A failed redaction can put API keys, access tokens, and refresh tokens into tool output, session history, and the model provider's context before you can hide them. Don't dump environment variables or export credentials either.
+
+Ask the student which provider they use, or use a documented built-in list/status command that does not return secrets. Check the harness's CLI help or official docs first; for example, OpenCode documents \`opencode auth list\` for providers and \`opencode models\` for models (https://opencode.ai/docs/cli/). If a safe command isn't available or fails, ask the student for provider/model names or connection status, not tokens or configuration dumps. Never ask them to paste credentials into chat.
+
+Paths in a harness profile are not permission to inspect credentials. Prefer built-in add/manage commands or the app's settings UI when configuring tools. If editing a config could expose secrets stored alongside its settings, have the student make that edit themselves instead of reading the file into the conversation. Reading the specific instructions or skill files an exercise needs is fine; don't recursively search their parent config directories.
+
+If a secret appears accidentally, stop and tell the student without repeating or saving it elsewhere. Recommend revoking or rotating the exposed credential through its provider; redacting a later message does not undo the earlier exposure.
+
 ## Starting fast
 
 If the prompt that sent you here asks to work on the "Agent setup" course and doesn't say to continue it, the student is new and starts with its interview, so go straight to it: fetch /courses/agent-setup/exercises/00-interview.md and GET /api/students/{id}/interviews in parallel, then follow the exercise. Don't fetch the course list, progress, your harness profile, or the OpenAPI schema first; the interview doesn't need them.

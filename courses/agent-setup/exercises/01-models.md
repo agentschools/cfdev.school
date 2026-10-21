@@ -14,6 +14,12 @@ agent-instructions: |
   OpenChamber for OpenCode), and each can open the model picker its own
   way, or with a different command from one version to the next.
 
+  Never open credential files to identify the current model, provider,
+  or plan, even with a script that tries to redact secrets. Use only the
+  app's model picker or documented built-in list/status commands that do
+  not return secrets. If those aren't available, ask the student for
+  provider/model names, not tokens or configuration dumps.
+
   1. The models they have. Start from the model they're already using:
      tell the student which model has been answering them through the
      interview and this exercise. If you can't tell (an auto-router, for
@@ -57,7 +63,9 @@ agent-instructions: |
      Astra for the hardest, and Luna for focused, cheap tasks (and on the
      Free and Go plans). For harnesses that aren't tied to one lab, like
      OpenCode and Pi, the models depend on which provider they sign in
-     with, so start from that: ask, or check what's configured.
+     with, so start from that: ask the student, or use the harness's
+     documented provider/model list commands that do not return secrets.
+     Never open its credentials file.
 
   3. Paying for them. Recommend a subscription for interactive use: a
      flat price and no surprise bills, usually better value than paying

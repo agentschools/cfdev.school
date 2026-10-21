@@ -15,11 +15,11 @@ agent-instructions: |
   4. Send with `env.EMAIL.send({ from: "guestbook@<domain>", to: "<address>", subject, text })`.
 
   Discord or Slack path:
-  1. Have the student create an incoming webhook: in Discord, a channel's Edit Channel > Integrations > Webhooks; in Slack, an app with Incoming Webhooks turned on. They paste the URL to you.
-  2. The URL is a secret: anyone with it can post to their channel. Store it as `NOTIFY_WEBHOOK_URL`:
+  1. Have the student create an incoming webhook: in Discord, a channel's Edit Channel > Integrations > Webhooks; in Slack, an app with Incoming Webhooks turned on. Never ask them to paste the URL into chat.
+  2. The URL is a secret: anyone with it can post to their channel. Add the binding/configuration yourself, but have the student enter the value directly as `NOTIFY_WEBHOOK_URL` in their own editor or terminal, outside the agent's tool output:
      - `cf` projects: `NOTIFY_WEBHOOK_URL: bindings.secret()` in `env`, the value in `.env` for local dev, and `cf deploy --secrets-file .env` to set it on deploy. A Worker with an unset secret won't deploy.
      - Wrangler projects: the value in `.env` for local dev, and `npx wrangler secret put NOTIFY_WEBHOOK_URL` for production.
-     Check `.env` is in `.gitignore` before writing it.
+     Check `.env` is in `.gitignore` before the student saves it. Don't read the file or echo the value back; verify through the notification arriving, not by inspecting the secret.
   3. Send with `fetch(env.NOTIFY_WEBHOOK_URL, { method: "POST", headers: { "content-type": "application/json" }, body })`, where `body` is `JSON.stringify({ content })` for Discord or `JSON.stringify({ text })` for Slack.
   Don't suggest ntfy.sh's public server: from a Worker it returned "daily message quota reached", since many Workers share its per-IP limit.
 

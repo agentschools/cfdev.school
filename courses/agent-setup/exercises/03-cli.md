@@ -47,7 +47,9 @@ agent-instructions: |
 
   5. Verify: run `cf auth whoami` yourself and confirm the JSON output
      shows `"authenticated": true`. If it doesn't, help them fix it before
-     moving on.
+     moving on, using the CLI's documented login flow or official docs.
+     Never open credential files, dump environment variables, or ask the
+     student to paste tokens, even to debug a failed login.
 
   6. Update the student's global (user-level) instructions file, the one
      loaded in every project, not a project's AGENTS.md or CLAUDE.md. Use
