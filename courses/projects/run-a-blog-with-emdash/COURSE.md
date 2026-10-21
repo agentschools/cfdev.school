@@ -1,7 +1,7 @@
 ---
 name: run-a-blog-with-emdash
 description: "Launch your own blog on Cloudflare with EmDash, write and publish posts, make it look like yours, put it online, and let your AI agent help you post. For students who've finished Publish a website."
-compatibility: "Requires the Agent setup and Publish a website courses, a Cloudflare account (the Workers Free plan works), and Node.js 22 or newer. A domain is optional: the blog goes live on a free workers.dev address first."
+compatibility: "Requires the Agent setup and Publish a website courses, a Cloudflare account (the Workers Free plan works), and Node.js 22 or newer. A domain is optional. The final exercise needs an agent with remote HTTP MCP support."
 metadata:
   author: Cloudflare Dev School
 ---
