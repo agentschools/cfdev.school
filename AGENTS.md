@@ -184,6 +184,19 @@ Domains, tested with an earlier version of the course on a throwaway custom doma
 
 The course hasn't been taken end to end as a student since the rework.
 
+## Run a blog with EmDash course
+
+`courses/projects/run-a-blog-with-emdash/` follows Publish a website: a four-question interview (what the blog is about, its name, whether they already have an EmDash site from Publish a website, and whether they have a domain), then create the blog locally, write a first post, make it theirs (title, About page, menu, one small theme change), deploy it, and connect their agent to the blog's built-in MCP server to draft a post the student reviews and publishes. A domain is optional; the blog is complete on workers.dev. A student who chose EmDash in Publish a website reuses that project.
+
+It relies on the EmDash behavior already recorded under "Publish a website course" (non-interactive `npm create emdash`, the fixed `my-emdash-site`/`my-emdash-media` names, the open setup wizard after the first deploy, Wrangler instead of `cf`) plus, from the docs and not tested here:
+
+- `--template blog` and `--no-sandboxed-plugins` (sandboxed plugins need Worker Loader, so Workers Paid).
+- Production gets its own D1 database and R2 bucket, so local posts don't carry over on deploy.
+- Every site serves an MCP server at `/_emdash/api/mcp` (https://docs.emdashcms.com/guides/ai-tools/) that takes OAuth or a personal access token, not an admin browser session.
+- The custom domain step uses the same Wrangler `routes` shape as Publish a website's, also untested.
+
+The course hasn't been taken end to end as a student.
+
 ## Build a guestbook course
 
 `courses/projects/build-a-guestbook/` is the second project course: a four-question interview (where it lives, its feel, how strict to be about spam, and how to be notified), then a form and list on an in-memory array (to show why a variable isn't storage), D1, moderation with Clef, and a notification per entry. It can go on the student's Publish a website site, another app on Cloudflare, or a new Worker, and covers both `cf` and Wrangler projects. No Turnstile, on purpose. Queues are only mentioned, in "get-notified", not built. Tested with `cf` v1.0.0-beta.12 (October 2026) on a throwaway `cfds-lab-guestbook` Worker, locally and deployed, on the `cf` path only:

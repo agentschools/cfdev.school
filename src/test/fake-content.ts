@@ -22,6 +22,12 @@ const collections = {
       data: { name: "publish-a-website", description: "Build and publish a site." },
     },
     {
+      id: "run-a-blog-with-emdash",
+      filePath: "courses/projects/run-a-blog-with-emdash/COURSE.md",
+      body: "\n# Run a blog with EmDash\n\nIntro.\n",
+      data: { name: "run-a-blog-with-emdash", description: "Run a blog with EmDash." },
+    },
+    {
       id: "build-a-guestbook",
       filePath: "courses/projects/build-a-guestbook/COURSE.md",
       body: "\n# Build a guestbook\n\nIntro.\n",

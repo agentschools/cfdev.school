@@ -95,6 +95,7 @@ describe("GET /api/progress/{studentId}", () => {
     expect(progress.courses.map((item) => [item.name, item.exercises.map((ex) => ex.slug)])).toEqual([
       ["agent-setup", ["interview", "models", "instructions"]],
       ["publish-a-website", ["interview"]],
+      ["run-a-blog-with-emdash", ["interview"]],
       ["build-a-guestbook", ["interview"]],
       ["workers", ["interview", "deploy-a-worker"]],
       ["bindings", ["interview", "live-objects"]],
