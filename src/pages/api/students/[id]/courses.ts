@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import type { APIRoute } from "astro";
 import { DEFAULT_INTERVIEW_PATH } from "../../../../data/courses";
-import { INTERVIEW_SLUG, withInterviewFirst } from "../../../../lib/course-format";
+import { INTERVIEW_SLUG, withInterviewFirst } from "@agentschools/course-spec";
 import { normalizeCourseUrl } from "../../../../lib/course-url";
 import { getBuiltInCourses } from "../../../../lib/courses";
 import { broadcastProgress, findStudent, loadProgress } from "../../../../lib/progress-store";
