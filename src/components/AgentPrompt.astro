@@ -108,12 +108,19 @@
     margin: 0;
     padding: 1rem 1.15rem;
     border-radius: 0.5rem;
-    background: var(--bg);
+    background: color-mix(in srgb, var(--accent) 12%, var(--bg));
     white-space: pre-wrap;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.875rem;
     line-height: 1.65;
     color: var(--fg);
+  }
+
+  /* A light tint barely shows on the dark background, so dark mode mixes in more. */
+  @media (prefers-color-scheme: dark) {
+    .agent-prompt-text {
+      background: color-mix(in srgb, var(--accent) 22%, var(--bg));
+    }
   }
 
   .agent-prompt-confirm {
