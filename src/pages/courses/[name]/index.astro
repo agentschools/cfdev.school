@@ -76,11 +76,17 @@ const title = course?.title ?? "Course not found";
     max-width: 1100px;
     margin: 0 auto;
     padding: 0 1.5rem;
+    container-type: inline-size;
   }
 
   .content {
     padding: 2.5rem 0 5rem;
     max-width: 42rem;
+  }
+
+  /* A course intro's video breaks out of the text column to the page's full width. */
+  .prose :global(figure:has(video)) {
+    width: 100cqw;
   }
 
   .header {
