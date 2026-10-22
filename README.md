@@ -6,6 +6,10 @@ Check it out at [cfdev.school](https://cfdev.school)
 
 See [`AGENTS.md`](./AGENTS.md) for the stack, scripts, and conventions. Plans and decisions live in GitHub issues.
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Community conduct
 
 See the proposed [Contributor Covenant code of conduct](./CODE_OF_CONDUCT.md).
