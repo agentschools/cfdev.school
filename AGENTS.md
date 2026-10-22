@@ -186,14 +186,14 @@ The course hasn't been taken end to end as a student since the rework.
 
 ## Run a blog with EmDash course
 
-`courses/projects/run-a-blog-with-emdash/` follows Publish a website: a four-question interview (what the blog is about, its name, whether they already have an EmDash site from Publish a website, and whether they have a domain), then create the blog locally, write a first post, make it theirs (title, About page, menu, one small theme change), deploy it, and connect their agent to the blog's built-in MCP server to draft a post the student reviews and publishes. A domain is optional; the blog is complete on workers.dev. A student who chose EmDash in Publish a website reuses that project.
+`courses/projects/run-a-blog-with-emdash/` follows Publish a website: a four-question interview (what the blog is about, its name, details of any existing EmDash project, and whether they have a domain), then create the blog locally, write a first post, make it theirs (title, About page, menu, one small theme change), deploy it, and connect their agent to the blog's built-in MCP server to draft a post the student reviews and publishes. A domain is optional; the blog is complete on workers.dev. A student reuses an EmDash project from Publish a website only when it used the blog template. The other templates have different content and routes. The deploy exercise also branches for a reused project whose production resources and setup already exist.
 
 It relies on the EmDash behavior already recorded under "Publish a website course" (non-interactive `npm create emdash`, the fixed `my-emdash-site`/`my-emdash-media` names, the open setup wizard after the first deploy, Wrangler instead of `cf`) plus, from the docs and not tested here:
 
 - `--template blog` and `--no-sandboxed-plugins` (sandboxed plugins need Worker Loader, so Workers Paid).
-- Production gets its own D1 database and R2 bucket, so local posts don't carry over on deploy.
-- Every site serves an MCP server at `/_emdash/api/mcp` (https://docs.emdashcms.com/guides/ai-tools/) that takes OAuth or a personal access token, not an admin browser session.
-- The custom domain step uses the same Wrangler `routes` shape as Publish a website's, also untested.
+- Production gets its own D1 database and R2 bucket, so local posts don't carry over on deploy. A reused deployment keeps its existing production resources.
+- Every site serves an MCP server at `/_emdash/api/mcp` (https://docs.emdashcms.com/guides/ai-tools/) that takes OAuth or a personal access token, not an admin browser session. The final exercise uses the harness profile when it has MCP instructions and falls back to the harness's current docs for the generic profile.
+- The custom domain step uses the same Wrangler `routes` shape as Publish a website's, then follows EmDash's Change domain flow so its Site URL and passkey move to the new hostname. Both remain untested.
 
 The course hasn't been taken end to end as a student.
 

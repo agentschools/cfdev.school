@@ -2,44 +2,48 @@
 description: "Start a new EmDash blog on your computer and open its admin panel."
 agent-instructions: |
   Read the student's interview for this course first (GET
-  /api/students/{id}/interviews). If they already have an EmDash site from
-  Publish a website, open that project instead of creating one, and still
-  teach every step below.
+  /api/students/{id}/interviews).
 
-  1. Ask the student for a short project name, lowercase with hyphens
-     (suggest one from their blog's name). Wait for their reply.
-  2. Create the blog with the blog template:
+  1. If they have an EmDash project from Publish a website, inspect its
+     package.json `emdash.label` and routes. Reuse it only if it uses the
+     blog template. A starter, marketing, or portfolio site has different
+     content and routes, so explain why this course needs a separate blog.
+  2. If they need a new project, ask for a short name, lowercase with
+     hyphens (suggest one from their blog's name), wait for their reply, and
+     create it:
 
        npm create emdash@latest <name> -- --platform cloudflare --template blog --pm npm --install --no-sandboxed-plugins --yes
 
-     Its wrangler.jsonc names the Worker, D1 database, and R2 bucket
-     `my-emdash-site` and `my-emdash-media` no matter the folder name.
-     Show the student those lines, explain that each is a Cloudflare
-     resource the deploy will create, and rename all three to match their
-     project. Wait for their OK before saving.
-  3. It writes an EMDASH_ENCRYPTION_KEY to .env. Tell them to back it up
-     somewhere safe and never commit it. Confirm .env is in .gitignore.
-  4. Leave sandboxed plugins off: they need Worker Loader, which is on
+  3. Open wrangler.jsonc. It names the Worker, D1 database, and R2 bucket
+     `my-emdash-site` and `my-emdash-media` in a new project. Show the
+     student those lines and explain each resource. If any default names
+     remain, propose names based on their project and wait for their OK
+     before changing them.
+  4. Confirm .env contains EMDASH_ENCRYPTION_KEY and is in .gitignore. Tell
+     them the key encrypts plugin secrets, must never be committed, and must
+     be kept with their backups.
+  5. Leave sandboxed plugins off: they need Worker Loader, which is on
      Workers Paid.
-  5. This is a Wrangler project: it deploys with Wrangler, not cf. Add a
-     short section to the project's AGENTS.md (EmDash creates one) with the
-     stack, `npm run dev`, `npm run deploy`, and "this is a Wrangler
-     project: don't run cf project commands here".
-  6. Before you run `npm run dev`, ask the student what they expect to see
-     at http://localhost:4321/. Wait for the answer. Then run it, and have
-     them open http://localhost:4321/_emdash/admin/ and finish the local
-     setup wizard.
-  7. Verify before completing: fetch
+  6. This is a Wrangler project: it deploys with Wrangler, not cf. Add or
+     update a short section in the project's AGENTS.md with the stack,
+     `npm run dev`, `npm run deploy`, and "this is a Wrangler project:
+     don't run cf project commands here".
+  7. Before you run `npm run dev`, ask the student what they expect to see
+     at http://localhost:4321/. Wait for the answer. Then run it and have
+     them open http://localhost:4321/_emdash/admin/. Finish the local setup
+     wizard if this is a new local database; otherwise sign in to the
+     existing admin.
+  8. Verify before completing: fetch
      http://localhost:4321/_emdash/admin/ and confirm it loads, and read
      wrangler.jsonc to confirm no `my-emdash-site` or `my-emdash-media`
      names are left. Completion waits on both.
-  8. Mark complete with PUT /api/progress/{studentId} as /llms.txt
+  9. Mark complete with PUT /api/progress/{studentId} as /llms.txt
      describes. Then start "write-your-first-post".
 ---
 
 # Create your blog
 
-You'll create a new blog from EmDash's blog template and run it on your own computer. Nothing is on the internet yet, so you can try things freely.
+You'll create a blog from EmDash's blog template, or reopen the blog you made in Publish a website, and run it on your own computer. Local changes stay on your computer until you deploy.
 
 ## What gets created
 
@@ -51,4 +55,4 @@ You'll pick the name your blog's resources use, and you'll see the config that n
 
 ## Keep your key safe
 
-EmDash writes a secret key to `.env`. It protects data your site stores. Back it up, and never put it in git. If you lose it, some saved settings can't be read again.
+EmDash writes a secret key to `.env`. It encrypts secrets saved by plugins. Back it up with your site's other backups, and never put it in git. If you lose it, those saved secrets can't be read again.
