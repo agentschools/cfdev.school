@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parse as parseYaml } from "yaml";
-import { exerciseSlugFromFilename, INTERVIEW_SLUG, titleFromMarkdown } from "../lib/course-format";
+import { exerciseSlugFromFilename, INTERVIEW_SLUG, titleFromMarkdown } from "@agentschools/course-spec";
 import { rawCourses } from "../lib/course-files";
 import {
   courseFrontmatterSchema,

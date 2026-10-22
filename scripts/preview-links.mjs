@@ -23,7 +23,7 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
     if (courseFile) {
       // A course in a track (courses/<track>/<name>/) has the same flat URL as one that isn't.
       const [, course, file, exerciseFile] = courseFile;
-      // Same slug rule as src/lib/course-format.ts: no leading number prefix.
+      // Same slug rule as @agentschools/course-spec: no leading number prefix.
       const page = exerciseFile ? `/courses/${course}/${exerciseFile.replace(/^\d+[-_]/, "")}` : `/courses/${course}`;
       add(page, `/courses/${course}/${file}`);
     } else if (filename === "src/data/harnesses.ts") {
@@ -49,9 +49,10 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       filename === "src/pages/authors.astro" ||
       filename === "src/lib/authors-client.ts" ||
       filename === "src/content/authors.md" ||
-      filename === "src/pages/authors.md.ts"
+      filename === "src/pages/authors.md.ts" ||
+      filename === "src/pages/course-spec.md.ts"
     ) {
-      add("/authors", "/authors.md");
+      add("/authors", "/authors.md", "/course-spec.md");
     } else if (filename === "src/pages/agents.astro") {
       add("/agents");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {
@@ -68,11 +69,7 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       add("/external-courses.md");
     } else if (filename === "src/data/courses.ts" || filename === "src/pages/courses/index.astro") {
       add("/courses");
-    } else if (
-      filename === "src/lib/courses.ts" ||
-      filename === "src/lib/course-format.ts" ||
-      filename === "src/pages/api/courses.ts"
-    ) {
+    } else if (filename === "src/lib/courses.ts" || filename === "src/pages/api/courses.ts") {
       add("/api/courses");
     } else if (filename === "src/pages/courses/[name]/index.astro" || filename === "src/lib/course-client.ts") {
       add("/courses/agent-setup");

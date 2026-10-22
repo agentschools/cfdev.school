@@ -5,6 +5,8 @@ import Layout from "../layouts/Layout.astro";
 
 const [guide] = await getCollection("authorsGuide");
 const { Content } = await render(guide);
+const [spec] = await getCollection("courseSpec");
+const { Content: Spec } = await render(spec);
 ---
 
 <Layout
@@ -28,11 +30,14 @@ const { Content } = await render(guide);
 
       <h2 class="format-heading">The course format</h2>
       <p class="format-intro">
-        The same guide your agent reads, at <a href="/authors.md">/authors.md</a>, for when you'd rather write the
-        course yourself.
+        The same guide your agent reads, at <a href="/authors.md">/authors.md</a> and
+        <a href="/course-spec.md">/course-spec.md</a>, for when you'd rather write the course yourself.
       </p>
       <div class="prose">
         <Content />
+      </div>
+      <div class="prose">
+        <Spec />
       </div>
     </main>
   </div>

@@ -1,12 +1,13 @@
+import { courseFrontmatterSchema, courseNameSchema, exerciseSlugSchema } from "@agentschools/course-spec";
 import { z } from "zod";
 import { TRACKS } from "../data/courses";
 
 /**
- * Courses and their exercises (see #73). A course is a directory with a
- * `COURSE.md` whose frontmatter loosely follows the Agent Skills spec
- * (https://agentskills.io/specification), plus an `exercises/` directory of
- * Markdown files ordered by filename. Built-in courses live in `courses/` at
- * the repo root. Ordering, slug, and title rules live in src/lib/course-format.ts.
+ * Courses and their exercises (see #73), in the COURSE.md format
+ * (https://github.com/agentschools/course-spec). That package defines the
+ * frontmatter schemas and the ordering, slug, and title rules; this file adds
+ * what Dev School serves and stores. Built-in courses live in `courses/` at
+ * the repo root.
  *
  * Source of truth for the `courses` and `exercises` content collections
  * (src/content.config.ts) and GET /api/courses, and for courses hosted
@@ -15,19 +16,14 @@ import { TRACKS } from "../data/courses";
  * /api/students/{id}/courses.
  */
 
-/** Same rules as an Agent Skills `name`: lowercase letters, numbers, and single hyphens. */
-const namePattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-
-export const courseNameSchema = z.string().min(1).max(64).regex(namePattern).meta({
-  description: "Stable course name. Lowercase letters, numbers, and hyphens, matching the course's directory.",
-  example: "agent-setup",
-});
-
-export const exerciseSlugSchema = z.string().min(1).max(64).regex(namePattern).meta({
-  description:
-    'Stable exercise slug: the exercise\'s filename without ".md" or a leading number prefix ("01-models.md" is "models").',
-  example: "models",
-});
+export {
+  type CourseFrontmatter,
+  courseFrontmatterSchema,
+  courseNameSchema,
+  type ExerciseFrontmatter,
+  exerciseFrontmatterSchema,
+  exerciseSlugSchema,
+} from "@agentschools/course-spec";
 
 const httpsUrlSchema = z.url({ protocol: /^https$/ });
 
@@ -39,30 +35,6 @@ export const courseRefSchema = z.union([courseNameSchema, httpsUrlSchema]).meta(
   description:
     'A built-in course\'s name, as GET /api/courses lists it, or the https URL of a course hosted elsewhere that you\'ve reported with PUT /api/students/{id}/courses. URLs are normalized (lowercase host, no trailing slash, ".git", query, or fragment), so any form of the same URL works.',
   example: "agent-setup",
-});
-
-/**
- * `COURSE.md` frontmatter. Same field set as `SKILL.md`. Strict, so a
- * misspelled key fails the build instead of being silently dropped.
- */
-export const courseFrontmatterSchema = z.strictObject({
-  name: courseNameSchema,
-  description: z.string().min(1).max(1024).meta({
-    description: "What the course teaches and who it's for.",
-  }),
-  license: z.string().min(1).optional(),
-  compatibility: z.string().min(1).max(500).optional().meta({
-    description: "Prerequisites: accounts, tools, or courses the student needs first.",
-  }),
-  metadata: z.record(z.string(), z.string()).optional().meta({
-    description: "Anything else, as strings. Dev School reads `author`.",
-  }),
-});
-
-/** Exercise file frontmatter. Everything is optional, the body is the exercise. Strict, like `courseFrontmatterSchema`. */
-export const exerciseFrontmatterSchema = z.strictObject({
-  description: z.string().min(1).optional(),
-  "agent-instructions": z.string().min(1).optional(),
 });
 
 export const courseExerciseSchema = z.object({
@@ -141,8 +113,6 @@ export const externalCourseSchema = reportCourseSchema.extend({
   updatedAt: z.iso.datetime().meta({ description: "When the course was last reported, as an ISO 8601 timestamp." }),
 });
 
-export type CourseFrontmatter = z.infer<typeof courseFrontmatterSchema>;
-export type ExerciseFrontmatter = z.infer<typeof exerciseFrontmatterSchema>;
 export type CourseExercise = z.infer<typeof courseExerciseSchema>;
 export type Course = z.infer<typeof courseSchema>;
 export type ReportCourse = z.infer<typeof reportCourseSchema>;

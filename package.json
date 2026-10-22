@@ -23,6 +23,7 @@
     "verify:external-course": "node scripts/fake-agent-external-course.mjs"
   },
   "dependencies": {
+    "@agentschools/course-spec": "github:agentschools/course-spec#7b9cb4e54963c83e005e567a381d9b46f0d5051f",
     "@astrojs/cloudflare": "14.2.6",
     "@floating-ui/dom": "1.8.0",
     "astro": "7.2.10",
