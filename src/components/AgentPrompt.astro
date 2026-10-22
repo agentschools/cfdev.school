@@ -2,51 +2,109 @@
 ---
 
 <section id="agent-prompt" class="agent-prompt" hidden>
-  <p class="agent-prompt-label">Copy this prompt for your agent:</p>
-  <div class="agent-prompt-box">
-    <pre id="agent-prompt-text" class="agent-prompt-text"></pre>
-    <button id="agent-prompt-copy" type="button" class="agent-prompt-copy">Copy</button>
+  <div class="agent-prompt-header">
+    <div class="agent-prompt-heading">
+      <p class="agent-prompt-title">Paste this into your agent</p>
+      <p class="agent-prompt-body">Your agent takes it from there.</p>
+    </div>
+    <button id="agent-prompt-copy" type="button" class="agent-prompt-copy">
+      <svg
+        aria-hidden="true"
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><rect x="9" y="9" width="13" height="13" rx="2"></rect><path
+          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg
+      >
+      Copy prompt
+    </button>
   </div>
-  <p id="agent-prompt-confirm" class="agent-prompt-confirm" hidden>Copied! Now paste that into your agent...</p>
+  <pre id="agent-prompt-text" class="agent-prompt-text"></pre>
+  <p id="agent-prompt-confirm" class="agent-prompt-confirm" hidden>Copied! Now paste it into your agent.</p>
 </section>
 
 <style>
-  /* Modeled on OpenCode School's prompt card, in our accent color. */
+  /* Matches the "Enroll for free" banner (EnrollBanner.astro). Design:
+     "Agent prompt — A (Banner)" on the "Agent prompt CTA (#131)" page in
+     Paper's cfdev.school file. */
   .agent-prompt[hidden] {
     display: none;
   }
 
   .agent-prompt {
-    max-width: 40rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
     margin: 0 0 2rem;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    background: var(--accent);
+    color: #fff;
     text-align: left;
   }
 
-  .agent-prompt-label {
-    margin: 0 0 0.5rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted-fg);
+  .agent-prompt-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
   }
 
-  .agent-prompt-box {
-    position: relative;
-    overflow: hidden;
-    border: 2px solid var(--accent);
-    border-left-width: 6px;
-    border-radius: 0.6rem;
-    background: color-mix(in srgb, var(--accent) 5%, var(--bg));
-    box-shadow:
-      0 0 0 3px color-mix(in oklch, var(--accent) 12%, transparent),
-      0 4px 16px color-mix(in oklch, var(--accent) 15%, transparent);
+  .agent-prompt-heading {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .agent-prompt-title {
+    margin: 0;
+    font-family: var(--heading-font);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+
+  .agent-prompt-body {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .agent-prompt-copy {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border: none;
+    border-radius: 999px;
+    background: #fff;
+    color: #1c1c1c;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    cursor: pointer;
+  }
+
+  .agent-prompt-copy:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
   }
 
   .agent-prompt-text {
     margin: 0;
-    padding: 1rem 1.25rem;
-    padding-right: 5rem;
+    padding: 1rem 1.15rem;
+    border-radius: 0.5rem;
+    background: var(--bg);
     white-space: pre-wrap;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.875rem;
@@ -54,29 +112,9 @@
     color: var(--fg);
   }
 
-  .agent-prompt-copy {
-    position: absolute;
-    top: 0.6rem;
-    right: 0.6rem;
-    padding: 0.25rem 0.6rem;
-    border: none;
-    border-radius: 0.3rem;
-    background: var(--accent);
-    color: var(--accent-contrast);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-  }
-
-  .agent-prompt-copy:hover {
-    filter: brightness(1.08);
-  }
-
   .agent-prompt-confirm {
-    margin: 1.25rem 0 0;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.85rem;
-    color: var(--muted-fg);
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
   }
 </style>
