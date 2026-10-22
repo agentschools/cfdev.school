@@ -1,8 +1,9 @@
 ---
 description: "Tell your agent what your blog is about, so the course fits it."
 agent-instructions: |
-  Ask these questions all at once, as short lines, and wait for the
-  answers. Every question is optional; skip any the student skips.
+  Follow /llms.txt's "Asking and answering questions" policy for these
+  four independent questions. Every question is optional; skip any the
+  student skips.
 
   1. What will your blog be about? One line is plenty.
   2. What do you want to call it? (You can change it later.)

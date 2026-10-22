@@ -27,7 +27,7 @@ The format is below. Dev School adds a few things to it:
 
 - Every course can assume the student has done [Agent setup](/courses/agent-setup), so their agent knows Dev School and has the `cf` CLI.
 - Don't ask in your interview what Agent setup's interview already covers: experience with AI agents, where the student has deployed before, what they want to build, and whether they want quizzes. Students' agents read those answers before every course.
-- Students' agents ask interview questions following /llms.txt's "Asking and answering questions" policy, so don't prescribe a harness or question UI.
+- Follow /llms.txt's "Asking and answering questions" policy for interview questions: students' agents choose how to present them, so don't prescribe a harness or question UI.
 - Leave the interview out and Dev School's [default interview](/default-interview.md) has the agent write two to four questions from your course's content.
 - Students who opted in get a short quiz after each exercise, which their agent writes from the exercise.
 - Dev School reads `metadata.author` and shows it to students.

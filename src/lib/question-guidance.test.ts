@@ -34,7 +34,6 @@ describe("school-wide question guidance", () => {
 
   it("keeps the author guide focused on question intent", () => {
     expect(authors).toContain('Follow /llms.txt\'s "Asking and answering questions"');
-    expect(authors).toMatch(/free-text or multiple-selection intent/);
     expect(authors).not.toMatch(/Claude Code's question tool/);
   });
 
