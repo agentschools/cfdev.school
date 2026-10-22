@@ -2,12 +2,13 @@
 ---
 
 <section id="agent-prompt" class="agent-prompt" hidden>
-  <p class="agent-prompt-label">Copy this prompt for your agent:</p>
+  <p class="agent-prompt-label">Copy this prompt, then paste it into the message box of your coding-agent app:</p>
+  <p class="agent-prompt-help">New to coding agents? <a href="/agents">Find an app to use</a>.</p>
   <div class="agent-prompt-box">
     <pre id="agent-prompt-text" class="agent-prompt-text"></pre>
     <button id="agent-prompt-copy" type="button" class="agent-prompt-copy">Copy</button>
   </div>
-  <p id="agent-prompt-confirm" class="agent-prompt-confirm" hidden>Copied! Now paste that into your agent...</p>
+  <p id="agent-prompt-confirm" class="agent-prompt-confirm" role="status" hidden>Copied! Paste it into the message box of your coding-agent app and send it.</p>
 </section>
 
 <style>
@@ -26,9 +27,15 @@
     margin: 0 0 0.5rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted-fg);
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--fg);
+  }
+
+  .agent-prompt-help {
+    margin: 0 0 0.75rem;
+    font-size: 0.875rem;
+    color: var(--fg);
   }
 
   .agent-prompt-box {
@@ -77,6 +84,6 @@
     margin: 1.25rem 0 0;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.85rem;
-    color: var(--muted-fg);
+    color: var(--fg);
   }
 </style>
