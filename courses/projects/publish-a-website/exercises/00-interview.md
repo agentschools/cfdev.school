@@ -13,8 +13,8 @@ agent-instructions: |
 
   Encourage a real site, something they'd actually share, and keep them on
   goals rather than technology: the next exercise picks the stack from
-  these answers. Ask all four at once, with your structured question tool
-  if you have one, otherwise in one numbered plain-text message:
+  these answers. Follow /llms.txt's "Asking and answering questions" policy for these
+  four independent questions:
 
   1. "What's your website about, and who is it for?" Free text. If what
      they wanted to build in Agent setup's interview answers this, suggest

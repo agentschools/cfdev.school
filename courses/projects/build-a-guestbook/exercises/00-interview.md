@@ -12,8 +12,8 @@ agent-instructions: |
     build on), and Bindings or Durable Objects (so you can go lighter on
     bindings and storage later).
 
-  Ask all four at once, with your structured question tool if you have
-  one, otherwise in one numbered plain-text message:
+  Follow /llms.txt's "Asking and answering questions" policy for these
+  four independent questions:
 
   1. "Where should your guestbook live?" Choices: on the site I built in
      Publish a website / in another app I have on Cloudflare / in a new
