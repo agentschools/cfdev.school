@@ -1,4 +1,5 @@
 import { buildAuthorPrompt } from "./agent-prompt";
+import { initPromptCopy } from "./agent-prompt-copy";
 
 /** /authors: the course-creation prompt needs no enrollment, so it's shown right away. */
 export function initAuthorsPage(): void {
@@ -11,12 +12,5 @@ export function initAuthorsPage(): void {
   promptText.textContent = buildAuthorPrompt();
   promptSection.hidden = false;
 
-  copyButton.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(promptText.textContent ?? "");
-      copyConfirm.hidden = false;
-    } catch (error) {
-      console.error("Copy failed", error);
-    }
-  });
+  initPromptCopy(copyButton, promptText, copyConfirm);
 }

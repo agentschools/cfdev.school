@@ -25,7 +25,11 @@
     </button>
   </div>
   <pre id="agent-prompt-text" class="agent-prompt-text"></pre>
-  <p id="agent-prompt-confirm" class="agent-prompt-confirm" hidden>Copied! Now paste it into your agent.</p>
+  <p id="agent-prompt-confirm" class="agent-prompt-confirm" hidden>
+    Copied! Now paste it into your agent.<span id="agent-prompt-help" class="agent-prompt-help" hidden>
+      {" "}Don't have an agent yet? <a href="/agents">Here's how to get one</a>.</span
+    >
+  </p>
 </section>
 
 <style>
@@ -116,5 +120,21 @@
     margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
+  }
+
+  .agent-prompt-help {
+    font-weight: 400;
+  }
+
+  .agent-prompt-help a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .agent-prompt-help a:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
   }
 </style>

@@ -1,5 +1,6 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { buildPrompt } from "./agent-prompt";
+import { initPromptCopy } from "./agent-prompt-copy";
 import { exerciseCompletions, hasCompletions } from "./course-progress";
 import { subscribeToProgress } from "./progress-client";
 import { setVisible } from "./reveal";
@@ -112,14 +113,7 @@ export function initExercisePage(): void {
     setVisible(promptSection, true);
   });
 
-  copyButton.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(promptText.textContent ?? "");
-      copyConfirm.hidden = false;
-    } catch (error) {
-      console.error("Copy failed", error);
-    }
-  });
+  initPromptCopy(copyButton, promptText, copyConfirm);
 
   // initEnrollment() may dispatch ENROLLED_EVENT before this listener
   // attaches, so check the cached student directly too.

@@ -1,3 +1,4 @@
+import { PROMPT_COPIED_STORAGE_KEY } from "./agent-prompt-copy";
 import { readCachedStudent } from "./enroll-client";
 import { THEME_STORAGE_KEY } from "./theme";
 
@@ -7,8 +8,9 @@ const STUDENT_STORAGE_KEY = "cfDevSchool.student";
  * /disenroll page. Mirrors OpenCode School's disenroll page (see AGENTS.md's
  * "Disenroll" section): "Reset progress" deletes the student's D1 completions
  * via DELETE /api/progress/{id} but keeps their student ID; "Disenroll
- * completely" only clears this browser's localStorage (student ID and the saved
- * color), it never touches the server, matching this app's no-accounts model.
+ * completely" only clears this browser's localStorage (student ID, the saved
+ * color, and whether a prompt has been copied), it never touches the server,
+ * matching this app's no-accounts model.
  */
 export function initDisenrollPage(): void {
   const nudge = document.getElementById("disenroll-enroll-nudge");
@@ -57,6 +59,7 @@ export function initDisenrollPage(): void {
     try {
       localStorage.removeItem(STUDENT_STORAGE_KEY);
       localStorage.removeItem(THEME_STORAGE_KEY);
+      localStorage.removeItem(PROMPT_COPIED_STORAGE_KEY);
     } catch {
       // Some browsers/extensions block localStorage; nothing more to clear.
     }
