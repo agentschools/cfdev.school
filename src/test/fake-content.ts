@@ -1,6 +1,6 @@
 /**
  * A fake `astro:content` for page and component tests, which can't load real
- * content collections (see AGENTS.md's "Testing Astro components"). Six small
+ * content collections (see AGENTS.md's "Testing Astro components"). Eight small
  * courses shaped like the real ones. Use it with:
  *
  *   vi.mock("astro:content", async () => (await import("<path>/test/fake-content")).fakeAstroContent);
@@ -32,6 +32,12 @@ const collections = {
       filePath: "courses/projects/build-a-guestbook/COURSE.md",
       body: "\n# Build a guestbook\n\nIntro.\n",
       data: { name: "build-a-guestbook", description: "Build a guestbook." },
+    },
+    {
+      id: "build-a-drawing-game",
+      filePath: "courses/projects/build-a-drawing-game/COURSE.md",
+      body: "\n# Build a drawing game\n\nIntro.\n",
+      data: { name: "build-a-drawing-game", description: "Build a drawing game." },
     },
     {
       id: "durable-objects",

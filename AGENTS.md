@@ -5,7 +5,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
 - No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
 - Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
-- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"), plus two in the projects track: Publish a website and Build a guestbook (see "Publish a website course" and "Build a guestbook course"). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
+- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"), plus four in the projects track: Publish a website, Run a blog with EmDash, Build a guestbook, and Build a drawing game (each has its own section below). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
 
 ## Titles
 
@@ -207,6 +207,22 @@ The course hasn't been taken end to end as a student.
 - `bindings.sendEmail({ destinationAddress, dev: { remote: true } })` sent from an onboarded domain (ziki.boo) to a verified address, locally and deployed, and returned a `messageId`; `cf email-sending get <messageId>` returned not found for it. Delivery wasn't checked from the agent. `cf email-sending subdomains preview` is read-only and lists the records sending needs, with conflicts; `subdomains create` and `cf email-routing addresses create` weren't run.
 - ntfy.sh's public server returned 429 "daily message quota reached" to a Worker on its first message (shared egress IPs), so the course uses Discord or Slack webhooks instead. Those weren't tested.
 - The Wrangler paths (Astro and EmDash: `d1_databases`, `"ai": { "remote": true }`, `send_email`, `wrangler secret put`) follow the docs and weren't tested.
+
+The course hasn't been taken end to end as a student.
+
+## Build a drawing game course
+
+`courses/projects/build-a-drawing-game/` (#156, a pilot for #144) is inspired by Jilles Soeters's Clef Pictionary video. The course page embeds it with a raw HTML `<figure><video>` in `COURSE.md` (Astro passes raw HTML through; `.prose figure`, `video`, and `figcaption` styles are in `Layout.astro`). Jilles gave permission to rehost the video; his source code has no license yet, so the course links to it rather than copying it. Four-question interview (who it's for, what players draw, browser experience, phone or desktop), then build a canvas, add a decision model (the student's word list plus Clef-flash), draw and guess (rounds, a win rule, timeouts and late answers), and launch your game (guess on demand or live, server checks, a rate limit, logs, deploy). Always a new React + Vite app made with `cf init`, never Wrangler, and the browser code goes in `app/`, the Worker in `src/`.
+
+Media lives in the `cfdev-school-media` R2 bucket on the personal account, served at `https://media.cfdev.school` (a custom domain on the bucket, with a CORS rule allowing GET and HEAD from any origin so `<track>` captions load cross-origin). Keys are `courses/<course>/<file>`. Upload with `cf r2 objects put <key> --bucket-name cfdev-school-media --file <path> --content-type <type>`. The video is a 1080p H.264 transcode with `+faststart` of the 4K original, the captions are a `whisper-cli` (large-v3-turbo) transcript with model names fixed by hand. Keep video binaries out of git.
+
+Tested with `cf` v1.0.0-beta.12, `@cloudflare/vite-plugin` 2.0.0-beta.v.4, React 19.3, and Vite 8.3 (October 2026), locally and deployed to a throwaway `cfds-lab-drawing-game` Worker:
+
+- `cf init` makes a Vite project. Adding React: `react()` before `cloudflare()` in `vite.config.ts`, an `index.html` at the root, and `"dom"`/`"dom.iterable"` in `lib`, `"jsx": "react-jsx"`, and `app` in `include` in the one `tsconfig.json` (`skipLibCheck` makes the DOM and Workers types coexist). `cf dev`, `cf build`, `npm run typecheck`, and `cf deploy` all worked with no assets config: static files are served first and unmatched paths reach the Worker. `server: { host: true }` exposes `cf dev` to phones on the same network.
+- Clef-flash takes `images: ["data:image/png;base64,..."]`. With eight words: 256×256 and smaller cost 408 input tokens, 512×512 600, 1024×1024 1,368 (images are scaled up to about 256×256 and capped at 1,024 tokens, per the docs). Clear drawings scored 92 to 98%. An empty canvas still got a top guess (person 34%, `finished` 0.06); a "nothing" word fixed that (63%) but a random scribble still came out tree 24%, nothing 20%. Black lines on a transparent PNG got the same answer as an empty canvas.
+- `bindings.rateLimit({ namespace, simple: { limit, period } })` works locally and deployed; with a limit of 30, 29 of 45 parallel deployed requests got through. The docs advise against keying on IP addresses, so the course uses one shared key as a budget.
+- Workers Logs invocation events had no request bodies. `cf observability telemetry query --body '{..."view":"events"...}'` with a `$metadata.service` filter returns them.
+- Live guessing and real touch input weren't tested; mouse drawing was, with agent-browser.
 
 The course hasn't been taken end to end as a student.
 
