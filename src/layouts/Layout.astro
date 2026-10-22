@@ -202,6 +202,26 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
     line-height: 1rem;
   }
 
+  .prose figure {
+    margin: 0 0 1.5rem;
+  }
+
+  .prose video {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: #000;
+  }
+
+  .prose figcaption {
+    margin-top: 0.5rem;
+    color: var(--muted-fg);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
   .prose code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.9em;
