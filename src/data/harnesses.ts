@@ -248,7 +248,7 @@ export const harnesses: HarnessProfile[] = [
       oauthLogin:
         "codex mcp login cloudflare. Codex has gated OAuth login behind an rmcp client feature flag in the past; if login fails, check the current Codex MCP docs for that flag.",
       restartBehavior:
-        "No restart needed for the CLI: per the current docs it picks up MCP config changes automatically. The ChatGPT desktop app and IDE extension do need a restart (Restart / Restart extension) after saving.",
+        "The ChatGPT desktop app and IDE extension need a restart (Restart / Restart extension) after saving a server. The current docs don't say whether the CLI picks up config.toml changes without a restart (an earlier pass read them as saying it does, but 2026-10-22 couldn't confirm that); restart the CLI if the tools don't show up.",
     },
     skills: {
       supported: true,
@@ -289,7 +289,7 @@ export const harnesses: HarnessProfile[] = [
         toolUse: true,
         apiPricePerMTok: { input: 0.1, output: 0.5 },
         bestFor: "Focused, repeatable tasks at the lowest cost. The model for the Free and Go plans.",
-        notes: "GPT-5.5 retires from Codex on 2026-10-14; Free and Go users move to GPT-6 Luna.",
+        notes: "GPT-5.5 retired from Codex (ChatGPT sign-in) on 2026-10-14; Free and Go users moved to GPT-6 Luna. API-key sessions are unaffected.",
       },
     ],
     lastVerified: "2026-10-03",
@@ -320,7 +320,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://developers.openai.com/codex/mcp",
-        note: "codex mcp add --url / codex mcp login for streamable HTTP + OAuth. Redirects to learn.chatgpt.com (see above).",
+        note: "codex mcp add --url / codex mcp login for streamable HTTP + OAuth. Redirects to learn.chatgpt.com (see above). Re-checked 2026-10-22: restart is documented only for the desktop app and IDE extension; the CLI's behavior isn't stated, so restartBehavior no longer claims it needs none. No OAuth feature flag is mentioned in the current docs (`--oauth-client-registration cimd|dcr` exists).",
       },
       {
         url: "https://developers.openai.com/codex/auth.md",
@@ -332,7 +332,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://developers.openai.com/community/codex-for-oss",
-        note: "OpenAI's official endorsement of third-party harnesses using ChatGPT subscription auth for Codex models.",
+        note: "OpenAI's official endorsement of third-party harnesses using ChatGPT subscription auth for Codex models. Re-checked 2026-10-22: the page only says developers can use \"Codex, OpenCode, Cline, pi, OpenClaw, or something else\" in the open-source program; it has no explicit third-party-routing policy text, so the endorsement claim is unconfirmed beyond that.",
       },
       {
         url: "https://learn.chatgpt.com/docs/build-skills",
@@ -373,7 +373,7 @@ export const harnesses: HarnessProfile[] = [
         "~/.config/opencode/skills/, plus auto-loaded ~/.claude/skills/ and ~/.agents/skills/",
       restartBehavior:
         "Restart OpenCode. Skills are cached per instance with no file watcher (inferred from source, not documented).",
-      explicitInvocation: "/skill-name",
+      explicitInvocation: "/skill-name (the 2026-10-22 docs say a skill is exposed as a /name command when its metadata sets `opencode/slash: \"true\"`; the source showed every skill registered, so a skill may need that setting)",
     },
     subscriptionBilling: {
       supportsSubscriptionLogin: false,
@@ -398,7 +398,11 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://opencode.ai/docs/mcp-servers",
-        note: "Remote MCP servers (type remote), opencode mcp add/auth, automatic OAuth on 401.",
+        note: "Remote MCP servers (type remote), opencode mcp add/auth, automatic OAuth on 401. Re-checked 2026-10-22: config JSON and `opencode mcp auth` confirmed; the docs state no restart requirement either way, and `opencode mcp add` wasn't shown, so restartBehavior stays unconfirmed.",
+      },
+      {
+        url: "https://opencode.ai/docs/providers/",
+        note: "Checked 2026-10-22: ChatGPT Plus/Pro, GitHub Copilot, and GitLab Duo (Premium or Ultimate) logins supported; Claude Pro/Max \"Anthropic explicitly prohibits this\"; OpenCode Go is a low-cost plan with no price given. Skills docs list ~/.config/opencode/skills, ~/.claude/skills, and ~/.agents/skills.",
       },
       {
         url: "https://opencode.ai/docs/rules/",
@@ -481,7 +485,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/mcp.md",
-        note: "Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload. Re-checked 2026-10-03. Re-checked 2026-10-05: docs confirm locations, `pi mcp add --url`, /mcp for auth and /reload, but `pi mcp login` is not documented there (oauthLogin left unchanged, unconfirmed from the shell).",
+        note: "Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload. Re-checked 2026-10-03. Re-checked 2026-10-05: docs confirm locations, `pi mcp add --url`, /mcp for auth and /reload, but `pi mcp login` is not documented there (oauthLogin left unchanged, unconfirmed from the shell). Re-checked 2026-10-22: the page now lists `pi mcp add`, `login`, `list`, and `remove`, confirms both mcp.json locations and /reload.",
       },
       {
         url: "https://github.com/earendil-works/pi/releases",
@@ -489,7 +493,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/providers.md",
-        note: "Subscription provider list and the Claude Pro/Max extra-usage caveat.",
+        note: "Subscription provider list and the Claude Pro/Max extra-usage caveat. Re-checked 2026-10-22 at the earendil-works/pi copy: it lists Anthropic OAuth/API-key auth but states no Claude Pro/Max extra-usage caveat, and the Anthropic legal page only prohibits routing plan credentials for third-party developers, so countsAgainstPlan: false for Claude rests on the issue linked below and is unconfirmed.",
       },
       {
         url: "https://github.com/badlogic/pi-mono/issues/3372",
@@ -654,6 +658,30 @@ export const harnesses: HarnessProfile[] = [
     },
     models: [
       {
+        name: "Claude Opus 5.5",
+        contextWindowTokens: 1000000,
+        vision: true,
+        toolUse: true,
+        bestFor: "Anthropic's suggested starting point for long-running agentic coding and knowledge work. Switch with /model.",
+        notes: "Listed in GitHub's supported-models docs with a 1M context window in Copilot CLI (checked 2026-10-22). Copilot bills AI Credits rather than per-token API prices, and which plans include it wasn't confirmed.",
+      },
+      {
+        name: "Claude Sonnet 5.5",
+        contextWindowTokens: 1000000,
+        vision: true,
+        toolUse: true,
+        bestFor: "Anthropic's best combination of speed and intelligence, for everyday coding. Switch with /model.",
+        notes: "Listed with a 1M context window in Copilot CLI (checked 2026-10-22); plan availability not confirmed.",
+      },
+      {
+        name: "GPT-6.1 Sol",
+        contextWindowTokens: 1000000,
+        vision: true,
+        toolUse: true,
+        bestFor: "OpenAI's near-Astra performance for complex work at a lower cost. Switch with /model.",
+        notes: "Listed with a 1M context window in Copilot CLI (checked 2026-10-22); plan availability not confirmed.",
+      },
+      {
         name: "Claude Sonnet 4.5",
         contextWindowTokens: 200000,
         vision: true,
@@ -682,6 +710,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://docs.github.com/copilot/how-tos/copilot-cli/use-copilot-cli/overview",
         note: "Supported instruction file types (.github/copilot-instructions.md, AGENTS.md) and MCP server setup.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/reference/ai-models/supported-models",
+        note: "Checked 2026-10-22: Copilot CLI models with 1M context include Claude Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra and Luna, and Kimi K3. The page names no default model and no deprecations, so Sonnet 4.5 (200K, from the old README) wasn't removed but is unconfirmed; its context window wasn't rechecked. Availability depends on plan.",
       },
       {
         url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers",
