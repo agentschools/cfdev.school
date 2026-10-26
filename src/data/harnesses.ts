@@ -283,6 +283,15 @@ export const harnesses: HarnessProfile[] = [
         bestFor: "OpenAI's most capable model, for the hardest work across code, apps, and research.",
       },
       {
+        name: "GPT-6.1 Terra",
+        contextWindowTokens: 1050000,
+        vision: true,
+        toolUse: true,
+        apiPricePerMTok: { input: 1, output: 5 },
+        bestFor: "A fast, efficient model for clear writing, visual understanding, and computer use.",
+        notes: "Listed as a current Codex model on 2026-10-26; which plans include it wasn't confirmed.",
+      },
+      {
         name: "GPT-6 Luna",
         contextWindowTokens: 1050000,
         vision: true,
@@ -294,6 +303,10 @@ export const harnesses: HarnessProfile[] = [
     ],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://developers.openai.com/api/docs/models/gpt-6.1-terra",
+        note: "Verified 2026-10-26: GPT-6.1 Terra has a 1,050,000 context window, text and image input, $1/$5 per MTok. Codex's models page (learn.chatgpt.com/docs/models) now lists it alongside Astra, Sol, and Luna.",
+      },
       {
         url: "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
         note: "Verified 2026-10-13: 1,050,000 context window, text and image input, $2/$10 per MTok. Astra is $10/$50 and Luna $0.10/$0.50 on their own model pages, both 1,050,000 context.",
