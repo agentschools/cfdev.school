@@ -24,6 +24,12 @@ const collections = vi.hoisted(() => ({
       data: { name: "build-a-guestbook", description: "Build a guestbook." },
     },
     {
+      id: "sell-pixels-to-agents",
+      filePath: "courses/projects/sell-pixels-to-agents/COURSE.md",
+      body: "# Sell pixels to agents\n",
+      data: { name: "sell-pixels-to-agents", description: "Sell pixels with test USDC." },
+    },
+    {
       id: "build-a-drawing-game",
       filePath: "courses/projects/build-a-drawing-game/COURSE.md",
       body: "\n# Build a drawing game\n",
@@ -58,6 +64,7 @@ describe("getBuiltInCourses", () => {
       ["publish-a-website", "Publish a website"],
       ["run-a-blog-with-emdash", "Run a blog with EmDash"],
       ["build-a-guestbook", "Build a guestbook"],
+      ["sell-pixels-to-agents", "Sell pixels to agents"],
       ["build-a-drawing-game", "Build a drawing game"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
@@ -73,6 +80,7 @@ describe("getBuiltInCourses", () => {
       ["publish-a-website", "projects"],
       ["run-a-blog-with-emdash", "projects"],
       ["build-a-guestbook", "projects"],
+      ["sell-pixels-to-agents", "projects"],
       ["build-a-drawing-game", "projects"],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
@@ -111,7 +119,7 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, workers, , durableObjects] = courses;
+    const [agentSetup, publishAWebsite, , buildAGuestbook, sellPixelsToAgents, buildADrawingGame, workers, , durableObjects] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
@@ -123,7 +131,8 @@ describe("nextStep", () => {
       url: "/courses/run-a-blog-with-emdash",
       label: "Next course: Run a blog with EmDash →",
     });
-    expect(nextStep(courses, buildAGuestbook, buildAGuestbook.exercises.length - 1).url).toBe("/courses/build-a-drawing-game");
+    expect(nextStep(courses, buildAGuestbook, buildAGuestbook.exercises.length - 1).url).toBe("/courses/sell-pixels-to-agents");
+    expect(nextStep(courses, sellPixelsToAgents, sellPixelsToAgents.exercises.length - 1).url).toBe("/courses/build-a-drawing-game");
     // The last course in Projects doesn't continue into Fundamentals.
     expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses");
   });

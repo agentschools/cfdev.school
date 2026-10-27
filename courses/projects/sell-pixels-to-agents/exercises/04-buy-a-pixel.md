@@ -16,7 +16,9 @@ agent-instructions: |
      filter for v2, exact, expected USDC contract, expected payTo and a positive
      integer atomic amount <= cap. Reject empty results; never transform the
      advertised price. Convert the decimal cap using viem parseUnits(cap,6),
-     not floating point. The SDK default cap isn't the student's budget.
+     not floating point. Reject zero/negative caps and more than six decimal
+     places before parsing; don't let parseUnits round an invalid budget.
+     The SDK default cap isn't the student's budget.
   3. Bind the script to the chosen origin and exact route/body. Require HTTPS
      except localhost, redirect:"error" on EVERY request, and a bounded fetch
      timeout. Never follow resource URLs supplied in payment metadata.
@@ -25,8 +27,8 @@ agent-instructions: |
      signs again, no batch/retry loop, and no signed headers in logs. Save the
      non-secret authorization identity locally so lost responses can be queried.
      Use onAfterPaymentCreation to persist only network, asset, payer, nonce,
-  value and validity window before sending; never persist a signed header.
-  Restarting requires checking the previous purchase and a new explicit
+     value and validity window before sending; never persist a signed header.
+     Restarting requires checking the previous purchase and a new explicit
      budget decision. Multiple purchases need a persistent aggregate budget
      journal counting committed AND unresolved spend, not just a per-call cap.
   4. Test synthetic challenges with a signer spy before using the real key:
