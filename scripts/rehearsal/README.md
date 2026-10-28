@@ -9,7 +9,7 @@ This first milestone covers the **Build a drawing game interview only**. It capt
 - The Worker bundles and starts in local workerd. Service binding connects to the isolated school. No hosted deployment has been made.
 - Credential-free tests verify the request policy, canned student behavior, and actual Pi Durable SQLite reopen/submission deduplication with a **simulated model**.
 - The browser observer passed against the actual school Worker with explicitly **scripted interview/progress writes**. It captured the real prompt and checked WebSocket-driven completion and reload. This is an observer smoke test, not evidence that Sonnet taught the interview.
-- Live Sonnet execution is blocked on gateway access. Existing Wrangler OAuth verified the personal account, but listing its gateways returned HTTP 403 / Cloudflare 10000 Authentication error. No gateway was created, no credentials were created, no paid inference ran, and $0 of the $5 spike allowance has been used by this prototype.
+- Live Sonnet execution is still pending secure credential configuration. After explicit action-time approval, the dedicated gateway was created through the authenticated dashboard on the verified personal account. It has authentication enabled, cache/retries disabled, 4 requests/minute, a $3 sliding daily spend rule, Unified Billing allowed, and no configured provider keys. Existing account credit was $19.76; no top-up was made. The temporary token expires 2026-10-28 at 22:00 UTC. One initial token appeared in browser tool output and was promptly deleted (verified absent); its replacement was captured without printing the value. Computer-use access to Terminal was denied, so no credential file has been written and no alternate transfer route was attempted. The replacement token page is awaiting a user handoff. No paid inference ran; $0 of the $5 spike allowance has been used.
 
 ## Run the isolated school
 
@@ -48,12 +48,12 @@ The separately authorized ceiling for this individual spike is **$5 total gatewa
 2. Require gateway authentication, enable Unified Billing fallback, ensure there is no applicable default Anthropic BYOK key, and verify existing credit availability without purchasing credits or changing auto-top-up.
 3. Disable gateway retries and fallbacks; set a gateway-wide spend rule below the $5 ceiling (suggest $3 over the spike's window) and a low rate limit. Read back the settings. Gateway spend limits are eventually consistent and are **not** a hard dollar ceiling. Stop using this gateway after the spike; do not let a rolling window renew the allowance.
 4. Verify the exact model and current rates. On 2026-10-28 the official Cloudflare catalog and installed Pi catalog agreed on $2/M input, $10/M output, $0.20/M cache read and $2.50/M cache creation. No model substitution is allowed. Account-specific serving availability and billing have not been demonstrated by an inference call.
-5. Put only a separately authorized existing gateway token in ignored `scripts/rehearsal/.dev.vars` as `CF_AIG_TOKEN`. Set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_GATEWAY_ID`, and `UNIFIED_BILLING_CONFIRMED="true"` there after verifying steps 1-4. Do not put vendor credentials there. The confirmation flag is an operator attestation, not an API verification of billing.
+5. Put only the separately authorized temporary gateway token in a mode-0600 environment file **outside the repository**, such as `/tmp/cfds-rehearsal-secrets/rehearsal.env`, as `CF_AIG_TOKEN`. Set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_GATEWAY_ID`, and `UNIFIED_BILLING_CONFIRMED="true"` in that same external file after verifying steps 1-4. A local helper at `/tmp/cfds-rehearsal-secrets/save-token.py` is prepared for the user to run; it asks with a hidden prompt and creates the external file exclusively with mode 0600. The helper contains no credential. Do not put vendor credentials there. The confirmation flag is an operator attestation, not an API verification of billing.
 
 Then start the separate runner and observer:
 
 ```sh
-npx wrangler dev -c scripts/rehearsal/wrangler.jsonc --local --port 8790 --persist-to .rehearsal/pi-state
+npx wrangler dev -c scripts/rehearsal/wrangler.jsonc --env-file /tmp/cfds-rehearsal-secrets/rehearsal.env --local --port 8790 --persist-to .rehearsal/pi-state
 REHEARSAL_MODE=live npm run rehearsal:observe
 ```
 
