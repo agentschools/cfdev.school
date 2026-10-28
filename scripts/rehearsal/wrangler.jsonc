@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "cfds-rehearsal-pi",
+  "main": "worker.ts",
+  // Pinned to the newest date supported by this repo's Wrangler 4.128 workerd.
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "vars": { "REHEARSAL_LOCAL_ONLY": "true", "CLOUDFLARE_ACCOUNT_ID": "", "CLOUDFLARE_GATEWAY_ID": "", "UNIFIED_BILLING_CONFIRMED": "false" },
+  "durable_objects": { "bindings": [{ "name": "RUN", "class_name": "Rehearsal" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Rehearsal"] }],
+  "services": [{ "binding": "SCHOOL", "service": "cloudflare-dev-school-rehearsal" }],
+  "observability": { "enabled": true, "head_sampling_rate": 1 }
+}
