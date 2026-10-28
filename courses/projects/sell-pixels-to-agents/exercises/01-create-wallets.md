@@ -7,7 +7,10 @@ agent-instructions: |
   
   1. Ask for a short lowercase directory and Worker name based on the shop's
      name, and wait. Use cf cli search to check current commands, then
-     `cf init <name>`. This makes a Vite Worker. Install hono, viem, and all
+     `cf init <name>`. This makes a Vite Worker, but doesn't initialize Git.
+     If the new directory isn't already inside a Git repository, run
+     `git init` there; otherwise use the existing repository. Install hono,
+     viem, and all
      four x402 packages together: @x402/hono@2.28.0, @x402/core@2.28.0,
      @x402/evm@2.28.0, @x402/fetch@2.28.0. Keep the lockfile. Add an AGENTS.md
      recording the choices, cf commands, testnet-only rule, and disposable keys.
@@ -26,8 +29,11 @@ agent-instructions: |
      choose USDC and Base Sepolia, and paste the buyer's PUBLIC address.
      They handle login, challenges and terms themselves. Don't buy or bridge
      tokens, create provider accounts or fund with real money. Faucet limits
-     change: record the actual amount received rather than promising a fixed
-     allowance. If unavailable, report the funding blocker and leave incomplete.
+     change: the public page advertised 20 USDC per address/network every
+     two hours when checked, enough for 2000 penny pixels. It requires no
+     Circle account, but uses reCAPTCHA and links terms for the student to
+     review. Record the amount actually received; don't promise delivery.
+     If unavailable, report the funding blocker and leave incomplete.
   4. Verify https://x402.org/facilitator/supported includes version 2, exact,
      eip155:84532. Use a read-only viem public client on Base Sepolia to check
      the buyer's USDC balance against Circle's current contract list
