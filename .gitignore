@@ -24,3 +24,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# local course rehearsal state, secrets and artifacts
+.rehearsal/
+.dev.vars*
+!.dev.vars.example

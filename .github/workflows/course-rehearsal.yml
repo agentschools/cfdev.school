@@ -1,0 +1,92 @@
+name: Optional course rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Same-repository PR number
+        required: true
+        type: number
+      expected_sha:
+        description: Full expected PR head SHA (fails if it moved)
+        required: true
+        type: string
+      mode:
+        description: Credential-free observer check; simulated does not run Pi
+        type: choice
+        options: [observe-only, simulated]
+        default: observe-only
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: course-rehearsal-${{ inputs.pr }}
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: main
+          path: controller
+          persist-credentials: false
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+      - name: Resolve selected PR without interpolating inputs into shell code
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync } from 'node:fs';
+          const pr = process.env.PR_NUMBER;
+          if (!/^\d+$/.test(pr) || !/^[0-9a-f]{40}$/.test(process.env.EXPECTED_SHA)) throw new Error('Invalid PR or SHA');
+          const response = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/pulls/${pr}`, {headers: {Authorization: `Bearer ${process.env.GH_TOKEN}`}});
+          if (!response.ok) throw new Error(`PR lookup failed: ${response.status}`);
+          const data = await response.json();
+          if (data.head.repo.full_name !== process.env.GITHUB_REPOSITORY || data.head.sha !== process.env.EXPECTED_SHA) throw new Error('Fork or moved PR rejected');
+          appendFileSync(process.env.GITHUB_ENV, `TARGET_SHA=${data.head.sha}\n`);
+          JS
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          path: school
+          persist-credentials: false
+      - name: Install and build (no Cloudflare or inference secrets)
+        run: |
+          cd controller
+          npm ci --prefer-offline --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          cd ../school
+          npm ci --prefer-offline --no-audit --no-fund
+          npm run build
+          node ../controller/scripts/rehearsal/prepare.mjs
+        env:
+          WRANGLER_SEND_METRICS: "false"
+      - name: Isolated local school and browser observer
+        env:
+          REHEARSAL_MODE: ${{ inputs.mode }}
+          REHEARSAL_ARTIFACTS: ${{ github.workspace }}/artifacts
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          cd school
+          npx wrangler d1 migrations apply cloudflare-dev-school-rehearsal -c dist/server/rehearsal.wrangler.json --local --persist-to .rehearsal/state
+          npx wrangler dev -c dist/server/rehearsal.wrangler.json --local --port 8788 --local-upstream 127.0.0.1:8788 --persist-to .rehearsal/state > "$RUNNER_TEMP/school.log" 2>&1 &
+          school_pid=$!
+          trap 'kill "$school_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do curl --fail --silent http://127.0.0.1:8788/api/courses > /dev/null && break; sleep 1; done
+          cd ../controller
+          node scripts/rehearsal/observe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: course-rehearsal-${{ inputs.pr }}-${{ github.run_id }}
+          path: artifacts/
+          retention-days: 7

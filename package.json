@@ -20,7 +20,10 @@
     "verify:interview": "node scripts/fake-agent-interview.mjs",
     "verify:exercise": "node scripts/fake-agent-exercise.mjs",
     "verify:exercise-kv": "node scripts/fake-agent-exercise-kv.mjs",
-    "verify:external-course": "node scripts/fake-agent-external-course.mjs"
+    "verify:external-course": "node scripts/fake-agent-external-course.mjs",
+    "rehearsal:test": "node --test scripts/rehearsal/*.check.mjs",
+    "rehearsal:observe": "node scripts/rehearsal/observe.mjs",
+    "rehearsal:typecheck": "tsc -p scripts/rehearsal/tsconfig.json"
   },
   "dependencies": {
     "@agentschools/course-spec": "github:agentschools/course-spec#c6e731941f9a20157b7f80c6f81f1813965c3110",
@@ -34,10 +37,14 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260901.1",
+    "@earendil-works/chord": "1.4.0",
+    "@earendil-works/pi-ai": "1.4.0",
+    "@earendil-works/pi-durable": "1.4.0",
     "@eslint/js": "10.0.1",
     "eslint": "10.9.1",
     "eslint-plugin-astro": "3.1.0",
     "globals": "17.11.0",
+    "playwright": "1.58.2",
     "shiki": "4.4.3",
     "typescript-eslint": "8.69.0",
     "vitest": "4.1.11",

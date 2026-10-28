@@ -1,0 +1,2 @@
+# Only use an existing separately authorized gateway token. No vendor API key.
+CF_AIG_TOKEN=""
