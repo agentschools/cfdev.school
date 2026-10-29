@@ -1,6 +1,7 @@
 ---
 import { render } from "astro:content";
 import AgentPrompt from "../../../components/AgentPrompt.astro";
+import WebInterview from "../../../components/WebInterview.astro";
 import EnrollBanner from "../../../components/EnrollBanner.astro";
 import Layout from "../../../layouts/Layout.astro";
 import { coursePath } from "../../../data/courses";
@@ -72,6 +73,10 @@ const title = exercise?.title ?? "Exercise not found";
           <EnrollBanner id="exercise-enroll-nudge" />
 
           <AgentPrompt />
+
+          {exercise.slug === "interview" && ["agent-setup", "publish-a-website"].includes(course.name) && exercise.entry.data["interview-questions"] && (
+            <WebInterview course={course.name} title={course.title} questions={exercise.entry.data["interview-questions"]} />
+          )}
 
           <div class="prose">
             <Content />

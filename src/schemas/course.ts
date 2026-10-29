@@ -1,4 +1,9 @@
-import { courseFrontmatterSchema, courseNameSchema, exerciseSlugSchema } from "@agentschools/course-spec";
+import {
+  courseFrontmatterSchema,
+  courseNameSchema,
+  exerciseSlugSchema,
+  exerciseFrontmatterSchema as specExerciseFrontmatterSchema,
+} from "@agentschools/course-spec";
 import { z } from "zod";
 import { TRACKS } from "../data/courses";
 
@@ -16,14 +21,7 @@ import { TRACKS } from "../data/courses";
  * /api/students/{id}/courses.
  */
 
-export {
-  type CourseFrontmatter,
-  courseFrontmatterSchema,
-  courseNameSchema,
-  type ExerciseFrontmatter,
-  exerciseFrontmatterSchema,
-  exerciseSlugSchema,
-} from "@agentschools/course-spec";
+export { type CourseFrontmatter, courseFrontmatterSchema, courseNameSchema, exerciseSlugSchema } from "@agentschools/course-spec";
 
 const httpsUrlSchema = z.url({ protocol: /^https$/ });
 
@@ -36,6 +34,28 @@ export const courseRefSchema = z.union([courseNameSchema, httpsUrlSchema]).meta(
     'A built-in course\'s name, as GET /api/courses lists it, or the https URL of a course hosted elsewhere that you\'ve reported with PUT /api/students/{id}/courses. URLs are normalized (lowercase host, no trailing slash, ".git", query, or fragment), so any form of the same URL works.',
   example: "agent-setup",
 });
+
+/** A web interview question (#160): Dev School's own extension, not part of the COURSE.md format. */
+export const interviewQuestionSchema = z.strictObject({
+  question: z.string().min(1),
+  type: z.enum(["single", "multiple", "text"]),
+  choices: z.array(z.string().min(1)).min(1).optional(),
+  hint: z.string().min(1).optional(),
+}).refine((item) => item.type === "text" ? !item.choices : !!item.choices, {
+  message: "Choice questions need choices; text questions have none",
+});
+
+export type InterviewQuestion = z.infer<typeof interviewQuestionSchema>;
+
+/**
+ * Exercise file frontmatter for built-in courses: the shared schema plus
+ * `interview-questions`, which only Dev School's web interview reads. Still strict.
+ */
+export const exerciseFrontmatterSchema = specExerciseFrontmatterSchema.extend({
+  "interview-questions": z.array(interviewQuestionSchema).min(1).max(4).optional(),
+});
+
+export type ExerciseFrontmatter = z.infer<typeof exerciseFrontmatterSchema>;
 
 export const courseExerciseSchema = z.object({
   slug: exerciseSlugSchema,

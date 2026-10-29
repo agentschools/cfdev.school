@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optional interview explorations</title>
+<style>
+:root { color-scheme:light dark; --bg:light-dark(#fff,#131313); --fg:light-dark(#222,#eee); --muted:light-dark(#666,#aaa); --border:light-dark(#ddd,#333); --card:light-dark(#fafafa,#1b1b1b); --accent:#c94700; }
+*{box-sizing:border-box}body{font:16px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:32px}main{max-width:1280px;margin:auto}h1{font-size:28px}h2{font-size:20px}h3{font-size:22px;margin:0}p{margin:12px 0}.muted,small{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}.variant{border:1px solid var(--border);padding:24px;border-radius:12px}.prompt{border:2px solid var(--accent);border-left-width:6px;border-radius:8px;padding:16px;margin:24px 0;background:color-mix(in srgb,var(--accent) 5%,var(--bg))}.prompt code{white-space:pre-wrap;font-size:12px}.eyebrow{font:11px ui-monospace,monospace;letter-spacing:.08em}.button{display:inline-block;padding:10px 14px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--fg);text-decoration:none}.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px}.bar{height:5px;border-radius:4px;background:var(--border);margin:16px 0 24px}.bar:before{content:"";display:block;width:25%;height:100%;background:var(--accent)}.choice{display:block;padding:12px;border:1px solid var(--border);border-radius:7px;margin:8px 0}.choice.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--bg))}.row{display:flex;align-items:center;justify-content:space-between;gap:16px}details{border-block:1px solid var(--border);padding:16px 0}summary{cursor:pointer}textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:12px;color:var(--fg)}@media(max-width:800px){body{padding:20px}.grid{grid-template-columns:1fr}.variant{padding:16px}}
+</style>
+<main>
+<h1>A welcoming way to start, with your agent still first</h1>
+<p class="muted">Two draft layout explorations. Synthetic examples only. These sketches do not save answers or enroll anyone.</p>
+<div class="grid">
+<article class="variant">
+<h2>A · A visible invitation</h2><p class="muted">The working draft: easy to discover, then one short question at a time.</p>
+<h3>Interview</h3><p>Make this course yours.</p>
+<div class="eyebrow">COPY THIS PROMPT FOR YOUR AGENT</div>
+<div class="prompt"><code>I'm enrolled in Cloudflare Dev School as curious-student-1234
+
+Let's work on the "Agent setup" course together.
+
+Fetch /llms.txt for instructions.</code></div>
+<div class="card"><h3>Or answer here</h3><p>Four quick questions. Every one is optional.</p><small>Question 1 of 4</small><div class="bar"></div><h2>How much have you used AI coding agents like this one?</h2><div class="choice selected">◉ this is my first time</div><div class="choice">○ now and then</div><div class="choice">○ daily</div><p><small>In your own words (optional)</small></p><textarea rows="2" aria-label="Your own answer"></textarea><p><span class="button primary">Save and next</span> <span class="button">Skip</span></p><small>Saved steps are ready for your agent. Continue later anytime.</small></div>
+</article>
+<article class="variant">
+<h2>B · A quieter alternative</h2><p class="muted">A compact disclosure keeps attention on the agent. The optional form takes one more click to discover.</p>
+<h3>Interview</h3><p>Make this course yours.</p>
+<div class="eyebrow">COPY THIS PROMPT FOR YOUR AGENT</div>
+<div class="prompt"><code>I'm enrolled in Cloudflare Dev School as curious-student-1234
+
+Let's work on the "Agent setup" course together.
+
+Fetch /llms.txt for instructions.</code></div>
+<details><summary>Prefer to answer four quick questions here?</summary><p>Save a few answers, skip any, then continue with your agent. Uses the same four-step flow as A.</p><a class="button" href="http://localhost:8788/courses/agent-setup/interview">Try the working form</a></details>
+<p>Your agent tailors explanations to your experience, goals, and quiz preference. You can change these anytime.</p>
+<p class="muted">Both options share answers with the agent. Neither marks setup checks complete. A makes the invitation more visible; B reduces the page's visual weight.</p>
+</article>
+</div>
+</main>
+</html>

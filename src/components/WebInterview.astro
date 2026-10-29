@@ -1,0 +1,77 @@
+---
+import type { InterviewQuestion } from "../schemas/course";
+interface Props {
+  course: string;
+  title: string;
+  questions: InterviewQuestion[];
+}
+const { course, title, questions } = Astro.props;
+---
+<section class="web-interview" data-web-interview data-course={course} data-title={title}>
+  <h2>Make this course yours</h2>
+  <p class="invitation">Four quick questions to shape what comes next. Skip any, change them later, or answer in your agent.</p>
+  <p class="privacy invitation">Keep answers about your project. Anyone with your student ID can read or change them.</p>
+  <button type="button" data-interview-open>Answer here</button>
+  <p data-interview-status tabindex="-1" role="status" aria-live="polite"></p>
+  <form hidden>
+    <p data-interview-count></p>
+    <progress max={questions.length} value="0" aria-label="Interview progress"></progress>
+    {questions.map((item, index) => (
+      <fieldset data-step data-question={item.question} data-type={item.type} hidden>
+        <legend tabindex="-1">{item.question}</legend>
+        {item.hint && <p>{item.hint}</p>}
+        {item.type === "multiple" && <p>Pick any that fit, or add your own.</p>}
+        <div class="choices">
+          {item.choices?.map((choice) => (
+            <label class="choice">
+              <input type={item.type === "multiple" ? "checkbox" : "radio"} name={`question-${index}`} value={choice} />
+              <span>{choice}</span>
+            </label>
+          ))}
+        </div>
+        <label class="own-answer">
+          {item.type === "text" ? "Your answer" : "In your own words (optional)"}
+          <textarea rows="2" maxlength="2000" name={`text-${index}`} />
+        </label>
+        {course === "publish-a-website" && index === 0 && <button type="button" data-use-project hidden>Use your earlier project idea</button>}
+      </fieldset>
+    ))}
+    <div class="actions">
+      <button type="button" data-interview-back>Back</button>
+      <button type="submit" data-interview-next>Save and next</button>
+      <button type="button" data-interview-skip>Skip this question</button>
+    </div>
+    <button type="button" class="cancel" data-interview-cancel>Close and continue later</button>
+    <p class="privacy">Each step saves to your student ID. Keep it about your project: anyone with that ID can read or change answers. Your agent finishes any setup checks.</p>
+  </form>
+  <noscript>Use the agent prompt below to take the interview.</noscript>
+</section>
+
+<script>
+  import { initWebInterview } from "../lib/web-interview-client";
+  initWebInterview();
+</script>
+
+<style>
+  .web-interview { padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--card-bg); }
+  h2 { font-size: 1.35rem; margin: 0 0 .5rem; }
+  p { line-height: 1.5; }
+  .privacy { color: var(--muted-fg); font-size: .85rem; }
+  button { font: inherit; padding: .65rem .9rem; min-height: 44px; border: 1px solid var(--border); border-radius: .5rem; color: var(--fg); background: var(--bg); cursor: pointer; }
+  button[type="submit"], [data-interview-open] { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+  button:disabled { opacity: .6; cursor: wait; }
+  button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+  progress { width: 100%; accent-color: var(--accent); margin-bottom: 1.5rem; }
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  legend { font-weight: 600; font-size: 1.15rem; margin-bottom: .75rem; }
+  .choices { display: grid; gap: .6rem; }
+  .choice { display: flex; align-items: center; gap: .75rem; border: 1px solid var(--border); padding: .85rem; border-radius: .5rem; cursor: pointer; min-height: 44px; }
+  .choice:has(input:checked) { border-color: var(--accent-text); background: color-mix(in oklch, var(--accent) 10%, transparent); }
+  input { accent-color: var(--accent); flex-shrink: 0; }
+  .own-answer { display: block; font-size: .9rem; margin-top: 1rem; }
+  textarea { box-sizing: border-box; display: block; width: 100%; resize: vertical; margin: .5rem 0 1rem; padding: .75rem; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: .5rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+  .cancel { margin-top: .75rem; text-decoration: underline; border: 0; background: transparent; }
+  .web-interview:has(form:not([hidden])) > .invitation { display: none; }
+  [hidden] { display: none !important; }
+</style>

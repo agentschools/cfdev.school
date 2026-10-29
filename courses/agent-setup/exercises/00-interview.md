@@ -1,5 +1,18 @@
 ---
 description: "Personalize your learning experience by sharing a bit about your existing knowledge, your goals, and your preferred style of learning."
+interview-questions:
+  - question: "How much have you used AI coding agents like this one?"
+    type: single
+    choices: ["this is my first time", "now and then", "daily"]
+  - question: "Where have you deployed apps before? (pick any)"
+    type: multiple
+    choices: ["nowhere yet", "Vercel or Netlify", "AWS, Google Cloud, or Azure", "Cloudflare"]
+  - question: "What do you want to build or learn?"
+    type: text
+    hint: "A few words about a project or an idea are plenty."
+  - question: "Want a short quiz at the end of each exercise? (recommended, skippable anytime)"
+    type: single
+    choices: ["yes", "no"]
 agent-instructions: |
   This is the first exercise of the Agent setup course: a short
   interview. Ask all the questions at once, not one at a time, so the
@@ -10,8 +23,9 @@ agent-instructions: |
 
   Before asking anything, GET /api/students/{id}/interviews (fetch it
   alongside this file if you can). If Agent setup's interview is already
-  on file, show the student what's there and only ask the questions it
-  doesn't answer yet.
+  on file, use its answers without re-interviewing. Only ask missing
+  questions marked pending, and let the student correct anything. Web answers do not
+  mean the environment checks below have run: do those before completion.
 
   How to ask:
 
@@ -35,17 +49,14 @@ agent-instructions: |
     plain words. Don't include field names, their student ID, or notes
     about what you need.
 
-  The questions (every one is optional, if the student skips one, move on
-  without pushing):
-
-  1. "How much have you used AI coding agents like this one?" Choices:
-     this is my first time / now and then / daily.
-  2. "Where have you deployed apps before? (pick any)" Choices, multiple
-     allowed: nowhere yet / Vercel or Netlify / AWS, Google Cloud, or
-     Azure / Cloudflare.
-  3. "What do you want to build or learn?" Free text, one line is plenty.
-  4. "Want a short quiz at the end of each exercise? (recommended,
-     skippable anytime)" Choices: yes / no.
+  Use `interview-questions` above as the single source of question texts,
+  choices, hints, and answer types. Every question is optional. Preserve
+  free text even for choices, and multiple selections for `multiple`.
+  A pair with `pending: true` and answer [] is an unfinished web question:
+  ask it on resume, then remove `pending` when answered or explicitly skipped.
+  An answer of [] without `pending` is an explicit skip: don't ask it again.
+  Omitted questions in an older saved interview were skipped, not pending.
+  Preserve all other pairs when saving. For a new interview, ask all four.
 
   Use the first two answers only to adjust your tone, depth, and
   comparisons in later exercises (e.g. explain a Worker by comparison to a
@@ -71,10 +82,12 @@ agent-instructions: |
 
   Store the answers with PUT /api/students/{id}/interviews, with
   `"course": "agent-setup"`. Each response's `question` is the question's
-  text exactly as written above, so later agents recognize it, and its
+  text exactly as written in `interview-questions`, so later agents recognize
+  it, and its
   `answer` is the choice the student picked, an array of the choices they
   picked (or typed) for question 2, or their own words for question 3,
-  lightly trimmed. Leave out questions they skipped. Store the OS you
+  lightly trimmed. Leave out questions they skipped in chat; preserve any
+  explicit [] skips already on file. Store the OS you
   detected as a pair too, with the question "Which operating system are
   you on?" and an answer like "macOS", "Linux", or "Windows". Include a
   `summary`: one sentence addressed to the student covering their
@@ -113,13 +126,13 @@ agent-instructions: |
 
 In this exercise, your agent asks you a few quick questions so it can tailor the rest of the course to you: how much it explains, which examples it reaches for, and what it compares new ideas to.
 
-Your agent asks all the questions at once, and each one takes a few words to answer. Every question is optional. Skip any you'd rather not answer.
+Answer here in four short steps, or use your coding agent. Each question takes a few words to answer. Every question is optional. Skip any you'd rather not answer.
 
 ## What happens next
 
-Answer the questions in your coding-agent app. Your agent also runs read-only checks for your operating system, installed tools, Cloudflare login status, and an existing instructions file. These checks don't install tools or change your setup.
+You can save answers here and continue in your coding-agent app. Your agent reads your saved answers and runs read-only checks for your operating system, installed tools, Cloudflare login status, and an existing instructions file. These checks don't install tools or change your setup.
 
-Depending on your app and its permissions, you may see prompts to allow commands or web requests. Read what each prompt allows before approving it. Your agent needs access to this site's API to save your answers and mark the interview complete; if that access is waiting for permission, the save is still pending. Once saving succeeds, your homepage shows a summary of your answers and the interview is marked complete. Then you'll continue to Models.
+Depending on your app and its permissions, you may see prompts to allow commands or web requests. Read what each prompt allows before approving it. Your agent needs access to this site's API to save your answers and mark the interview complete; if that access is waiting for permission, the save is still pending. Once saving succeeds, your homepage shows a summary of your answers. After the checks, your agent marks the interview complete. Then you'll continue to Models.
 
 ## What gets saved
 
@@ -130,19 +143,19 @@ This is saved with your student ID so your agent can pick up where you left off 
 - What you want to build or learn, in your own words
 - Whether you want a short quiz at the end of each exercise
 - Your operating system, which your agent detects by itself so it can give you the right commands
-- A one-sentence summary of your answers, written by your agent and shown on the homepage
+- A short summary of your answers, shown on the homepage and updated when your agent finishes the interview
 - Which exercises you've completed
 - Which agent you used for each exercise, like Claude Code or Codex
 - Which model your agent was running, when it reports one
 
 Your agent also checks whether a few tools it needs are installed, like Node.js and the `cf` CLI. That isn't saved.
 
-## No personal information
+## Keep it about your project
 
-Cloudflare Dev School doesn't have accounts. Your student ID is a random name like `smooth-operator-4629`, not your name or email, and nothing above asks who you are. The one free-text answer, what you want to build, is the only place personal details could end up, so keep it about the project.
+Cloudflare Dev School doesn't have accounts. Your student ID is a random name like `smooth-operator-4629`, not your name or email, and nothing above asks who you are. Keep all answers about the project. Anyone who knows your student ID can read or change your answers; it is not a password-protected account.
 
 To clear your progress, or to forget your student ID in this browser, use the [Disenroll](/disenroll) page.
 
 ## Changing your answers
 
-You can change any answer at any time, in any exercise, just by telling your agent. For example: "turn off quizzes," "I've used AWS before, too," or "I want to focus on building APIs now." Nothing you say here locks you in.
+You can revisit this form or change any answer at any time by telling your agent. For example: "turn off quizzes," "I've used AWS before, too," or "I want to focus on building APIs now." Nothing you say here locks you in.

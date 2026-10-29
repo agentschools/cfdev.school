@@ -39,6 +39,10 @@ const title = course?.title ?? "Course not found";
 
           <AgentPrompt />
 
+          {["agent-setup", "publish-a-website"].includes(course.name) && (
+            <p>Or start with <a href={exercisePath(course.name, "interview")}>four quick questions here</a>, then continue with your agent.</p>
+          )}
+
           <div class="prose">
             <Content />
           </div>

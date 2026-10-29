@@ -42,7 +42,7 @@ beforeEach(async () => {
 function context(id: string, body?: unknown): APIContext {
   return {
     params: { id },
-    request: { json: async () => body } as unknown as Request,
+    request: new Request("http://localhost/api/interviews", { method: "PUT", body: JSON.stringify(body) }),
   } as unknown as APIContext;
 }
 
@@ -152,5 +152,52 @@ describe("PUT /api/students/{id}/interviews", () => {
     const courses = state.broadcasts[1].progress.courses;
     expect(courses.find((course) => course.name === "agent-setup")?.interviewSummary).toBe("Quizzes off.");
     expect(courses.find((course) => course.name === "workers")?.interviewSummary).toBeUndefined();
+  });
+});
+
+describe("web form conditional saves", () => {
+  async function conditional(body: unknown, headers: Record<string, string>): Promise<Response> {
+    const { PUT } = await import("./interviews");
+    const ctx = context(STUDENT);
+    ctx.request = new Request("http://localhost/api/interviews", { method: "PUT", headers, body: JSON.stringify(body) });
+    return PUT(ctx);
+  }
+
+  it("creates once, rejects repeated creation, and never marks an exercise complete", async () => {
+    const partial = { ...agentSetup, responses: [...agentSetup.responses, { question: "Goal", answer: [], pending: true }] };
+    const first = await conditional(partial, { "If-None-Match": "*" });
+    expect((await get(STUDENT)).body.interviews[0].responses.at(-1)).toEqual({ question: "Goal", answer: [], pending: true });
+    expect(first.status).toBe(200);
+    expect(first.headers.get("Cache-Control")).toBe("no-store");
+    expect((await conditional({ ...agentSetup, summary: "stale" }, { "If-None-Match": "*" })).status).toBe(412);
+    expect((await get(STUDENT)).body.interviews[0].summary).toBe(agentSetup.summary);
+    expect(await state.db.prepare("SELECT COUNT(*) AS n FROM course_exercise_completions").first()).toEqual({ n: 0 });
+    expect(state.broadcasts).toHaveLength(1);
+  });
+
+  it("preserves explicit skips and detected context, rejects stale edits after agent saves", async () => {
+    const first = await put(STUDENT, agentSetup);
+    const timestamp = first.body.interviews[0].updatedAt;
+    const changed = { ...agentSetup, responses: [...agentSetup.responses, { question: "Goal", answer: [] }] };
+    const response = await conditional(changed, { "If-Match": `"${timestamp}"` });
+    expect(response.status).toBe(200);
+    const data = await response.json() as Interviews;
+    const saved = data.interviews[0];
+    expect(saved.responses.at(-1)).toEqual({ question: "Goal", answer: [] });
+    expect(saved.responses).toContainEqual({ question: "Which operating system are you on?", answer: "macOS" });
+    expect(saved.updatedAt > timestamp).toBe(true);
+    await put(STUDENT, { ...agentSetup, summary: "Changed by your agent" });
+    expect((await conditional(changed, { "If-Match": `"${saved.updatedAt}"` })).status).toBe(412);
+    expect((await get(STUDENT)).body.interviews[0].summary).toBe("Changed by your agent");
+  });
+
+  it("rejects an update to a missing interview and leaves other students untouched", async () => {
+    expect((await conditional(agentSetup, { "If-Match": '"2026-10-01T00:00:00.000Z"' })).status).toBe(412);
+    await state.db.prepare("INSERT INTO students (id, created_at) VALUES (?, ?)").bind("other-student-1111", "2026-10-01T00:00:00.000Z").run();
+    await put("other-student-1111", agentSetup);
+    await conditional({ ...agentSetup, responses: [] }, { "If-None-Match": "*" });
+    expect((await get("other-student-1111")).body.interviews[0].responses).toEqual(agentSetup.responses);
+    const { GET } = await import("./interviews");
+    expect((await GET(context(STUDENT))).headers.get("Cache-Control")).toBe("no-store");
   });
 });
