@@ -145,10 +145,10 @@ export const harnesses: HarnessProfile[] = [
       thirdPartyRoutingHonorsPlanLimits: true,
       headline: "Included with Claude Pro ($20/month) and Max plans.",
       plans: [
-        { plan: "Claude Pro or Max", signIn: true, countsAgainstPlan: true, notes: "Fable models can bill usage credits instead of the plan's limits, depending on plan; Claude Code asks first." },
+        { plan: "Claude Pro, Max, or Ultra", signIn: true, countsAgainstPlan: true, notes: "Fable models can bill usage credits instead of the plan's limits, depending on plan; Claude Code asks first." },
       ],
       summary:
-        "Native first-party harness. Pro ($20/mo), Max 5x ($100/mo) and Max 20x ($200/mo) plans all cover Claude Code directly against the same usage pool as claude.ai. An ANTHROPIC_API_KEY in the environment overrides subscription login and switches to per-token API billing. Anthropic explicitly prohibits OTHER third-party harnesses from routing through a Claude Pro/Max login on Claude Code's behalf; this only applies to Claude Code itself.",
+        "Native first-party harness. Pro ($20/mo), Max ($100/mo, 5x Pro usage) and Ultra ($200/mo, 10x Pro weekly usage; Anthropic's pricing page now lists it where Max 20x used to be) plans all cover Claude Code directly against the same usage pool as claude.ai. An ANTHROPIC_API_KEY in the environment overrides subscription login and switches to per-token API billing. Anthropic explicitly prohibits OTHER third-party harnesses from routing through a Claude Pro/Max login on Claude Code's behalf; this only applies to Claude Code itself.",
     },
     models: [
       {
@@ -212,6 +212,14 @@ export const harnesses: HarnessProfile[] = [
         note: "Checked 2026-10-05: Pro $20/mo, Max 5x $100/mo, Claude Code included in all paid plans. The fetched page text showed Max 20x as $100, which looks like an extraction error; secondary sources say $200. Max 20x $200 is not confirmed on an official page.",
       },
       {
+        url: "https://claude.com/pricing",
+        note: "Checked 2026-10-30: Pro $20/mo ($17 annual), Max $100/mo (5x Pro), Ultra $200/mo (10x Pro weekly, no 5-hour limit); Claude Code included in all paid plans. Ultra appears to replace Max 20x; the legal page below also lists \"Free, Pro, Max, and Ultra\" plans.",
+      },
+      {
+        url: "https://code.claude.com/docs/en/legal-and-compliance",
+        note: "Re-checked 2026-10-30: Anthropic still doesn't permit third-party developers to route requests through Free, Pro, Max, or Ultra plan credentials.",
+      },
+      {
         url: "https://support.claude.com/en/articles/11145838-use-claude-code-with-your-pro-or-max-plan",
         note: "Pro/Max plan coverage, API key precedence, opting out of API credits.",
       },
@@ -248,7 +256,7 @@ export const harnesses: HarnessProfile[] = [
       oauthLogin:
         "codex mcp login cloudflare. Codex has gated OAuth login behind an rmcp client feature flag in the past; if login fails, check the current Codex MCP docs for that flag.",
       restartBehavior:
-        "The ChatGPT desktop app and IDE extension need a restart (Restart / Restart extension) after saving a server. The current docs don't say whether the CLI picks up config.toml changes without a restart (an earlier pass read them as saying it does, but 2026-10-22 couldn't confirm that); restart the CLI if the tools don't show up.",
+        "Restart Codex after adding or changing a server: the current MCP docs (checked 2026-10-30) say to restart your Codex client for changes to take effect after adding or modifying servers via the CLI, and the ChatGPT desktop app and IDE extension need a restart (Restart / Restart extension) too.",
     },
     skills: {
       supported: true,
@@ -289,7 +297,7 @@ export const harnesses: HarnessProfile[] = [
         toolUse: true,
         apiPricePerMTok: { input: 1, output: 5 },
         bestFor: "A fast, efficient model for clear writing, visual understanding, and computer use.",
-        notes: "Listed as a current Codex model on 2026-10-26; which plans include it wasn't confirmed.",
+        notes: "Listed as a current Codex model. Per Codex's models page (2026-10-30), Astra, Sol, and Terra are available across most paid plans.",
       },
       {
         name: "GPT-6 Luna",
@@ -303,6 +311,18 @@ export const harnesses: HarnessProfile[] = [
     ],
     lastVerified: "2026-10-03",
     sources: [
+      {
+        url: "https://learn.chatgpt.com/docs/models",
+        note: "Re-checked 2026-10-30: recommended models Astra, GPT-6.1 Sol, GPT-6.1 Terra, GPT-6 Luna (Luna: \"most efficient model for focused, high-volume tasks\"); Astra, Sol, Terra on most paid plans, Luna varies by plan. GPT-5.5 retired from Codex 2026-10-14.",
+      },
+      {
+        url: "https://learn.chatgpt.com/docs/pricing",
+        note: "Checked 2026-10-30: Free $0, Go $8, Plus $20, Pro from $100 ($100, $200, or $500 tiers), Business $20/user/month; Codex included.",
+      },
+      {
+        url: "https://learn.chatgpt.com/docs/extend/mcp?surface=cli",
+        note: "Checked 2026-10-30: docs say to restart the Codex client after adding or modifying MCP servers via the CLI (supersedes the 2026-10-05 reading).",
+      },
       {
         url: "https://developers.openai.com/api/docs/models/gpt-6.1-terra",
         note: "Verified 2026-10-26: GPT-6.1 Terra has a 1,050,000 context window, text and image input, $1/$5 per MTok. Codex's models page (learn.chatgpt.com/docs/models) now lists it alongside Astra, Sol, and Luna.",
@@ -393,7 +413,7 @@ export const harnesses: HarnessProfile[] = [
       thirdPartyRoutingHonorsPlanLimits: false,
       headline: "Free and open source. Sign in with ChatGPT, GitHub Copilot, or GitLab Duo, or use an API key.",
       plans: [
-        { plan: "Claude Pro or Max", signIn: false, countsAgainstPlan: null, notes: "Anthropic prohibits it; OpenCode removed the plugins that did it in 1.3.0." },
+        { plan: "Claude Pro, Max, or Ultra", signIn: false, countsAgainstPlan: null, notes: "Anthropic prohibits it; OpenCode removed the plugins that did it in 1.3.0." },
         { plan: "ChatGPT Plus or Pro", signIn: true, countsAgainstPlan: true },
         { plan: "GitHub Copilot", signIn: true, countsAgainstPlan: null, notes: "Supported; how usage counts against the Copilot plan wasn't verified." },
         { plan: "GitLab Duo", signIn: true, countsAgainstPlan: null, notes: "Supported; how usage counts against the Duo plan wasn't verified." },
@@ -482,7 +502,7 @@ export const harnesses: HarnessProfile[] = [
       headline: "Free and open source. Sign in with ChatGPT, GitHub Copilot, or xAI, or use an API key.",
       plans: [
         { plan: "ChatGPT Plus or Pro", signIn: true, countsAgainstPlan: true },
-        { plan: "Claude Pro or Max", signIn: true, countsAgainstPlan: false, notes: "Since April 2026 it draws from Anthropic's pay-per-token extra usage, not the plan's limits." },
+        { plan: "Claude Pro, Max, or Ultra", signIn: true, countsAgainstPlan: false, notes: "Since April 2026 it draws from Anthropic's pay-per-token extra usage, not the plan's limits." },
         { plan: "GitHub Copilot", signIn: true, countsAgainstPlan: null },
         { plan: "xAI", signIn: true, countsAgainstPlan: null },
       ],
@@ -695,11 +715,20 @@ export const harnesses: HarnessProfile[] = [
         notes: "Listed with a 1M context window in Copilot CLI (checked 2026-10-22); plan availability not confirmed.",
       },
       {
-        name: "Claude Sonnet 4.5",
-        contextWindowTokens: 200000,
+        name: "Claude Fable 5.1",
+        contextWindowTokens: 1000000,
         vision: true,
         toolUse: true,
-        notes: "Default Copilot CLI model per the repo README as of 2026-10-03, but the README may be stale: the GitHub changelog shows newer models (Claude Fable 5.1, GPT-6.1 Sol) added in September 2026 and some models deprecated on 2026-09-01. Could not confirm the current default; switch with the /model slash command.",
+        bestFor: "Anthropic's pick for demanding reasoning and long-horizon agentic work. Switch with /model.",
+        notes: "Listed in GitHub's supported-models docs for Copilot CLI (checked 2026-10-30). The 1M context figure comes from the 2026-10-22 check; the page only says 1M context is available in VS Code and Copilot CLI. Plan availability not confirmed.",
+      },
+      {
+        name: "Claude Haiku 5.5",
+        contextWindowTokens: 1000000,
+        vision: true,
+        toolUse: true,
+        bestFor: "Anthropic's fastest model, for high-volume, latency-sensitive tasks such as classification, extraction, and routing. Switch with /model.",
+        notes: "Listed in GitHub's supported-models docs for Copilot CLI (checked 2026-10-30). The 1M context figure comes from the 2026-10-22 check. Plan availability not confirmed.",
       },
     ],
     lastVerified: "2026-10-03",
@@ -727,6 +756,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://docs.github.com/en/copilot/reference/ai-models/supported-models",
         note: "Checked 2026-10-22: Copilot CLI models with 1M context include Claude Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra and Luna, and Kimi K3. The page names no default model and no deprecations, so Sonnet 4.5 (200K, from the old README) wasn't removed but is unconfirmed; its context window wasn't rechecked. Availability depends on plan.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/reference/ai-models/supported-models",
+        note: "Re-checked 2026-10-30: Copilot CLI models include Claude Haiku 4.5/5.5, Opus 4.8/5/5.5, Sonnet 4.6/5/5.5, Fable 5/5.1, GPT-6 Astra/Luna/Sol, GPT-6.1 Sol/Terra, Gemini, Grok 4.5 to 4.7, Kimi K3. Claude Sonnet 4.5 is no longer listed, so it was removed from models. Auto model selection names GPT-5.3-Codex as the long-term-support fallback; no explicit default model is stated. 1M context is available in VS Code and Copilot CLI only.",
       },
       {
         url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers",
