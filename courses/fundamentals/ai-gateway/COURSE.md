@@ -19,11 +19,6 @@ metadata:
 
 When an application calls an AI model directly, you're flying blind. Requests go straight from your code to a provider, and it's hard to answer basic questions: which feature or team is running up the bill, how often users ask the exact same question, what happens when a model slows down or errors out, or whether someone just pasted a credit card number or a prompt injection into your chat box.
 
-[Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/) sits between your application and the models it calls — whether those models run on [Workers AI](https://developers.cloudflare.com/workers-ai/), OpenAI, Anthropic, Google, or another provider. Pointing your requests through a gateway takes one option on the Workers AI binding (or one base URL change in an SDK), and gives you a single place to observe and control every request without rewriting your app.
+[Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/) sits between your application and the models it calls, whether those models run on [Workers AI](https://developers.cloudflare.com/workers-ai/), OpenAI, Anthropic, Google, or another provider. Pointing your requests through a gateway takes one option on the Workers AI binding (or one base URL change in an SDK), and gives you a single place to observe and control every request without rewriting your app.
 
-In this course, you'll build one small Worker and layer four controls onto its AI traffic in under 30 minutes:
-
-- **See every request:** route model calls through a gateway, attach server-side metadata (`user`, `team`), and inspect tokens, latency, and cost in the live logs.
-- **Cache and rate limit:** serve repeat questions straight from the gateway's cache for `$0` and cap how many requests a minute the gateway accepts.
-- **Route and fall back:** move model choice out of your code and into a named dynamic route that picks models by team, falls back on failure, and updates without redeploying your Worker.
-- **Block bad prompts:** stop prompt injections and sensitive data at the gateway with Guardrails and DLP before they ever reach a model.
+Every exercise in this course builds on the same Worker, and your agent checks each step itself before marking it complete.

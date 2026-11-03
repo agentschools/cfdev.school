@@ -62,11 +62,6 @@ agent-instructions: |
 
 # Interview
 
-Before you start, your agent asks you four quick questions:
+Your agent asks you a few questions before the course starts: what you've built with AI models so far, which providers you care about, and whether you want the short demo clips shown as you go. Your answers set how much it explains and which examples it uses.
 
-1. Whether you've called AI models from an app or used an AI gateway before.
-2. Which model providers you mostly use or want to use (the hands-on exercises use Workers AI so you don't need external API keys, and your agent will show how your preferred providers plug into the same gateway).
-3. What you care most about when running AI in production: cost visibility, caching and rate limits, model routing and fallbacks, or blocking prompt injection and sensitive data.
-4. How you want to use the short (under two-minute) demo clips in each exercise — opened or previewed right in your agent session, linked lightly, or skipped altogether.
-
-All four questions are optional, and you can change your answers at any time just by telling your agent.
+They're optional, and you can change your answers later just by telling your agent.

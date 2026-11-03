@@ -18,7 +18,7 @@ agent-instructions: |
      - Send the exact same prompt twice with `skipCache: false` (wait ~3 seconds between them so the cache write finishes), and a third time with `skipCache: true`.
      - Check `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` and show the student that the second request has `"cached": true` (and much lower duration / zero model cost), while the `skipCache: true` request went back to the model (`"cached": false`).
   5. Rate limiting:
-     - Explain the difference between a `fixed` window (resets on the clock) and a `sliding` window (counts the last N seconds whenever a request arrives).
+     - Explain the difference between a `fixed` window (resets on the clock) and a `sliding` window (counts the last N seconds whenever a request arrives), and how request rate limits differ from dollar spend limits (which can be scoped by metadata keys like `team` or `agent_id`).
      - Set a tight sliding rate limit on the gateway to see it enforce a ceiling: `cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl <ttl> --cache-invalidate-on-update true --rate-limiting-interval 60 --rate-limiting-limit 2 --rate-limiting-technique sliding`. Wait ~15-30 seconds for the setting to propagate.
      - Send 3 to 4 distinct prompts (or pass `skipCache: true`) in quick succession until the gateway rejects a request with a rate-limit error (HTTP 429 / rate limit exceeded).
      - Immediately reset the rate limit to `0` (disabled) or a high limit (`--rate-limiting-interval 0 --rate-limiting-limit 0`) and `--cache-ttl 0` so the next exercise's routing tests always reach the models.
@@ -39,11 +39,19 @@ agent-instructions: |
 <figcaption>Serving repeat prompts from the AI Gateway cache and capping request volume with rate limits. <a href="/media/courses/ai-gateway/cache-and-rate-limit.mp4">Direct video link</a></figcaption>
 </figure>
 
-The cheapest, fastest model call is the one you don't have to make. And any AI endpoint on the internet needs a ceiling so a runaway loop or traffic spike doesn't burn through your quota. In this exercise you'll turn on exact-match response caching and request rate limiting on your gateway.
+The cheapest, fastest model call is the one you don't have to make. And any AI endpoint on the internet needs a ceiling so a runaway loop or traffic spike doesn't burn through your quota.
+
+## What you'll build
+
+Exact-match [response caching](https://developers.cloudflare.com/ai-gateway/features/caching/) and per-request `skipCache` support on your gateway, followed by a [request rate limit](https://developers.cloudflare.com/ai-gateway/features/rate-limiting/) that stops a burst of calls with `429 Too Many Requests`.
+
+## Prerequisites
+
+- You've completed [See every request](/courses/ai-gateway/see-every-request) and still have that Worker and gateway.
 
 ## Exact-match caching
 
-When [caching](https://developers.cloudflare.com/ai-gateway/features/caching/) is enabled on your gateway (or per call with `cacheTtl`), AI Gateway hashes the provider, model, and request body. If an identical request arrives before the TTL expires, the gateway returns the stored response immediately without calling the model provider:
+When caching is enabled on your gateway (or per call with `cacheTtl`), AI Gateway hashes the provider, model, and request body. If an identical request arrives before the TTL expires, the gateway returns the stored response immediately without calling the model provider:
 
 ```ts title="src/index.ts"
 const result = await env.AI.run(
@@ -60,17 +68,10 @@ const result = await env.AI.run(
 );
 ```
 
-Because the default cache key matches on the request body and **not** on `metadata`, two different users sending the exact same prompt will share a cached answer. That's ideal for shared questions (like documentation search or FAQs). For personalized prompts, either pass `skipCache: true` or set a custom `cacheKey` that includes the user or tenant ID.
-
-## Request rate limits vs. spend limits
-
-Right below caching in your gateway configuration are two traffic controls:
-
-- **[Rate limiting](https://developers.cloudflare.com/ai-gateway/features/rate-limiting/):** caps the **number of requests** the gateway accepts in a time window (for example, 60 requests per 60 seconds) and returns `429 Too Many Requests` above it. A `fixed` window resets on the clock; a `sliding` window counts the trailing window whenever a request arrives.
-- **[Spend limits](https://developers.cloudflare.com/ai-gateway/features/spend-limits/):** caps **dollars spent** over a time window, and can be scoped or split by metadata keys like `team`, `user`, or `agent_id` so one runaway agent hits a `429` without slowing anyone else down.
+Because the default cache key matches on the request body and **not** on `metadata`, two different users sending the exact same prompt will share a cached answer. That's ideal for shared questions like documentation search or FAQs. For personalized prompts, pass `skipCache: true` or set a custom `cacheKey` that includes the user ID.
 
 ## Why it matters
 
 - **Zero model cost on repeats:** a cache hit doesn't call the upstream model, so it costs `$0` in model tokens and returns in tens of milliseconds instead of seconds.
-- **Per-request escape hatch:** your gateway can cache by default while your code opts out on sensitive or time-sensitive calls with `skipCache: true`.
-- **One switch for traffic spikes:** rate limits stop loops at the gateway before they reach your model provider.
+- **Per-request escape hatch:** your gateway can cache by default while your code opts out on personalized or time-sensitive calls with `skipCache: true`.
+- **Two kinds of ceilings:** request rate limits cap how many requests a minute the gateway accepts (`fixed` or `sliding` window), while [spend limits](https://developers.cloudflare.com/ai-gateway/features/spend-limits/) cap dollars spent and can be scoped to a `team`, `user`, or `agent_id` in metadata.

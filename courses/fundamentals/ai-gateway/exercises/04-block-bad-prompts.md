@@ -3,7 +3,7 @@ description: "Stop prompt injections and sensitive data at the gateway with Guar
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  This builds on the gateway and Worker from "route-and-fall-back"; check GET /api/progress/{studentId} first. Notice that this exercise requires zero changes to the Worker's code: security policies attach directly to the gateway.
+  This builds on the gateway and Worker from "route-and-fall-back"; check GET /api/progress/{studentId} first. Notice that this exercise requires zero changes to the Worker's routing logic: security policies attach directly to the gateway.
 
   1. Video clip (check question 4 of the `ai-gateway` interview):
      - If they chose "show me the clips as we go": share `<origin>/media/courses/ai-gateway/block-bad-prompts.mp4`. Open `<origin>/courses/ai-gateway/block-bad-prompts` in your browser panel if you have one, or render `[![Watch the demo clip](<origin>/media/courses/ai-gateway/block-bad-prompts-poster.jpg)](<origin>/media/courses/ai-gateway/block-bad-prompts.mp4)` and offer to open it in their browser. Tell them what to watch for: the difference between DLP (looks for sensitive data like credit card numbers) and Guardrails (looks for harmful intent like prompt injection), turning on prompt-injection blocking with one switch, and seeing the gateway block an attack with HTTP 424 and zero model tokens.
@@ -44,31 +44,25 @@ agent-instructions: |
 
 When users can type into your AI application, you don't control what they paste. Customers accidentally paste credit card numbers into support chats, and attackers intentionally send prompt injections to hijack what your assistant does.
 
-If you try to enforce security inside every application, one service eventually forgets a check — and if you rely on the model itself to refuse a prompt injection, your security changes every time you swap models in a dynamic route. Putting those checks in [AI Gateway](https://developers.cloudflare.com/ai-gateway/) applies the same policy to every request before it ever reaches a model.
+## What you'll build
+
+Prompt-injection protection on your gateway using [Guardrails](https://developers.cloudflare.com/ai-gateway/features/guardrails/). You'll send both a normal prompt and a prompt-injection attempt through your Worker, and confirm in the gateway logs that the attack is stopped before it ever reaches a model.
+
+## Prerequisites
+
+- You've completed [Route and fall back](/courses/ai-gateway/route-and-fall-back) and still have that Worker and gateway.
 
 ## DLP looks for data, Guardrails looks for intent
 
 AI Gateway gives you two complementary controls on the request and response path:
 
-- **[Data Loss Prevention (DLP)](https://developers.cloudflare.com/ai-gateway/features/dlp/):** scans text against detection profiles — such as *Financial Information* (credit card numbers) or *Social / Insurance / National Identifier Numbers* — and either **Flags** or **Blocks** a match. A blocked request is stopped before it leaves Cloudflare for an external model provider.
+- **[Data Loss Prevention (DLP)](https://developers.cloudflare.com/ai-gateway/features/dlp/):** scans text against detection profiles, such as *Financial Information* (credit card numbers) or *National Identifier Numbers*, and either **Flags** or **Blocks** a match before it reaches a model provider.
 - **[Guardrails](https://developers.cloudflare.com/ai-gateway/features/guardrails/):** evaluates prompts and responses with dedicated safety models on Workers AI — Prompt Guard (`P1`) for prompt injection and jailbreak attempts, and Llama Guard (`S1`–`S13`) for harmful content categories — and either **Flags** or **Blocks** matching requests.
 
-## Turning on prompt-injection blocking
-
-You can enable Guardrails in the dashboard under your gateway's **Firewall / Guardrails** tab, or with a single `cf ai-gateway gateways update` command that sets `P1` (Prompt Injection) to `BLOCK` on incoming prompts:
-
-```sh
-cf ai-gateway gateways update dev-school-gateway \
-  --body '{"collect_logs":true,"cache_ttl":0,"cache_invalidate_on_update":true,"rate_limiting_interval":0,"rate_limiting_limit":0,"rate_limiting_technique":"sliding","guardrails":{"prompt":{"P1":"BLOCK"},"response":{}}}'
-```
-
-When a prompt-injection attempt arrives:
-
-1. Guardrails evaluates the prompt first and blocks it (`Prompt blocked due to security configurations`, HTTP `424`).
-2. Your dynamic route never resolves and the upstream model is never called — the gateway log records `guardrails.prompt.P1: "BLOCK"`, `0` model tokens, and `$0` model cost.
+When Guardrails blocks a prompt injection, your dynamic route never resolves and the upstream model is never called: the gateway returns HTTP `424` (`Prompt blocked due to security configurations`) and logs `0` model tokens and `$0` model cost.
 
 ## Why it matters
 
-- **Zero code changes:** turning on Guardrails or a DLP policy is a gateway change, not an application deployment.
-- **Model-independent defense:** whether your dynamic route sends a request to Llama, Granite, OpenAI, or Anthropic, every prompt passes through the same check first.
-- **Privacy in logs when you need it:** if your app handles regulated data and shouldn't store raw prompt text in gateway logs, passing `collectLog: false` (or the `cf-aig-collect-log-payload: false` header) keeps *who* sent the request, the model, and the cost without storing *what* was sent.
+- **Zero code changes:** turning on Guardrails or a DLP policy is a gateway setting, not an application deployment. If you try to build security checks into every app separately, one service eventually forgets.
+- **Model-independent defense:** some models refuse a prompt injection on their own and others don't. Checking prompts at the gateway means your security stays consistent even when you swap models in a dynamic route.
+- **Keep who sent it, not what they sent:** if your app handles regulated data and shouldn't store prompt text in gateway logs, setting `collectLog: false` (or `cf-aig-collect-log-payload: false`) keeps the metadata, model, and cost in the log without storing the request or response body.

@@ -40,7 +40,19 @@ agent-instructions: |
 <figcaption>Routing a model request through AI Gateway and inspecting its log and metadata. <a href="/media/courses/ai-gateway/see-every-request.mp4">Direct video link</a></figcaption>
 </figure>
 
-Before you can control your AI traffic, you need to see it. In this exercise you'll create an [AI Gateway](https://developers.cloudflare.com/ai-gateway/), route a Worker's model calls through it, tag each request with who sent it, and inspect the resulting logs.
+Before you can control your AI traffic, you need to see it. When your app calls a model directly, those requests don't leave a central trail of who asked, how long the model took, or what it cost.
+
+## What you'll build
+
+An [AI Gateway](https://developers.cloudflare.com/ai-gateway/) in your Cloudflare account and a Worker with an `/ask` route that calls a [Workers AI](https://developers.cloudflare.com/workers-ai/) model through the gateway, tags each request with `user` and `team` metadata, and returns the gateway's log ID.
+
+## Prerequisites
+
+Your agent can help you with these.
+
+- [Node.js](https://nodejs.org/) installed.
+- A free [Cloudflare account](https://dash.cloudflare.com/sign-up).
+- The [`cf` CLI](/courses/agent-setup/cli) logged in to your Cloudflare account (`cf auth whoami`).
 
 ## Where AI Gateway sits
 
@@ -62,45 +74,29 @@ With AI Gateway:
                          └── Guardrails & DLP
 ```
 
-## One option on a binding, or one URL in an SDK
-
-In a Cloudflare Worker using the [Workers AI binding](https://developers.cloudflare.com/ai-gateway/usage/worker-binding-methods/), you add `AI: bindings.ai({ dev: { remote: true } })` in `cloudflare.config.ts` and pass a `gateway` object as the third argument to `env.AI.run()`:
+In a Worker using the [Workers AI binding](https://developers.cloudflare.com/ai-gateway/usage/worker-binding-methods/), you pass a `gateway` object as the third argument to `env.AI.run()`:
 
 ```ts title="src/index.ts"
-import { env } from "cloudflare:workers";
-
-export default {
-  async fetch(request: Request) {
-    if (request.method !== "POST") {
-      return new Response("Send a POST request with { prompt, user, team }");
-    }
-
-    const { prompt = "Summarize why logs matter in one sentence.", user = "riley", team = "interns" } =
-      await request.json<{ prompt?: string; user?: string; team?: string }>();
-
-    const result = await env.AI.run(
-      "@cf/meta/llama-3.1-8b-instruct-fp8",
-      { messages: [{ role: "user", content: prompt }] },
-      {
-        gateway: {
-          id: "dev-school-gateway",
-          metadata: { user, team },
-        },
-      },
-    );
-
-    return Response.json({
-      response: (result as { response?: string }).response ?? result,
-      logId: env.AI.aiGatewayLogId,
+const result = await env.AI.run(
+  "@cf/meta/llama-3.1-8b-instruct-fp8",
+  { messages: [{ role: "user", content: prompt }] },
+  {
+    gateway: {
+      id: "dev-school-gateway",
       metadata: { user, team },
-    });
+    },
   },
-};
+);
+
+return Response.json({
+  response: (result as { response?: string }).response ?? result,
+  logId: env.AI.aiGatewayLogId,
+});
 ```
 
-If you call OpenAI, Anthropic, or another provider from an SDK (or from outside Workers), it's the same idea — you point `baseURL` at `https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>/<provider>` and pass metadata in the `cf-aig-metadata` header.
+If you call OpenAI, Anthropic, or another provider from an SDK, it's the same idea: point `baseURL` at `https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>/<provider>` and pass metadata in the `cf-aig-metadata` header.
 
 ## Why it matters
 
-- **Immediate visibility:** every request records the provider, model, input/output tokens, duration, and estimated cost, with its log ID available right on `env.AI.aiGatewayLogId`.
+- **Immediate visibility:** every request records the provider, model, input and output tokens, duration, and estimated cost, with its log ID on `env.AI.aiGatewayLogId`.
 - **Attribution across one gateway:** your app uses one binding or gateway credential, while server-attached `metadata` (up to five flat key-value pairs like `user` and `team`) lets you filter logs, break down spend, and route traffic by who is asking.
