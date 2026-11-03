@@ -5,6 +5,7 @@
 // src/worker.ts and Durable Objects.
 declare namespace Cloudflare {
   interface Env {
+    ASSETS: Fetcher;
     DB: D1Database;
     SESSION: KVNamespace;
     PROGRESS_HUB: DurableObjectNamespace<import("./durable-objects/progress-hub").ProgressHub>;

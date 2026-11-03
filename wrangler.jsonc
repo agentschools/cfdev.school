@@ -9,6 +9,11 @@
   "routes": [{ "pattern": "cfdev.school", "custom_domain": true }],
   // Keep the old workers.dev host up: src/worker.ts redirects it to cfdev.school.
   "workers_dev": true,
+  // Run the Worker first for /media/* so video requests get 206 Range responses for seeking.
+  "assets": {
+    "binding": "ASSETS",
+    "run_worker_first": ["/media/*"]
+  },
   "d1_databases": [
     {
       "binding": "DB",

@@ -1,6 +1,7 @@
 import { handle } from "@astrojs/cloudflare/handler";
 import { env as globalEnv } from "cloudflare:workers";
 import { canonicalRedirect } from "./lib/canonical-host";
+import { serveMediaWithRange } from "./lib/media-range";
 import { studentIdSchema } from "./schemas/student";
 
 export { ProgressHub } from "./durable-objects/progress-hub";
@@ -17,7 +18,11 @@ export default {
   async fetch(request, env, ctx) {
     const redirect = canonicalRedirect(request);
     if (redirect) return redirect;
-    const match = new URL(request.url).pathname.match(LIVE_PROGRESS_PATH);
+    const { pathname } = new URL(request.url);
+    if (pathname.startsWith("/media/")) {
+      return serveMediaWithRange(request, env.ASSETS);
+    }
+    const match = pathname.match(LIVE_PROGRESS_PATH);
     if (match && request.headers.get("Upgrade") === "websocket") {
       const studentId = studentIdSchema.safeParse(match[1]);
       if (!studentId.success) return new Response("Invalid student ID", { status: 400 });
