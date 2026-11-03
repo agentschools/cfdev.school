@@ -45,6 +45,12 @@ const collections = {
       body: "\n# Durable Objects\n\nIntro.\n",
       data: { name: "durable-objects", description: "Learn Durable Objects." },
     },
+    {
+      id: "ai-gateway",
+      filePath: "courses/fundamentals/ai-gateway/COURSE.md",
+      body: "\n# AI Gateway\n\nIntro.\n",
+      data: { name: "ai-gateway", description: "Learn AI Gateway." },
+    },
   ],
   exercises: [
     { id: "agent-setup/00-interview", body: "\n# Interview\n", data: { description: "Tell your agent about you." } },

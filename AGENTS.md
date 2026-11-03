@@ -5,7 +5,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
 - No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
 - Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
-- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then three in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), and Durable Objects (see "Durable Objects course"), plus four in the projects track: Publish a website, Run a blog with EmDash, Build a guestbook, and Build a drawing game (each has its own section below). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
+- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then four in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), Durable Objects (see "Durable Objects course"), and AI Gateway (see "AI Gateway course"), plus four in the projects track: Publish a website, Run a blog with EmDash, Build a guestbook, and Build a drawing game (each has its own section below). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
 
 ## Titles
 
@@ -161,6 +161,20 @@ The course was taken end to end as a student on production in October 2026 (a Pi
 - State survives a redeploy. `cf workers delete --force` also removes the Worker's Durable Object namespaces.
 - Node's global `WebSocket` works as a test client against `wss://` on workers.dev.
 - Taken end to end as a student on the PR #104 preview (fresh enrollment, deleted afterward): every step worked as written. 429s from KV in "no-lost-updates" vary from run to run, sometimes none.
+
+## AI Gateway course
+
+`courses/fundamentals/ai-gateway/` (#177) has a four-question interview (prior experience with AI gateways/APIs, preferred model providers, main operational concern, and how they want to use the short demo clips) and four exercises on one Worker using `AI: bindings.ai({ dev: { remote: true } })` and Workers AI models: routing requests through a gateway with server-side `metadata` and reading `env.AI.aiGatewayLogId` ("see-every-request", with an architecture diagram), exact-match caching plus `skipCache` and request rate limiting ("cache-and-rate-limit"), a versioned Dynamic Route `dynamic/support` that branches on `metadata.team` with fallback and zero-redeploy model swaps ("route-and-fall-back"), and stopping prompt injections and sensitive data with Guardrails and DLP ("block-bad-prompts").
+
+Each page (`COURSE.md` and the four exercises) embeds a short (<2 min) 1080p clip from Thomas's AI Gateway demo recordings (`public/media/courses/ai-gateway/<clip>.{mp4,vtt}` and `<clip>-poster.jpg`, trimmed with `ffmpeg -crf 28 -r 30 -movflags +faststart` and captioned with `whisper-cli`; `src/pages/courses/[name]/[exercise].astro` has the same `width: 100cqw` video breakout as `src/pages/courses/[name]/index.astro`). In `agent-instructions`, the agent adapts how it surfaces the clips to question 4 of the interview: opening or previewing them in the session when the student wants videos, dropping a one-line link when they want links only, and omitting them when they skip video.
+
+Tested with `cf` v1.0.0-beta.12 (November 2026) against a throwaway `cfds-lab-aig` gateway:
+
+- `cf ai-gateway gateways create` and `cf ai-gateway gateways update` require `--collect-logs`, `--cache-ttl`, `--cache-invalidate-on-update`, `--rate-limiting-interval`, and `--rate-limiting-limit` (or `--body`).
+- `cf ai-gateway dynamic-routing create <gateway-id> --name support --elements @route-v1.json` creates the route and deploys version 1 (`"active": true`) in one step. Creating and deploying a new version uses `cf ai-gateway dynamic-routing versions create <route-id> --gateway-id <gateway-id> --elements @route-v2.json` followed by `cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id <gateway-id> --version-id <version-id>`. Route deployments take ~30–60 seconds to propagate.
+- Updating `guardrails` on a gateway requires both `prompt` and `response` objects inside `guardrails` (pass `--body '{"...","guardrails":{"prompt":{"P1":"BLOCK"},"response":{}}}'`; passing `--guardrails-prompt-p1 BLOCK` alone omits `guardrails.response` and fails with 7001).
+
+The course hasn't been taken end to end as a student.
 
 ## Publish a website course
 

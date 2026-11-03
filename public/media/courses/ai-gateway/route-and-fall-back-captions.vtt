@@ -1,0 +1,116 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:05.640
+ Instead of naming a specific model like this Llama 3.1, I want to use the Dynamic Routes feature
+
+00:00:05.640 --> 00:00:07.480
+ in Cloudflare's AI Gateway.
+
+00:00:07.480 --> 00:00:12.920
+ So I'm changing this to use the dynamic/support route, and I'm doing a small change of going
+
+00:00:12.920 --> 00:00:17.140
+ to the compat endpoint versus the Workers AI v1 endpoint.
+
+00:00:17.140 --> 00:00:19.960
+ That is so that we can support for this dynamic route.
+
+00:00:19.960 --> 00:00:25.720
+ So again, just a simple URL change, and now we're changing the model that we want to use.
+
+00:00:25.720 --> 00:00:27.880
+ And in this case, it's a dynamic model.
+
+00:00:27.880 --> 00:00:31.960
+ So looking back in our AI gateway, we can look at our dynamic models.
+
+00:00:31.960 --> 00:00:35.760
+ I have this one called support, which is the one that we've just chosen to use.
+
+00:00:35.760 --> 00:00:42.280
+ And what it does is it actually makes choices based on the metadata and those choices determine
+
+00:00:42.280 --> 00:00:44.380
+ which model is going to be called.
+
+00:00:44.380 --> 00:00:46.160
+ So the rule here is pretty simple.
+
+00:00:46.160 --> 00:00:51.720
+ If you're on the intern team, you get a more economical model, in this case Llama 3.1.
+
+00:00:51.720 --> 00:00:58.160
+ Everyone else, so our escalation engineers, get a more capable model like Llama 3.3 with
+
+00:00:58.160 --> 00:00:59.840
+ a model fallback as well.
+
+00:00:59.840 --> 00:01:06.360
+ So if that 3.3 for whatever reason is failing, we can fall back to this OpenAI GPT-OSS model.
+
+00:01:06.360 --> 00:01:11.320
+ And what this really unlocks is that now your route lives inside of your gateway.
+
+00:01:11.320 --> 00:01:12.480
+ We can change the routes.
+
+00:01:12.480 --> 00:01:13.760
+ We can modify the routes.
+
+00:01:13.760 --> 00:01:19.880
+ If a new model comes out, we can change this choice here to a different model without having
+
+00:01:19.880 --> 00:01:24.960
+ to redeploy our application or application already is pointing at this dynamic support
+
+00:01:24.960 --> 00:01:25.960
+ route.
+
+00:01:25.960 --> 00:01:29.360
+ We can change the models within that route without making deployments.
+
+00:01:29.360 --> 00:01:34.000
+ And that's really great and really unlocks a lot of capabilities for us.
+
+00:01:34.000 --> 00:01:36.240
+ Maybe we want to start trying something out for the interns.
+
+00:01:36.240 --> 00:01:39.760
+ We can easily change the model they're using without having to make a deployment.
+
+00:01:39.760 --> 00:01:43.360
+ This is instantly making the changes out to your AI gateway.
+
+00:01:43.360 --> 00:01:45.200
+ So let's see this in action.
+
+00:01:45.200 --> 00:01:47.040
+ I can go back to this.
+
+00:01:47.040 --> 00:01:49.200
+ This version is now using the dynamic route.
+
+00:01:49.200 --> 00:01:54.160
+ I can go use our support case here with Riley.
+
+00:01:54.160 --> 00:01:55.720
+ Send this through.
+
+00:01:55.720 --> 00:02:01.360
+ And we can see that this Llama 3.1 was chosen by our route, which is perfect.
+
+00:02:01.360 --> 00:02:03.960
+ This is going through our dynamic route.
+
+00:02:03.960 --> 00:02:09.400
+ I'll refresh and I will now go with Sam, who is an escalation engineer.
+
+00:02:09.400 --> 00:02:11.120
+ He is no longer an intern.
+
+00:02:11.120 --> 00:02:16.720
+ I will send this request and we can see that we're using that dynamic/support route and now
+
+00:02:16.720 --> 00:02:18.960
+ getting Llama 3.3.
+
