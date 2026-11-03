@@ -197,6 +197,10 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://claude.com/pricing",
+        note: "Checked 2026-11-03: Pro $20/month ($17 annual) confirmed with Claude Code included. The fetched page now labels the tiers Pro, Max ($100) and Ultra ($200), while Anthropic's legal page lists \"Pro, Max, and Ultra\" and secondary sources still say Max 5x/Max 20x, so whether the $200 tier was renamed Ultra is unconfirmed; summary left unchanged.",
+      },
+      {
+        url: "https://claude.com/pricing",
         note: "Verified 2026-10-11 for subscriptionBilling.headline: Pro is $20/month billed monthly ($17/month billed annually) and includes Claude Code.",
       },
       {
@@ -329,7 +333,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://learn.chatgpt.com/docs/models",
-        note: "Recommended models (Astra, GPT-6.1 Sol, GPT-6 Luna) and GPT-5.5 retirement on 2026-10-14. Checked 2026-10-03.",
+        note: "Re-checked 2026-11-03: Astra, GPT-6.1 Sol, GPT-6.1 Terra and GPT-6 Luna still the current Codex models; Sol for Plus and up, Luna for Free and Go; /model, --model, or `model = \"gpt-6.1-sol\"` in config.toml. learn.chatgpt.com/docs/pricing confirms Free $0, Go $8, Plus $20, Pro from $100 ($100/$200/$500). The MCP page still doesn't say whether the CLI needs a restart. Earlier: Recommended models (Astra, GPT-6.1 Sol, GPT-6 Luna) and GPT-5.5 retirement on 2026-10-14. Checked 2026-10-03.",
       },
       {
         url: "https://developers.openai.com/codex/mcp",
@@ -498,7 +502,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/mcp.md",
-        note: "Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload. Re-checked 2026-10-03. Re-checked 2026-10-05: docs confirm locations, `pi mcp add --url`, /mcp for auth and /reload, but `pi mcp login` is not documented there (oauthLogin left unchanged, unconfirmed from the shell). Re-checked 2026-10-22: the page now lists `pi mcp add`, `login`, `list`, and `remove`, confirms both mcp.json locations and /reload.",
+        note: "Re-checked 2026-11-03: `pi mcp login <server>` and `/mcp login <server>` are documented, plus `pi mcp add --url` (with `-l` for project scope) and `/reload` after outside edits. Built-in MCP (since 0.99.0, 2026-09-29): mcp.json locations, pi mcp add/login, /mcp, exposure modes (codemode default), /reload. Re-checked 2026-10-03. Re-checked 2026-10-05: docs confirm locations, `pi mcp add --url`, /mcp for auth and /reload, but `pi mcp login` is not documented there (oauthLogin left unchanged, unconfirmed from the shell). Re-checked 2026-10-22: the page now lists `pi mcp add`, `login`, `list`, and `remove`, confirms both mcp.json locations and /reload.",
       },
       {
         url: "https://github.com/earendil-works/pi/releases",
@@ -590,7 +594,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://cursor.com/docs/mcp",
-        note: "Checked 2026-10-03: docs say to restart Cursor after modifying mcp.json. The OAuth section only documents static client credentials; the browser-prompt flow described here is unconfirmed.",
+        note: "Re-checked 2026-11-03: the page (as summarized by the fetch tool) no longer states whether a restart is needed after editing mcp.json, so restartBehavior's advice to restart is a cautious default, not a documented requirement. OAuth uses the authorization code flow with PKCE. Checked 2026-10-03: docs say to restart Cursor after modifying mcp.json. The OAuth section only documents static client credentials; the browser-prompt flow described here is unconfirmed.",
       },
       {
         url: "https://cursor.com/docs/cli/reference/parameters",
