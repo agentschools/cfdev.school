@@ -16,6 +16,7 @@ const PROPER_NOUNS = [
   "Guardrails",
   "OpenCode",
   "Pi",
+  "Unified Billing",
   "Worker",
   "Workers",
   "Wrangler",

@@ -3,7 +3,7 @@ description: "Move model selection out of your Worker and into a versioned dynam
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  This builds on the gateway and Worker from "cache-and-rate-limit"; check GET /api/progress/{studentId} first.
+  This builds on the gateway and Worker from "cap-requests-and-spend"; check GET /api/progress/{studentId} first.
 
   1. Video clip (check question 4 of the `ai-gateway` interview):
      - If they chose "show me the clips as we go": share `<origin>/media/courses/ai-gateway/route-and-fall-back.mp4`. Open `<origin>/courses/ai-gateway/route-and-fall-back` in your browser panel if you have one, or render `[![Watch the demo clip](<origin>/media/courses/ai-gateway/route-and-fall-back-poster.jpg)](<origin>/media/courses/ai-gateway/route-and-fall-back.mp4)` and offer to open it in their browser. Tell them what to watch for: replacing the hardcoded model name with `dynamic/support`, routing `interns` vs. `escalations` to different models based on metadata, and swapping a model in the gateway without redeploying the app.
@@ -74,15 +74,15 @@ agent-instructions: |
 <figcaption>Routing requests by team metadata and swapping models in AI Gateway without redeploying the app. <a href="/media/courses/ai-gateway/route-and-fall-back.mp4">Direct video link</a></figcaption>
 </figure>
 
-When a model name is hardcoded in your application, every model upgrade, tier rule, or provider outage requires a code change and a deployment across every service that calls it.
+When a model name is hardcoded in your application, every model upgrade, free-vs.-paid tier rule, or provider outage requires a code change and a deployment across every service that calls it. Moving model choice into a versioned [Dynamic Route](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/) lets the gateway pick the model from request metadata, fall back automatically if a primary model fails, and swap or roll back models without touching your application code.
 
 ## What you'll build
 
-A versioned [Dynamic Route](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/), `dynamic/support`, that sends `interns` to a fast economical model and `escalations` to a larger model with an automatic fallback. Then you'll deploy a new version of the route and watch the model change without redeploying your Worker.
+A dynamic route named `dynamic/support` that sends `interns` to a fast economical model and `escalations` to a larger model with an automatic fallback. Then you'll deploy a second version of the route and watch the model change with zero Worker redeploy.
 
 ## Prerequisites
 
-- You've completed [Cache and rate limit](/courses/ai-gateway/cache-and-rate-limit) and still have that Worker and gateway.
+- You've completed [Cap requests and spend](/courses/ai-gateway/cap-requests-and-spend) and still have that Worker and gateway.
 
 ## Moving model choice into the gateway
 
@@ -101,17 +101,12 @@ const result = await env.AI.run(
 );
 ```
 
-Inside AI Gateway, `dynamic/support` evaluates your routing rules and picks the model:
+Inside AI Gateway, `dynamic/support` evaluates your route graph and picks the model:
 
-```text
-dynamic/support
-  ├── metadata.team == "interns"  ──► @cf/meta/llama-3.1-8b-instruct-fp8
-  └── otherwise ("escalations")   ──► @cf/meta/llama-3.3-70b-instruct-fp8-fast
-                                        └── on failure ──► @cf/openai/gpt-oss-120b
+```mermaid
+flowchart TD
+  Start["dynamic/support"] --> Check{"metadata.team == interns?"}
+  Check -->|"true"| Economical["Llama 3.1 8B"]
+  Check -->|"false"| Capable["Llama 3.3 70B"]
+  Capable -->|"on failure"| Backup["GPT-OSS 120B (fallback)"]
 ```
-
-## Why it matters
-
-- **Policy lives in the gateway, not the app:** free vs. paid users, interns vs. escalations, or A/B percentage splits are configured in one place and recorded in the gateway logs.
-- **Zero-redeploy model swaps and rollbacks:** every route edit is saved as a version. Trying a new model or rolling back to a previous version takes one deployment in the gateway, with no application release.
-- **Built-in fallback:** if the primary model on a branch errors or times out, the gateway follows the route's fallback edge to a backup model or provider automatically.

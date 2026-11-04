@@ -42,7 +42,7 @@ agent-instructions: |
 <figcaption>Blocking prompt injection and sensitive data at the gateway before a request reaches the model. <a href="/media/courses/ai-gateway/block-bad-prompts.mp4">Direct video link</a></figcaption>
 </figure>
 
-When users can type into your AI application, you don't control what they paste. Customers accidentally paste credit card numbers into support chats, and attackers intentionally send prompt injections to hijack what your assistant does.
+When users can type into your AI application, you don't control what they paste. Customers accidentally paste credit card numbers into support chats, and attackers intentionally send prompt injections to hijack what your assistant does. If you try to build security checks into every application separately, one service eventually forgets — and if you rely on the model itself to refuse an injection, your security changes every time you swap models in a dynamic route. Putting those checks in [AI Gateway](https://developers.cloudflare.com/ai-gateway/) applies one policy to every request before it ever reaches a model, with zero application code changes.
 
 ## What you'll build
 
@@ -56,13 +56,7 @@ Prompt-injection protection on your gateway using [Guardrails](https://developer
 
 AI Gateway gives you two complementary controls on the request and response path:
 
-- **[Data Loss Prevention (DLP)](https://developers.cloudflare.com/ai-gateway/features/dlp/):** scans text against detection profiles, such as *Financial Information* (credit card numbers) or *National Identifier Numbers*, and either **Flags** or **Blocks** a match before it reaches a model provider.
+- **[Data Loss Prevention (DLP)](https://developers.cloudflare.com/ai-gateway/features/dlp/):** scans text against detection profiles, such as *Financial Information* (credit card numbers) or *National Identifier Numbers*, and either **Flags** or **Blocks** a match before it leaves Cloudflare for a model provider.
 - **[Guardrails](https://developers.cloudflare.com/ai-gateway/features/guardrails/):** evaluates prompts and responses with dedicated safety models on Workers AI — Prompt Guard (`P1`) for prompt injection and jailbreak attempts, and Llama Guard (`S1`–`S13`) for harmful content categories — and either **Flags** or **Blocks** matching requests.
 
-When Guardrails blocks a prompt injection, your dynamic route never resolves and the upstream model is never called: the gateway returns HTTP `424` (`Prompt blocked due to security configurations`) and logs `0` model tokens and `$0` model cost.
-
-## Why it matters
-
-- **Zero code changes:** turning on Guardrails or a DLP policy is a gateway setting, not an application deployment. If you try to build security checks into every app separately, one service eventually forgets.
-- **Model-independent defense:** some models refuse a prompt injection on their own and others don't. Checking prompts at the gateway means your security stays consistent even when you swap models in a dynamic route.
-- **Keep who sent it, not what they sent:** if your app handles regulated data and shouldn't store prompt text in gateway logs, setting `collectLog: false` (or `cf-aig-collect-log-payload: false`) keeps the metadata, model, and cost in the log without storing the request or response body.
+When Guardrails blocks a prompt injection, your dynamic route never resolves and the upstream model is never called: the gateway returns HTTP `424` (`Prompt blocked due to security configurations`) and logs `0` model tokens and `$0` model cost. And if your app handles regulated data that shouldn't be stored in gateway logs at all, setting `collectLog: false` (or `cf-aig-collect-log-payload: false`) keeps *who* sent the request, the model, and the cost without storing *what* was sent.

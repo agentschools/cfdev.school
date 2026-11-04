@@ -1,0 +1,68 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.240
+ Now how do you actually pay for all this? So option one is the bring your own keys that I mentioned
+
+00:00:04.240 --> 00:00:09.280
+ before. You've got your own account with the providers, you own the contract, they bill you
+
+00:00:09.280 --> 00:00:13.520
+ and the key lives in the gateway like we saw earlier. Option two that Cloudflare provides is
+
+00:00:13.520 --> 00:00:19.120
+ Unified Billing. So Unified Billing is this idea where you load your credits into your Cloudflare
+
+00:00:19.120 --> 00:00:25.200
+ account and the gateway pays the provider for you. You've got one relationship with Cloudflare and
+
+00:00:25.200 --> 00:00:28.720
+ you don't have to set up an account with every provider to start using their models and start
+
+00:00:28.720 --> 00:00:34.480
+ taking advantage of the new models that they offer. Credit purchases carry a 5% fee, provider
+
+00:00:34.480 --> 00:00:40.160
+ rates are passed through with no markup. So each request is paid in one way: your own provider
+
+00:00:40.160 --> 00:00:44.640
+ key, or your Cloudflare credits, never both. One more thing I want to look at under settings is the
+
+00:00:45.760 --> 00:00:50.720
+ rate limiting requests. This is right under our cache settings. So I could turn on rate limiting
+
+00:00:50.720 --> 00:00:56.000
+ with one click and you can set how many requests the gateway accepts any time window and you pick
+
+00:00:56.000 --> 00:01:02.720
+ fixed or sliding fixed resets on the clock say every 10 minutes sliding counts the last 10 minutes
+
+00:01:02.720 --> 00:01:09.040
+ whenever a request comes in. So these rate limiting options are here. So this is a way to this is a
+
+00:01:09.040 --> 00:01:15.600
+ cap on requests, not a cap on dollars. So seeing that spend is great and being able to have a cap
+
+00:01:15.600 --> 00:01:19.280
+ on the number of requests is nice as well and caching can save you money. But now I want to
+
+00:01:19.280 --> 00:01:24.560
+ look at the spend limits as well right underneath here. These are spend limits. It's a dollar budget
+
+00:01:24.560 --> 00:01:31.200
+ either per month or per window. And right now I have this on a the interns. We have a fixed budget
+
+00:01:31.200 --> 00:01:38.880
+ on the interns and can change this to $10 USD over a one month fixed period. And we can limit
+
+00:01:38.880 --> 00:01:43.040
+ different providers limited to different models, limited by metadata even. So the metadata we're
+
+00:01:43.040 --> 00:01:46.960
+ saying that the team is the interns. This is how we can easily set up and apply spend limits to a
+
+00:01:46.960 --> 00:01:53.040
+ particular team, particular metadata, or particular agents. Budgets are enforced after each request
+
+00:01:53.040 --> 00:01:56.400
+ finishes, so a burst of requests can briefly go over a limit.
+

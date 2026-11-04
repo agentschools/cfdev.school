@@ -1,0 +1,65 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.160
+ Now the cheapest model call is, well, the one that you never have to make and support bots
+
+00:00:04.160 --> 00:00:07.120
+ like the one that we've built, they often get the same types of requests.
+
+00:00:07.120 --> 00:00:11.840
+ If it's a support bot, maybe it's supporting an FAQ, there's a lot of the same requests coming through.
+
+00:00:12.720 --> 00:00:17.200
+ So I'm here in my settings and I can change my cache responses easily with one click here
+
+00:00:17.200 --> 00:00:23.120
+ and my gateway will start caching responses. I have automatically purge requests after five minutes.
+
+00:00:23.120 --> 00:00:28.560
+ I could change that easily to a different value or custom. So I'll save that five-minute caching
+
+00:00:28.560 --> 00:00:32.960
+ period. We can look over at our application now. So this application with no change as a code,
+
+00:00:32.960 --> 00:00:38.080
+ just a change to the gateway. I'll send this cache scenario through. We can send this through
+
+00:00:38.640 --> 00:00:43.600
+ exactly what we expect a cache miss as the first time it goes through our application.
+
+00:00:43.600 --> 00:00:49.280
+ Let me refresh and I'll send this again and we get the cache hit exactly what we're expecting.
+
+00:00:49.280 --> 00:00:56.960
+ So our AI gateway has added the single click caching for us so that we can cache requests.
+
+00:00:56.960 --> 00:01:02.160
+ And it's important to realize that the cache matches on each request, not just who's asking.
+
+00:01:02.800 --> 00:01:08.640
+ So let's look at the logs really quick. I can refresh and yeah, we can see this was,
+
+00:01:09.280 --> 00:01:13.440
+ we get, now we see some of these in here where the cache response is here. This little blue symbol
+
+00:01:13.440 --> 00:01:18.800
+ means that the cached response happened. This is our initial request
+
+00:01:19.600 --> 00:01:25.520
+ and this is now our cached response for that same request. And you'll see that the duration
+
+00:01:25.520 --> 00:01:32.160
+ is extremely different as well. We see 1,742 milliseconds versus 45 milliseconds
+
+00:01:32.160 --> 00:01:36.240
+ for that cached response. So not only are we not paying for the model because we're sending back
+
+00:01:36.240 --> 00:01:41.520
+ a cached response, we get much faster responses because they're cached. There's also support for
+
+00:01:41.520 --> 00:01:46.480
+ skipping the cache. There's the skip cache option here as well. So you can send along skipCache:
+
+00:01:46.480 --> 00:01:50.000
+ true and it will skip the cache for any request in case you need that.
+

@@ -24,9 +24,9 @@ agent-instructions: |
      - wait a few seconds for log ingestion, then run `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` and confirm both requests appear with their model, token counts, duration, cost estimate, and `metadata`. Show the student the log output.
      Don't trust the student saying it worked.
   6. Comprehension check: ask the student why metadata like `team` or `user` should be attached by their Worker on the server rather than trusted from a browser header. Wait for their reply and gently correct anything off.
-  7. Mark complete: only after verification succeeds, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cache-and-rate-limit".
+  7. Mark complete: only after verification succeeds, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cache-responses".
 
-  Out of scope here: dynamic routes, caching, rate limits, and Guardrails/DLP — those are the next three exercises.
+  Out of scope here: dynamic routes, caching, rate limits, spend limits, and Guardrails/DLP — those are the next exercises.
 ---
 
 # See every request
@@ -40,11 +40,11 @@ agent-instructions: |
 <figcaption>Routing a model request through AI Gateway and inspecting its log and metadata. <a href="/media/courses/ai-gateway/see-every-request.mp4">Direct video link</a></figcaption>
 </figure>
 
-Before you can control your AI traffic, you need to see it. When your app calls a model directly, those requests don't leave a central trail of who asked, how long the model took, or what it cost.
+Before you can control your AI traffic, you need to see it. Routing calls through [AI Gateway](https://developers.cloudflare.com/ai-gateway/) records the provider, model, input and output tokens, duration, and estimated cost for every request, while server-attached `metadata` (up to five flat key-value pairs like `user` and `team`) lets you filter logs, break down spend, and route traffic even when your whole app shares one gateway credential.
 
 ## What you'll build
 
-An [AI Gateway](https://developers.cloudflare.com/ai-gateway/) in your Cloudflare account and a Worker with an `/ask` route that calls a [Workers AI](https://developers.cloudflare.com/workers-ai/) model through the gateway, tags each request with `user` and `team` metadata, and returns the gateway's log ID.
+An AI Gateway in your Cloudflare account and a Worker with an `/ask` route that calls a [Workers AI](https://developers.cloudflare.com/workers-ai/) model through the gateway, tags each request with `user` and `team` metadata, and returns `env.AI.aiGatewayLogId`.
 
 ## Prerequisites
 
@@ -58,20 +58,11 @@ Your agent can help you with these.
 
 Without a gateway, your application talks straight to each model provider. With AI Gateway, every request passes through a proxy on Cloudflare's network first:
 
-```text
-Without AI Gateway:
-
-  Your Worker or App ───────────────────────────────────► Model Provider
-  (holds API keys, hardcodes the model,                   (Workers AI, OpenAI,
-   no central logs, cache, or limits)                      Anthropic, ...)
-
-With AI Gateway:
-
-  Your Worker or App ──► Cloudflare AI Gateway ─────────► Model Provider
-  (sends prompt +        ├── Logs & metadata (who, cost)  ├── Workers AI
-   who's asking)         ├── Cache & rate limits          ├── OpenAI / Anthropic
-                         ├── Dynamic routes & fallbacks   └── Any other provider
-                         └── Guardrails & DLP
+```mermaid
+flowchart TD
+  App["Your Worker or App"] -->|"prompt + metadata"| Gateway["Cloudflare AI Gateway\nLogs · Cache · Limits · Routes · Guardrails"]
+  Gateway --> WorkersAI["Workers AI"]
+  Gateway --> External["OpenAI · Anthropic · Google"]
 ```
 
 In a Worker using the [Workers AI binding](https://developers.cloudflare.com/ai-gateway/usage/worker-binding-methods/), you pass a `gateway` object as the third argument to `env.AI.run()`:
@@ -95,8 +86,3 @@ return Response.json({
 ```
 
 If you call OpenAI, Anthropic, or another provider from an SDK, it's the same idea: point `baseURL` at `https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>/<provider>` and pass metadata in the `cf-aig-metadata` header.
-
-## Why it matters
-
-- **Immediate visibility:** every request records the provider, model, input and output tokens, duration, and estimated cost, with its log ID on `env.AI.aiGatewayLogId`.
-- **Attribution across one gateway:** your app uses one binding or gateway credential, while server-attached `metadata` (up to five flat key-value pairs like `user` and `team`) lets you filter logs, break down spend, and route traffic by who is asking.

@@ -206,6 +206,21 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
     margin: 0 0 1.5rem;
   }
 
+  .prose .mermaid-diagram {
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--card-bg);
+    overflow-x: auto;
+  }
+
+  .prose .mermaid-diagram svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+
   .prose video {
     display: block;
     width: 100%;
