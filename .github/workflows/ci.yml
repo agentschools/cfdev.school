@@ -33,6 +33,16 @@ jobs:
 
       - run: npm run lint
 
+      # Media belongs in public/media/, which preview.yml moves to R2.
+      - name: Keep large files out of git
+        run: |
+          large=$(git ls-files -z -- . ':(exclude)public/media' | xargs -0 -r stat -c '%s %n' | awk '$1 > 1048576')
+          if [ -n "$large" ]; then
+            echo "::error::Files over 1 MB. Put media in public/media/ instead, see AGENTS.md:"
+            echo "$large"
+            exit 1
+          fi
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10

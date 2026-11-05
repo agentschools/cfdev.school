@@ -131,6 +131,18 @@ Built-in courses live in `courses/<name>/` at the repo root, or `courses/<track>
 
 Verify the Workers course with `npm run verify:exercise` and `npm run verify:exercise-kv` (sibling scripts, not one parameterized script, to keep each diff small), against `npm run dev:worker` or a PR preview (`BASE_URL=...`). Same caveats as `verify:interview`: real enrollment and completion rows in whatever D1 `BASE_URL` points at, delete them afterward. Neither deploys a Worker or provisions a KV namespace, they only check the HTTP contract.
 
+## Course media
+
+Videos, posters, captions, and other media for built-in courses live in the `cfdev-school-media` R2 bucket on the personal account, served at `https://media.cfdev.school` (a custom domain on the bucket, with a CORS rule allowing GET and HEAD from any origin so `<track>` captions load cross-origin). Never in `main`.
+
+- To add media, commit it to `public/media/courses/<course>/<file>` on a branch in this repo and reference it in Markdown as `/media/courses/<course>/<file>`. `npm run dev` serves it from disk.
+- On every PR push, `preview.yml`'s `upload-media` job uploads everything under `public/media/` to R2 at the same key (`courses/<course>/<file>`), then pushes a `chore: move public/media to media.cfdev.school` commit that deletes it, so pull before pushing again. Uploading the same path again replaces the object in production right away.
+- `src/pages/media/[...path].ts` 302-redirects `/media/*` to `media.cfdev.school`, so the same paths work in previews, production, and local dev once the files are gone. R2 handles Range requests, so video seeking works; Workers Static Assets doesn't send `206`, which is why media isn't served from `public/`.
+- Squash-merge PRs that added media, or the binaries stay in `main`'s history from the commits before the removal.
+- PRs from forks don't get the R2 secrets, so a maintainer has to move their media to a branch here.
+- The job uses `R2_MEDIA_ACCESS_KEY_ID` and `R2_MEDIA_SECRET_ACCESS_KEY`: S3 credentials from an R2 account API token named "cfdev.school GitHub Actions media upload", with Object Read & Write on this bucket only. The Access Key ID is the token's ID and the secret is the SHA-256 of its value. Object-scoped R2 tokens only work with the S3 API, not the Cloudflare REST API that `wrangler r2 object` and `cf` use, so the job uses the preinstalled `aws` CLI.
+- `ci.yml` fails on any tracked file over 1 MB outside `public/media/`.
+
 ## Bindings course
 
 Each exercise's body carries the teaching, so students can read it on the page as a preview: a short section with simple code blocks, then "Why it matters". `agent-instructions` keep the procedure, verification, `cf` workarounds, and comprehension checks, and point at the body's sections instead of repeating them. Agents read the body too (`/llms.txt` says to follow both).
@@ -214,7 +226,7 @@ The course hasn't been taken end to end as a student.
 
 `courses/projects/build-a-drawing-game/` (#156, a pilot for #144) is inspired by Jilles Soeters's Clef Pictionary video. The course page embeds it with a raw HTML `<figure><video>` in `COURSE.md` (Astro passes raw HTML through; `.prose figure`, `video`, and `figcaption` styles are in `Layout.astro`). Jilles gave permission to rehost the video; his source code has no license yet, so the course links to it rather than copying it. Four-question interview (who it's for, what players draw, browser experience, phone or desktop), then build a canvas, add a decision model (the student's word list plus Clef-flash), draw and guess (rounds, a win rule, timeouts and late answers), and launch your game (guess on demand or live, server checks, a rate limit, logs, deploy). Always a new React + Vite app made with `cf init`, never Wrangler, and the browser code goes in `app/`, the Worker in `src/`.
 
-Media lives in the `cfdev-school-media` R2 bucket on the personal account, served at `https://media.cfdev.school` (a custom domain on the bucket, with a CORS rule allowing GET and HEAD from any origin so `<track>` captions load cross-origin). Keys are `courses/<course>/<file>`. Upload with `cf r2 objects put <key> --bucket-name cfdev-school-media --file <path> --content-type <type>`. The video is a 1080p H.264 transcode with `+faststart` of the 4K original, the captions are a `whisper-cli` (large-v3-turbo) transcript with model names fixed by hand. Keep video binaries out of git.
+The video is in R2 (see "Course media"), linked by absolute `media.cfdev.school` URLs from before `/media/` paths existed. The video is a 1080p H.264 transcode with `+faststart` of the 4K original, the captions are a `whisper-cli` (large-v3-turbo) transcript with model names fixed by hand. Keep video binaries out of git.
 
 Tested with `cf` v1.0.0-beta.12, `@cloudflare/vite-plugin` 2.0.0-beta.v.4, React 19.3, and Vite 8.3 (October 2026), locally and deployed to a throwaway `cfds-lab-drawing-game` Worker:
 
@@ -315,7 +327,7 @@ The global `~/.npmrc` sets `min-release-age=7`, so `npm install <pkg>@latest` ca
 - `.github/workflows/deploy.yml`: deploys to production on push to `main`.
 - `.github/workflows/refresh-harnesses.yml`: daily (and manual `workflow_dispatch`) harness data check, see "AI harness research data". It runs lint and test itself before opening its PR, because PRs created with `GITHUB_TOKEN` don't trigger `ci.yml` or `preview.yml`. Needs "Allow GitHub Actions to create and approve pull requests" enabled in the repo's Actions settings.
 - `anthropics/claude-code-action` needs `github_token: ${{ github.token }}` in this repo; without it the action tries to get a Claude GitHub App token (needs `id-token: write` and the app installed) and fails.
-- Required repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to `Workers Scripts:Edit` + `D1:Edit`), `CLOUDFLARE_ACCOUNT_ID`, `ANTHROPIC_API_KEY` (refresh-harnesses only).
+- Required repo secrets: `CLOUDFLARE_API_TOKEN` (scoped to `Workers Scripts:Edit` + `D1:Edit`), `CLOUDFLARE_ACCOUNT_ID`, `ANTHROPIC_API_KEY` (refresh-harnesses only), `R2_MEDIA_ACCESS_KEY_ID` and `R2_MEDIA_SECRET_ACCESS_KEY` (see "Course media").
 
 ## Testing Astro components
 
