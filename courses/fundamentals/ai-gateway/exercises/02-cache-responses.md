@@ -6,12 +6,13 @@ agent-instructions: |
   This builds on the gateway and interactive lab Worker from "see-every-request"; check GET /api/progress/{studentId} first. Do not rely on the video clip to teach; you can mention `<origin>/courses/ai-gateway/cache-responses` as an optional reference, and teach everything directly in chat.
 
   1. Teach the concept and ask the student to predict (before enabling cache):
-     - Explain how AI Gateway caching works: when exact-match caching is enabled, the gateway hashes the provider, model, and request body (`messages`). On a **cache miss**, it calls the model and stores the response for your TTL; on a **cache hit**, it returns the stored response directly from Cloudflare's edge in tens of milliseconds for `$0` in model tokens.
-     - Point out a critical design detail: the default cache key hashes the model and prompt, **not** `metadata`.
+     - Explain how AI Gateway caching works: when exact-match caching is enabled, the gateway hashes the provider, endpoint, model, provider auth header, and full request body (`messages` and any parameters), so only an exact repeat matches. On a **cache miss**, it calls the model and stores the response for your TTL; on a **cache hit**, it returns the stored response directly from Cloudflare's edge in tens of milliseconds for `$0` in model tokens.
+     - Point out a critical design detail: the default cache key covers the request itself, **not** `metadata`.
      - Ask the student to predict: if `riley` (on `interns`) and `sam` (on `escalations`) send the exact same question while caching is on, what happens on Sam's request—and when would that be helpful vs. dangerous? Also ask what cache TTL (in seconds, at least 60, e.g. `300` for 5 minutes) they'd like to turn on. Wait for their reply.
 
   2. Enable caching and let the student see a live cache hit:
      - Confirm their prediction: Sam gets Riley's cached answer immediately, which is great for shared FAQs or classification prompts, and dangerous if the prompt or response contains user-specific data (where you should pass `skipCache: true` or a custom `cacheKey` that includes the user ID).
+     - `cf ai-gateway gateways update` replaces the gateway's whole configuration (the API is a `PUT`), so any setting left out of the command is reset. Before the first update in this exercise, run `cf ai-gateway gateways get <gateway-id>` and, if it shows settings the commands below don't include (for example `authentication`, `workers_ai_billing_mode`, `dlp`, or `logpush`), add them to the update with `--body` so you don't turn them off.
      - Enable caching on the gateway with their chosen TTL:
        `cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl <ttl> --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding`
      - Make sure their Worker passes `skipCache: Boolean(skipCache)` inside the `gateway` options of `env.AI.run()` (already wired up if they used the interactive lab Worker from Exercise 1).
@@ -52,7 +53,7 @@ Exact-match [response caching](https://developers.cloudflare.com/ai-gateway/feat
 
 ## Exact-match caching and `skipCache`
 
-When caching is enabled on your gateway (or per call with `cacheTtl`), AI Gateway hashes the provider, model, and request body. If an identical request arrives before the TTL expires, the gateway returns the stored response without calling the provider:
+When caching is enabled on your gateway (or per call with `cacheTtl`), AI Gateway [hashes](https://developers.cloudflare.com/ai-gateway/features/caching/#how-the-cache-key-works) the provider, endpoint, model, provider auth header, and full request body. If an identical request arrives before the TTL expires, the gateway returns the stored response without calling the provider:
 
 ```ts title="src/index.ts"
 const result = await env.AI.run(

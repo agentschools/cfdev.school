@@ -17,6 +17,7 @@ agent-instructions: |
 
   2. Configure and verify the request rate limit and team-scoped spend limit:
      - Ensure `src/index.ts` catches errors from `env.AI.run()` and returns `Response.json({ error: String(err), logId: env.AI.aiGatewayLogId }, { status: 429 })` so gateway blocks show up cleanly in their lab page and API response.
+     - `cf ai-gateway gateways update` replaces the gateway's whole configuration (the API is a `PUT`), so any setting left out of the command is reset. Before the first update in this exercise, run `cf ai-gateway gateways get <gateway-id>` and, if it shows settings the commands below don't include (for example `authentication`, `workers_ai_billing_mode`, `dlp`, or `logpush`), add them to the update with `--body` so you don't turn them off.
      - First, enable a tight sliding request rate limit (2 requests per 60 seconds):
        `cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 60 --rate-limiting-limit 2 --rate-limiting-technique sliding`
        Wait ~20 seconds, send 3–4 requests in quick succession until one is rejected with `429` (`Rate limit exceeded`), and show the student.

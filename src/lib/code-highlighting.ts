@@ -83,12 +83,15 @@ export function codeTitle(meta: string | undefined): string | undefined {
   return meta?.match(/(?:^|\s)title="([^"]+)"/)?.[1];
 }
 
-function decodeXmlEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"');
+const XML_ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+
+/** Decodes XML's five named entities and numeric references (`&#39;`, `&#x27;`) in one pass. */
+export function decodeXmlEntities(text: string): string {
+  return text.replace(/&(?:#(\d+)|#x([0-9a-fA-F]+)|(amp|lt|gt|quot|apos));/g, (entity, dec, hex, name) => {
+    if (name) return XML_ENTITIES[name];
+    const codePoint = dec ? Number(dec) : parseInt(hex, 16);
+    return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity;
+  });
 }
 
 /** Converts the well-formed XML string from `renderMermaidSVG` into a HAST Element. */
