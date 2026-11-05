@@ -30,4 +30,5 @@ The format is below. Dev School adds a few things to it:
 - Leave the interview out and Dev School's [default interview](/default-interview.md) has the agent write two to four questions from your course's content.
 - Students who opted in get a short quiz after each exercise, which their agent writes from the exercise.
 - Dev School reads `metadata.author` and shows it to students.
+- In `agent-instructions`, help the agent teach rather than just execute: explain *why* a concept or feature exists (with a quick before/after diagram when helpful) before running setup commands, make sure any Worker URL shared with the student responds usefully on `GET /` (either with an interactive test page or instructions on how to call its routes), and keep features enabled while the student tries them or inspects the Cloudflare dashboard.
 

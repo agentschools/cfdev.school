@@ -3,30 +3,46 @@ description: "Create an AI Gateway, route a Worker's model calls through it with
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  Keep the pace brisk: this whole course is designed to finish in under 30 minutes, so keep explanations to two or three sentences and avoid unnecessary redeploys. Read the student's interviews first (GET /api/students/{id}/interviews).
+  Teaching approach (use this flexible rhythm across the course, adapting to the student's lead):
+  - **Teach the "why" and mental model first**: Before asking the student for config names or running CLI commands, explain what problem the feature solves, how it changes the request path, and any new terms (like *gateway* and *metadata* tags), pitched to their interview answers (GET /api/students/{id}/interviews). Never rely on the web page's video clip to explain a concept; you can drop a one-line optional link to `<origin>/courses/ai-gateway/see-every-request` (or `/media/courses/ai-gateway/see-every-request.mp4`), but teach everything directly in chat.
+  - **Show a compact Before/After diagram in chat**: Draw a short ASCII diagram in chat showing how requests flow without vs. with AI Gateway so visual and text learners both get the mental model immediately.
+  - **Never link a dead `GET /` Worker**: If you give the student a `.workers.dev` URL, clicking it in a browser must work. When scaffolding a new Worker for this course, serve an interactive HTML playground on `GET /` alongside `POST /ask` so the student can send prompts, switch teams, toggle cache bypass, and see the live response + `logId` in their browser.
+  - **Let the student drive and explore**: Keep features live while the student tries them, and link them directly to their Cloudflare Dashboard when visual inspection adds value.
 
-  1. Video clip (check question 4 of the `ai-gateway` interview first):
-     - If they chose "show me the clips as we go": share `<origin>/media/courses/ai-gateway/see-every-request.mp4` (where `<origin>` is the site you fetched `/llms.txt` from). If you have a built-in browser panel tool (like `openchamber_web`'s `browser.open`), open `<origin>/courses/ai-gateway/see-every-request` in it; in Markdown chat, render `[![Watch the 90-second demo](<origin>/media/courses/ai-gateway/see-every-request-poster.jpg)](<origin>/media/courses/ai-gateway/see-every-request.mp4)` and offer to open it in their system browser (`open` on macOS, `xdg-open` on Linux, `start` on Windows). Tell them what to watch for: a two-line change routes requests through the gateway, and every call shows up in the logs with tokens, latency, cost, and custom metadata.
-     - If they chose "just link them": include a one-line link to `<origin>/media/courses/ai-gateway/see-every-request.mp4` and move straight to step 2.
-     - If they chose "skip videos": do not mention or link the video.
-  2. Walk through the body's architecture diagram ("Where AI Gateway sits") in two or three sentences, tailored to their provider preference from question 2 of the interview: whether an app calls Workers AI through `env.AI.run()` or OpenAI/Anthropic via an SDK `baseURL`, the request goes through AI Gateway first, which logs and governs it before forwarding to the provider.
-  3. Choose: in one message, ask the student for:
-     - a gateway ID (lowercase letters, numbers, and dashes, e.g. `dev-school-gateway`), and
-     - two team names to tag requests with in metadata (default: `interns` and `escalations`).
-     Wait for their reply.
-  4. Create the gateway and Worker:
-     - Create the gateway with `cf ai-gateway gateways create --id <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding`. (If it already exists from an earlier run, `cf ai-gateway gateways get <gateway-id>` confirms it.) If `cf` stops with "More than one account available", ask which account to use or read `cf auth whoami`, and set `accountId` in `cloudflare.config.ts` and `CLOUDFLARE_ACCOUNT_ID` for CLI calls.
-     - Scaffold a new Worker with `cf init <dir>` (e.g. `ai-gateway-lab`), add `AI: bindings.ai({ dev: { remote: true } })` to `worker.env` in `cloudflare.config.ts` (importing `bindings` from `"cf/config"`), and run `cf workers types`. Explain in one sentence why `dev: { remote: true }` is set: local dev calls the real model and real AI Gateway on their Cloudflare account.
-     - Write a minimal `POST /ask` handler in `src/index.ts` (~25 lines, like the body's example) that reads `{ prompt, user, team }` from the JSON body, calls `env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", { messages: [{ role: "user", content: prompt }] }, { gateway: { id: "<gateway-id>", metadata: { user, team } } })`, and returns `Response.json({ response, logId: env.AI.aiGatewayLogId, metadata: { user, team } })`. Point out that `team` and `user` are attached on the server, where the caller can't forge another user's tag.
-     - Deploy the Worker once with `cf deploy` so it's live on their account, and keep `cf dev` handy for fast iteration.
-  5. Verify before completing. YOU must:
-     - send two `POST /ask` requests (against the deployed URL or `cf dev`) with different `team` and `user` values (e.g. `interns` and `escalations`) and confirm each returns a non-empty `response` and a `logId`;
-     - wait a few seconds for log ingestion, then run `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` and confirm both requests appear with their model, token counts, duration, cost estimate, and `metadata`. Show the student the log output.
-     Don't trust the student saying it worked.
-  6. Comprehension check: ask the student why metadata like `team` or `user` should be attached by their Worker on the server rather than trusted from a browser header. Wait for their reply and gently correct anything off.
-  7. Mark complete: only after verification succeeds, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cache-responses".
+  1. Teach the concept first (before setup):
+     - Explain what an AI gateway is: a proxy checkpoint between your application and the AI models it calls. Without it, your app calls OpenAI, Anthropic, or Workers AI directly and you can't easily see per-team spend, cache repeat answers, swap models without redeploying, or block bad prompts in one place.
+     - Show a compact Before/After flow in chat, tailored to the provider they picked in question 2 of the interview (e.g. `env.AI.run()` for Workers AI, or pointing an SDK's `baseURL` at `https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>/<provider>`):
+       ```text
+       Before:  Your App ──────────────────────────────► Model Provider (no central logs or controls)
+       After:   Your App ──(prompt + metadata)──► AI Gateway ──► Workers AI / OpenAI / Anthropic
+                                                      │
+                                           Logs · Cache · Limits · Routes · Guardrails
+       ```
+     - Explain **metadata** (tags): up to 5 flat key-value labels (like `{ user: "alex", team: "interns" }`) that your server attaches to each request so you can filter logs, attribute cost, and route traffic by team or user even when the whole app shares one model credential.
+     - Then, in the same message, ask the student if they'd like to use an existing Worker or create a new interactive lab Worker, and ask what gateway ID and two team names they want to use (or offer defaults: `dev-school-gateway`, `interns`, and `escalations`). Wait for their reply.
 
-  Out of scope here: dynamic routes, caching, rate limits, spend limits, and Guardrails/DLP — those are the next exercises.
+  2. Create the gateway and interactive lab Worker:
+     - Resolve their `<account-id>` first (`cf auth whoami` or `cloudflare.config.ts`). If `cf` stops with "More than one account available", ask which account to use and set `accountId` in `cloudflare.config.ts` and `CLOUDFLARE_ACCOUNT_ID` for CLI calls.
+     - Create the gateway with `cf ai-gateway gateways create --id <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding` (or `cf ai-gateway gateways get <gateway-id>` if it already exists).
+     - If they don't have an existing Worker for this course, scaffold one with `cf init <dir>` (e.g. `ai-gateway-lab`), add `AI: bindings.ai({ dev: { remote: true } })` to `worker.env` in `cloudflare.config.ts` (importing `bindings` from `"cf/config"`), and run `cf workers types`. Mention in one sentence why `dev: { remote: true }` is set: even in local dev, calls go through their real AI Gateway and Workers AI on Cloudflare.
+     - In `src/index.ts`, implement two routes:
+       - `POST /ask`: reads `{ prompt, user, team, skipCache }` from JSON, calls `env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", { messages: [{ role: "user", content: prompt }] }, { gateway: { id: "<gateway-id>", metadata: { user, team }, skipCache: Boolean(skipCache) } })` wrapped in a `try / catch` (returning `{ error: String(err), logId: env.AI.aiGatewayLogId }` with status `429`/`424` on gateway errors), and returns `Response.json({ response, logId: env.AI.aiGatewayLogId, metadata: { user, team } })`.
+       - `GET /`: serves a clean, self-contained HTML lab page where the student can type a prompt, pick a `team` from a `<select>` (using their two team names), toggle a `Bypass cache (skipCache)` checkbox, click **Ask through the gateway**, and see the model's answer, the returned `logId`, and the attached `metadata` tags right on the page. (If the student brought their own Worker, make sure `GET /` either serves a working page or explains how to call `/ask` so clicking the Worker URL never returns a dead 404.)
+     - Show the student the key `env.AI.run(..., { gateway: { id, metadata } })` code and point out that `user` and `team` are attached on the server, where a caller can't spoof another team's tag.
+     - Deploy with `cf deploy` and send two initial `POST /ask` requests (one per team) so the gateway has live log entries ready to inspect.
+
+  3. Have the student try their lab page and inspect the Cloudflare Dashboard:
+     - Share two clickable links with the student:
+       1. Their live lab Worker URL (`https://<worker>.<subdomain>.workers.dev/`) — invite them to open it and send a question under either team.
+       2. Their direct AI Gateway Logs dashboard URL: `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`
+     - Give them a quick dashboard exploration mission: open the Logs link, click one of their recent requests to expand it, and look at what the gateway captured (the model used, token counts, duration, cost estimate, and their custom `metadata` tags).
+     - Also ask the comprehension check in the same turn so they can reply once they've looked: why should a real app attach `user` and `team` metadata on the server rather than trusting tags sent from the browser? Wait for their reply.
+
+  4. Mark complete:
+     - Confirm via `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` that requests for both teams appear in the gateway logs with `metadata`.
+     - Gently correct anything off in their answer, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cache-responses".
+
+  Out of scope here: routes, caching, rate limits, spend limits, and Guardrails/DLP — those are the next exercises.
 ---
 
 # See every request
@@ -44,7 +60,7 @@ Before you can control your AI traffic, you need to see it. Routing calls throug
 
 ## What you'll build
 
-An AI Gateway in your Cloudflare account and a Worker with an `/ask` route that calls a [Workers AI](https://developers.cloudflare.com/workers-ai/) model through the gateway, tags each request with `user` and `team` metadata, and returns `env.AI.aiGatewayLogId`.
+An AI Gateway in your Cloudflare account and an interactive lab Worker that calls a [Workers AI](https://developers.cloudflare.com/workers-ai/) model through the gateway, tags each request with `user` and `team` metadata, and displays the model's answer alongside `env.AI.aiGatewayLogId` so you can inspect the matching record in your Cloudflare dashboard.
 
 ## Prerequisites
 
@@ -54,15 +70,20 @@ Your agent can help you with these.
 - A free [Cloudflare account](https://dash.cloudflare.com/sign-up).
 - The [`cf` CLI](/courses/agent-setup/cli) logged in to your Cloudflare account (`cf auth whoami`).
 
-## Where AI Gateway sits
+## Where AI Gateway sits: before and after
 
-Without a gateway, your application talks straight to each model provider. With AI Gateway, every request passes through a proxy on Cloudflare's network first:
+Without a gateway, each part of your application calls model providers directly, leaving you with no single place to see usage, attach team tags, or enforce policies. With AI Gateway, every request passes through a proxy checkpoint on Cloudflare's network first:
 
 ```mermaid
 flowchart TD
-  App["Your Worker or App"] -->|"prompt + metadata"| Gateway["Cloudflare AI Gateway\nLogs · Cache · Limits · Routes · Guardrails"]
-  Gateway --> WorkersAI["Workers AI"]
-  Gateway --> External["OpenAI · Anthropic · Google"]
+  subgraph Before["Before: Direct model calls"]
+    AppDirect["Your Worker or App"] -->|"direct API call"| ProviderDirect["Workers AI · OpenAI · Anthropic"]
+  end
+  subgraph After["After: Through AI Gateway"]
+    App["Your Worker or App"] -->|"prompt + metadata"| Gateway["Cloudflare AI Gateway\nLogs · Cache · Limits · Routes · Guardrails"]
+    Gateway --> WorkersAI["Workers AI"]
+    Gateway --> External["OpenAI · Anthropic · Google"]
+  end
 ```
 
 In a Worker using the [Workers AI binding](https://developers.cloudflare.com/ai-gateway/usage/worker-binding-methods/), you pass a `gateway` object as the third argument to `env.AI.run()`:
@@ -82,6 +103,7 @@ const result = await env.AI.run(
 return Response.json({
   response: (result as { response?: string }).response ?? result,
   logId: env.AI.aiGatewayLogId,
+  metadata: { user, team },
 });
 ```
 

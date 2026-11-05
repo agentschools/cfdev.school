@@ -17,7 +17,12 @@ describe("codeTitleTransformer", () => {
     expect(node.properties.className).toEqual(["mermaid-diagram"]);
     const svg = node.children[0] as Element;
     expect(svg.tagName).toBe("svg");
-    expect(String(svg.properties.style)).toContain("--bg:var(--card-bg)");
-    expect(String(svg.properties.style)).toContain("--fg:var(--fg)");
+    const style = String(svg.properties.style);
+    expect(style).toContain("--bg:var(--card-bg)");
+    expect(style).toContain("--fg:var(--code-fg)");
+    // Self-referential custom properties (`--fg:var(--fg)`, `--border:var(--border)`)
+    // are cyclic in CSS and make every derived fill/stroke invalid (black-on-black).
+    expect(style).not.toContain("--fg:var(--fg)");
+    expect(style).not.toContain("--border:var(--border)");
   });
 });

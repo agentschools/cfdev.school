@@ -131,10 +131,11 @@ export const codeTitleTransformer: ShikiTransformer = {
   name: "cf-dev-school:code-title",
   pre(node) {
     if (this.options.lang === "mermaid") {
+      // Avoid `--fg:var(--fg)` and `--border:var(--border)` on `<svg style>`,
+      // which create CSS custom-property self-cycles and make fills/strokes invalid.
       const svg = renderMermaidSVG(this.source, {
         bg: "var(--card-bg)",
-        fg: "var(--fg)",
-        border: "var(--border)",
+        fg: "var(--code-fg)",
         muted: "var(--muted-fg)",
         accent: "var(--accent-text)",
         font: "system-ui",

@@ -3,24 +3,28 @@ description: "Turn on exact-match response caching so repeat questions return in
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  This builds on the gateway and Worker from "see-every-request"; check GET /api/progress/{studentId} first. Keep it fast: use `cf dev` (whose remote AI binding already hits the live gateway on their account) or their deployed Worker so you don't wait on unnecessary deploys.
+  This builds on the gateway and interactive lab Worker from "see-every-request"; check GET /api/progress/{studentId} first. Do not rely on the video clip to teach; you can mention `<origin>/courses/ai-gateway/cache-responses` as an optional reference, and teach everything directly in chat.
 
-  1. Video clip (check question 4 of the `ai-gateway` interview):
-     - If they chose "show me the clips as we go": share `<origin>/media/courses/ai-gateway/cache-responses.mp4`. Open `<origin>/courses/ai-gateway/cache-responses` in your browser panel if you have one, or render `[![Watch the demo clip](<origin>/media/courses/ai-gateway/cache-responses-poster.jpg)](<origin>/media/courses/ai-gateway/cache-responses.mp4)` and offer to open it in their browser. Tell them what to watch for: turning on caching in the gateway, seeing `MISS` then `HIT` with latency dropping from 1,742 ms to 45 ms and `$0` model cost, and skipping cache per request.
-     - If they chose "just link them": drop a one-line link to `<origin>/media/courses/ai-gateway/cache-responses.mp4`.
-     - If they chose "skip videos": don't mention or link the video.
-  2. Predict before enabling cache: tell the student that AI Gateway's default cache key hashes the request body and model, *not* `metadata`. Ask them: if `riley` (on `interns`) and `sam` (on `escalations`) send the exact same prompt while caching is on, what will happen on Sam's request, and when would that be a problem? Wait for their answer. Confirm: Sam gets Riley's cached answer immediately, which is great for shared FAQs and bad for personalized prompts unless you pass `skipCache: true` or a custom `cacheKey`.
-  3. Enable caching and `skipCache`:
-     - Ask the student what cache TTL (in seconds, at least 60, e.g. `300` for 5 minutes) they want on their gateway. Wait briefly if they haven't already said.
-     - Update the gateway with `cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl <ttl> --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding`.
-     - In `src/index.ts`, allow `{ prompt, user, team, skipCache }` in the request JSON and pass `skipCache: Boolean(skipCache)` inside the `gateway` options of `env.AI.run()`.
-  4. Verify before completing. YOU must:
-     - send the exact same prompt twice with `skipCache: false` (wait ~3 seconds between them so the cache write finishes), and a third time with `skipCache: true`;
-     - run `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` and show the student that the second request has `"cached": true` (with much lower duration and zero model cost), while the `skipCache: true` request went back to the model (`"cached": false`);
-     - reset `--cache-ttl 0` on the gateway afterward (`cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding`) so later exercises always reach the live models.
-     Don't trust the student saying it worked.
-  5. Comprehension check: ask the student when they should pass `skipCache: true` or a custom `cacheKey` instead of relying on the default cache key. Wait for their reply and gently correct anything off.
-  6. Mark complete: only after verifying both a cached hit (`"cached": true` in the gateway logs) and a `skipCache: true` miss, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cap-requests-and-spend".
+  1. Teach the concept and ask the student to predict (before enabling cache):
+     - Explain how AI Gateway caching works: when exact-match caching is enabled, the gateway hashes the provider, model, and request body (`messages`). On a **cache miss**, it calls the model and stores the response for your TTL; on a **cache hit**, it returns the stored response directly from Cloudflare's edge in tens of milliseconds for `$0` in model tokens.
+     - Point out a critical design detail: the default cache key hashes the model and prompt, **not** `metadata`.
+     - Ask the student to predict: if `riley` (on `interns`) and `sam` (on `escalations`) send the exact same question while caching is on, what happens on Sam's request—and when would that be helpful vs. dangerous? Also ask what cache TTL (in seconds, at least 60, e.g. `300` for 5 minutes) they'd like to turn on. Wait for their reply.
+
+  2. Enable caching and let the student see a live cache hit:
+     - Confirm their prediction: Sam gets Riley's cached answer immediately, which is great for shared FAQs or classification prompts, and dangerous if the prompt or response contains user-specific data (where you should pass `skipCache: true` or a custom `cacheKey` that includes the user ID).
+     - Enable caching on the gateway with their chosen TTL:
+       `cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl <ttl> --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding`
+     - Make sure their Worker passes `skipCache: Boolean(skipCache)` inside the `gateway` options of `env.AI.run()` (already wired up if they used the interactive lab Worker from Exercise 1).
+     - Send the exact same prompt twice with `skipCache: false` (waiting ~3 seconds between them so the cache write finishes), and a third time with `skipCache: true`.
+     - **Important: leave caching ON** so the student can experience it themselves. Invite the student to:
+       1. Click **Ask through the gateway** twice with the same prompt on their lab page (and then once with **Bypass cache** checked) to feel the speed difference.
+       2. Check their gateway Logs dashboard (`https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`) and look for the cached indicator on the repeat request—comparing its duration and `$0` cost to the uncached requests.
+     - In the same message, ask the comprehension check: when should an app pass `skipCache: true` vs. a custom per-user `cacheKey`? Wait for their reply.
+
+  3. Mark complete:
+     - Confirm via `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` that the logs show both `"cached": true` and `"cached": false` (on the `skipCache: true` call).
+     - Reset `--cache-ttl 0` on the gateway now that the student has tried it (`cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding`) and tell the student you turned caching back off so later exercises always hit the live models.
+     - Gently correct anything off in their answer, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cap-requests-and-spend".
 
   Out of scope here: semantic caching (AI Gateway caching is exact-match only), rate limiting, and spend limits (rate limits and spend limits are the next exercise).
 ---
@@ -40,7 +44,7 @@ The cheapest, fastest model call is the one you don't have to make. Support bots
 
 ## What you'll build
 
-Exact-match [response caching](https://developers.cloudflare.com/ai-gateway/features/caching/) on your gateway and a `skipCache` option on your Worker's `/ask` route. You'll send the same prompt twice to see a cache hit in the gateway logs, then bypass the cache for a fresh answer.
+Exact-match [response caching](https://developers.cloudflare.com/ai-gateway/features/caching/) on your gateway and a `skipCache` option on your Worker's `/ask` route. You'll send the same prompt twice to see a cache hit in the gateway logs and dashboard, then bypass the cache for a fresh answer.
 
 ## Prerequisites
 
