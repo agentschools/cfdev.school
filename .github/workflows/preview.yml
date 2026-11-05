@@ -22,7 +22,8 @@ jobs:
   # uploaded here to the cfdev-school-media R2 bucket at the same path, and
   # removed from the branch so it never reaches main. src/pages/media/[...path].ts
   # redirects /media/* to media.cfdev.school once the files are gone.
-  # Only branches in this repo get the R2 secrets, not forks.
+  # Writes are create-only; existing keys must have identical bytes. New keys
+  # are still public before merge. Only same-repo branches get R2 secrets.
   upload-media:
     if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
@@ -36,7 +37,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 1
 
-      - name: Upload public/media to R2 and remove it from the branch
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+
+      - name: Create or verify public/media in R2, then remove it from the branch
         if: hashFiles('public/media/**') != ''
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_MEDIA_ACCESS_KEY_ID }}
@@ -45,18 +50,8 @@ jobs:
           R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
           set -euo pipefail
-          echo "## Uploaded to media.cfdev.school" >> "$GITHUB_STEP_SUMMARY"
-          cd public/media
-          find . -type f ! -name .DS_Store -print0 | while IFS= read -r -d '' file; do
-            key="${file#./}"
-            case "$key" in
-              *.vtt) type=text/vtt ;;
-              *) type=$(file --brief --mime-type "$file") ;;
-            esac
-            aws s3 cp "$file" "s3://cfdev-school-media/$key" --content-type "$type" --endpoint-url "$R2_ENDPOINT" --only-show-errors
-            echo "- https://media.cfdev.school/$key" >> "$GITHUB_STEP_SUMMARY"
-          done
-          cd "$GITHUB_WORKSPACE"
+          node scripts/upload-media.mjs
+          # Never delete media after any failed or unverified upload.
           git rm -r --quiet public/media
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
