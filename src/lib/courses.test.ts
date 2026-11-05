@@ -35,6 +35,12 @@ const collections = vi.hoisted(() => ({
       body: "\n# Durable Objects\n",
       data: { name: "durable-objects", description: "Learn Durable Objects." },
     },
+    {
+      id: "ai-gateway",
+      filePath: "courses/fundamentals/ai-gateway/COURSE.md",
+      body: "\n# AI Gateway\n",
+      data: { name: "ai-gateway", description: "Learn AI Gateway." },
+    },
   ],
   exercises: [
     { id: "agent-setup/10-tools", body: "# Tools\n", data: {} },
@@ -62,6 +68,7 @@ describe("getBuiltInCourses", () => {
       ["workers", "Workers"],
       ["bindings", "Bindings"],
       ["durable-objects", "Durable Objects"],
+      ["ai-gateway", "AI Gateway"],
     ]);
   });
 
@@ -77,6 +84,7 @@ describe("getBuiltInCourses", () => {
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
       ["durable-objects", "fundamentals"],
+      ["ai-gateway", "fundamentals"],
     ]);
   });
 
@@ -111,14 +119,18 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, workers, , durableObjects] = courses;
+    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, workers, , durableObjects, aiGateway] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
       url: "/courses/bindings",
       label: "Next course: Bindings →",
     });
-    expect(nextStep(courses, durableObjects, durableObjects.exercises.length - 1).url).toBe("/courses");
+    expect(nextStep(courses, durableObjects, durableObjects.exercises.length - 1)).toMatchObject({
+      url: "/courses/ai-gateway",
+      label: "Next course: AI Gateway →",
+    });
+    expect(nextStep(courses, aiGateway, aiGateway.exercises.length - 1).url).toBe("/courses");
     expect(nextStep(courses, publishAWebsite, publishAWebsite.exercises.length - 1)).toMatchObject({
       url: "/courses/run-a-blog-with-emdash",
       label: "Next course: Run a blog with EmDash →",

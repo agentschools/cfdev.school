@@ -1,5 +1,6 @@
 import type { Element, ElementContent } from "hast";
 import type { LanguageRegistration, ShikiTransformer, ThemeRegistration } from "shiki";
+import { renderMermaidSVG } from "beautiful-mermaid";
 import yaml from "shiki/langs/yaml.mjs";
 
 // Code block colors are CSS variables (set in Layout.astro), so highlighting
@@ -82,14 +83,72 @@ export function codeTitle(meta: string | undefined): string | undefined {
   return meta?.match(/(?:^|\s)title="([^"]+)"/)?.[1];
 }
 
+const XML_ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+
+/** Decodes XML's five named entities and numeric references (`&#39;`, `&#x27;`) in one pass. */
+export function decodeXmlEntities(text: string): string {
+  return text.replace(/&(?:#(\d+)|#x([0-9a-fA-F]+)|(amp|lt|gt|quot|apos));/g, (entity, dec, hex, name) => {
+    if (name) return XML_ENTITIES[name];
+    const codePoint = dec ? Number(dec) : parseInt(hex, 16);
+    return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity;
+  });
+}
+
+/** Converts the well-formed XML string from `renderMermaidSVG` into a HAST Element. */
+function svgToHast(xml: string): Element {
+  const root: Element = { type: "element", tagName: "root", properties: {}, children: [] };
+  const stack: Element[] = [root];
+  const tokenPattern = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z0-9:_-]+)([^>]*?)(\/?)>|([^<]+)/g;
+  for (const match of xml.matchAll(tokenPattern)) {
+    const [, closing, tag, attrString, selfClosing, text] = match;
+    if (text !== undefined) {
+      const parent = stack[stack.length - 1];
+      if (text.trim() || parent.tagName === "text" || parent.tagName === "style") {
+        parent.children.push({ type: "text", value: decodeXmlEntities(text) });
+      }
+      continue;
+    }
+    if (!tag) continue;
+    if (closing) {
+      stack.pop();
+      continue;
+    }
+    const properties: Record<string, string> = {};
+    for (const attr of attrString.matchAll(/([a-zA-Z0-9:_-]+)="([^"]*)"/g)) {
+      properties[attr[1]] = decodeXmlEntities(attr[2]);
+    }
+    const element: Element = { type: "element", tagName: tag, properties, children: [] };
+    stack[stack.length - 1].children.push(element);
+    if (!selfClosing) stack.push(element);
+  }
+  return root.children[0] as Element;
+}
+
 /**
  * Puts a label at the top of a code block: the fence's `title`, or "Terminal"
  * for shell blocks without one. Copy buttons copy the <code> only, so the
- * label isn't copied with it.
+ * label isn't copied with it. Also renders ```mermaid fences into theme-aware
+ * inline SVGs at build time.
  */
 export const codeTitleTransformer: ShikiTransformer = {
   name: "cf-dev-school:code-title",
   pre(node) {
+    if (this.options.lang === "mermaid") {
+      // Avoid `--fg:var(--fg)` and `--border:var(--border)` on `<svg style>`,
+      // which create CSS custom-property self-cycles and make fills/strokes invalid.
+      const svg = renderMermaidSVG(this.source, {
+        bg: "var(--card-bg)",
+        fg: "var(--code-fg)",
+        muted: "var(--muted-fg)",
+        accent: "var(--accent-text)",
+        font: "system-ui",
+        transparent: true,
+      }).replace(/@import url\([^)]+\);\s*/g, "");
+      node.tagName = "figure";
+      node.properties = { className: ["mermaid-diagram"] };
+      node.children = [svgToHast(svg)];
+      return;
+    }
     const title = codeTitle(this.options.meta?.__raw);
     const terminal = !title && TERMINAL_LANGS.has(this.options.lang);
     if (!title && !terminal) return;
