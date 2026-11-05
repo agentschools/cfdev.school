@@ -145,10 +145,10 @@ export const harnesses: HarnessProfile[] = [
       thirdPartyRoutingHonorsPlanLimits: true,
       headline: "Included with Claude Pro ($20/month) and Max plans.",
       plans: [
-        { plan: "Claude Pro or Max", signIn: true, countsAgainstPlan: true, notes: "Fable models can bill usage credits instead of the plan's limits, depending on plan; Claude Code asks first." },
+        { plan: "Claude Pro, Max, or Ultra", signIn: true, countsAgainstPlan: true, notes: "Fable models can bill usage credits instead of the plan's limits, depending on plan; Claude Code asks first." },
       ],
       summary:
-        "Native first-party harness. Pro ($20/mo), Max 5x ($100/mo) and Max 20x ($200/mo) plans all cover Claude Code directly against the same usage pool as claude.ai. An ANTHROPIC_API_KEY in the environment overrides subscription login and switches to per-token API billing. Anthropic explicitly prohibits OTHER third-party harnesses from routing through a Claude Pro/Max login on Claude Code's behalf; this only applies to Claude Code itself.",
+        "Native first-party harness. Pro ($20/mo), Max ($100/mo) and Ultra ($200/mo) plans all cover Claude Code directly against the same usage pool as claude.ai. An ANTHROPIC_API_KEY in the environment overrides subscription login and switches to per-token API billing. Anthropic explicitly prohibits OTHER third-party harnesses from routing through a Claude Pro/Max login on Claude Code's behalf; this only applies to Claude Code itself.",
     },
     models: [
       {
@@ -194,6 +194,10 @@ export const harnesses: HarnessProfile[] = [
       {
         url: "https://code.claude.com/docs/en/model-config",
         note: "Verified 2026-10-13: aliases fable (hardest, longest tasks; never the default; can bill usage credits), opus (complex reasoning), sonnet (daily coding), haiku (simple tasks), resolving to Fable 5.1, Opus 5.5, Sonnet 5.5, and Haiku 5.5 on the Anthropic API.",
+      },
+      {
+        url: "https://code.claude.com/docs/en/legal-and-compliance",
+        note: "Checked 2026-11-04: the legal page now lists \"Free, Pro, Max, and Ultra\" plans, and claude.com/pricing lists Pro $20, Max $100, Ultra $200, all with Claude Code. Together they settle the 2026-11-03 question, so the summary now says Max ($100) and Ultra ($200). Third-party routing of plan credentials is still prohibited.",
       },
       {
         url: "https://claude.com/pricing",
