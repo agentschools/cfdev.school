@@ -30,6 +30,12 @@ const collections = vi.hoisted(() => ({
       data: { name: "build-a-drawing-game", description: "Build a drawing game." },
     },
     {
+      id: "see-and-control-ai-spend",
+      filePath: "courses/projects/see-and-control-ai-spend/COURSE.md",
+      body: "\n# See and control AI spend\n",
+      data: { name: "see-and-control-ai-spend", description: "See and control AI spend." },
+    },
+    {
       id: "durable-objects",
       filePath: "courses/fundamentals/durable-objects/COURSE.md",
       body: "\n# Durable Objects\n",
@@ -65,6 +71,7 @@ describe("getBuiltInCourses", () => {
       ["run-a-blog-with-emdash", "Run a blog with EmDash"],
       ["build-a-guestbook", "Build a guestbook"],
       ["build-a-drawing-game", "Build a drawing game"],
+      ["see-and-control-ai-spend", "See and control AI spend"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
       ["durable-objects", "Durable Objects"],
@@ -81,6 +88,7 @@ describe("getBuiltInCourses", () => {
       ["run-a-blog-with-emdash", "projects"],
       ["build-a-guestbook", "projects"],
       ["build-a-drawing-game", "projects"],
+      ["see-and-control-ai-spend", "projects"],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
       ["durable-objects", "fundamentals"],
@@ -119,7 +127,7 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, workers, , durableObjects, aiGateway] = courses;
+    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, controlAiSpend, workers, , durableObjects, aiGateway] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
@@ -136,8 +144,9 @@ describe("nextStep", () => {
       label: "Next course: Run a blog with EmDash →",
     });
     expect(nextStep(courses, buildAGuestbook, buildAGuestbook.exercises.length - 1).url).toBe("/courses/build-a-drawing-game");
+    expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses/see-and-control-ai-spend");
     // The last course in Projects doesn't continue into Fundamentals.
-    expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses");
+    expect(nextStep(courses, controlAiSpend, controlAiSpend.exercises.length - 1).url).toBe("/courses");
   });
 
   it("sends a student finishing Agent setup to the catalog to pick a track", async () => {
