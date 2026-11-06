@@ -5,12 +5,13 @@
   "questions": [
     {
       "id": "experience",
-      "question": "How much have you used AI coding agents like this one?",
+      "question": "How much have you used AI coding agents?",
       "type": "single",
       "options": [
-        "this is my first time",
-        "now and then",
-        "daily"
+        "Not yet",
+        "A few times",
+        "Most weeks",
+        "Every day"
       ]
     },
     {
@@ -28,7 +29,21 @@
         "GitHub Copilot",
         "Gemini CLI"
       ],
-      "none": "None yet",
+      "other": true
+    },
+    {
+      "id": "deployments",
+      "question": "Where have you deployed apps before?",
+      "type": "multi",
+      "options": [
+        "Vercel",
+        "Netlify",
+        "Heroku",
+        "AWS",
+        "Google Cloud",
+        "Azure",
+        "Cloudflare"
+      ],
       "other": true
     },
     {
@@ -41,25 +56,13 @@
         "D1",
         "Workers KV",
         "Durable Objects",
-        "Workers AI",
         "AI Gateway",
-        "Pages",
         "Queues",
-        "DNS or CDN"
+        "Browser Run",
+        "Workflows",
+        "Containers",
+        "Vectorize"
       ],
-      "none": "None yet",
-      "other": true
-    },
-    {
-      "id": "deployments",
-      "question": "Where have you deployed apps before? (pick any)",
-      "type": "multi",
-      "options": [
-        "Vercel or Netlify",
-        "AWS, Google Cloud, or Azure",
-        "Cloudflare"
-      ],
-      "none": "nowhere yet",
       "other": true
     },
     {
@@ -68,15 +71,15 @@
       "type": "multi",
       "options": [
         "Web apps",
-        "Agents",
-        "Voice agents",
-        "Schedulers and automations",
+        "Cloud agents",
+        "Automations",
         "APIs and backends",
-        "Personal websites or blogs",
         "Games",
-        "Data tools"
+        "Data tools",
+        "Multiplayer apps",
+        "MCP servers",
+        "Browser automation"
       ],
-      "none": "Not sure yet",
       "other": true
     },
     {
@@ -93,12 +96,13 @@
     },
     {
       "id": "quizzes",
-      "question": "Want a short quiz at the end of each exercise? (recommended, skippable anytime)",
+      "question": "Want a short quiz at the end of each exercise?",
       "type": "single",
       "options": [
-        "yes",
-        "no"
-      ]
+        "Yes, quiz me!",
+        "No quizzes please"
+      ],
+      "default": "Yes, quiz me!"
     }
   ]
 }

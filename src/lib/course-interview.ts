@@ -11,7 +11,7 @@ const definitionSchema = z.object({
   questions: z.array(z.object({
     id: z.string(), question: z.string(), type: z.enum(["short", "long", "single", "multi"]),
     hint: z.string().optional(), options: z.array(z.string()).optional(),
-    none: z.string().optional(), other: z.boolean().optional(),
+    other: z.boolean().optional(), default: z.string().optional(),
   })),
 });
 export type InterviewDefinition = z.infer<typeof definitionSchema>;
@@ -22,10 +22,19 @@ export function courseInterview(course: string): InterviewDefinition | undefined
 
 export const SAVED_ANSWER = "__saved-answer__";
 
+/** Agents stored short lowercase choices ("yes") before the form's longer labels ("Yes, quiz me!"). */
+export function matchingOption(question: InterviewDefinition["questions"][number], answer: string): string | undefined {
+  const short = answer.toLowerCase();
+  return question.options?.find(option => {
+    const label = option.toLowerCase();
+    return label === short || (label.startsWith(short) && !/[a-z]/.test(label[short.length]));
+  });
+}
+
 /** A previous agent answer can be more specific than the website's fixed choices. */
 export function savedSingleAnswer(question: InterviewDefinition["questions"][number], responses: InterviewResponse[]): InterviewResponse | undefined {
   const previous = responses.find(response => response.question === question.question);
-  return question.type === "single" && previous && (typeof previous.answer !== "string" || !question.options?.includes(previous.answer)) ? previous : undefined;
+  return question.type === "single" && previous && (typeof previous.answer !== "string" || !matchingOption(question, previous.answer)) ? previous : undefined;
 }
 
 export function interviewBody(definition: InterviewDefinition, data: FormData, existing: InterviewResponse[] = []): SaveInterview {
@@ -37,12 +46,10 @@ export function interviewBody(definition: InterviewDefinition, data: FormData, e
       return [previous];
     }
     if (values.some(answer => answer.length > 2000)) throw new Error("Please keep each answer under 2,000 characters.");
-    if (question.options && values.some(answer => ![...question.options!, question.none, "Other"].includes(answer))) throw new Error("Please choose a listed answer.");
-    if (question.none && values.includes(question.none) && values.length > 1) throw new Error(`Choose ${question.none} on its own, or select your other answers.`);
+    if (question.options && values.some(answer => !question.options!.includes(answer))) throw new Error("Please choose a listed answer.");
     const other = String(data.get(`${question.id}-other`) ?? "").trim();
-    if (values.includes("Other") && !other) throw new Error("Please describe your Other choice, or uncheck Other.");
     if (other.length > 2000) throw new Error("Please keep each answer under 2,000 characters.");
-    const answers = values.map(value => value === "Other" ? `Other: ${other}` : value);
+    const answers = other ? [...values, `Other: ${other}`] : values;
     if (!answers.length) return [];
     return [{ question: question.question, answer: question.type === "multi" ? answers : answers[0] }];
   });

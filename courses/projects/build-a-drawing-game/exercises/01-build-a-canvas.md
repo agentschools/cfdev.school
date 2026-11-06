@@ -3,7 +3,7 @@ description: "Start a React app on a Worker and build a canvas that works with a
 agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
-  Read this course's interview (GET /api/students/{id}/interviews): who the game is for and what they'll draw set the page's look, browser experience sets how much React you explain, and where they'll play sets the canvas size and how much phone testing to do. Teach the body's sections as you go, before the code that uses them.
+  Read this course's interview (GET /api/students/{id}/interviews): who'll play, what they'll draw, and how it should look and feel set the page's style, browser experience sets how much React you explain, and where they'll play sets the canvas size and how much phone testing to do. Teach the body's sections as you go, before the code that uses them.
 
   1. Ask the student what to call the game: it becomes the directory and Worker name, so suggest something short and lowercase with hyphens. Wait for their reply. Then create the project with `cf init <name>`, and write a short `AGENTS.md` in it: what the game is, that it's React + Vite on one Worker built with `cf`, and the commands (`cf dev`, `npm run typecheck`, `cf deploy`). Never run Wrangler in this project.
   2. Add React to the Vite project `cf init` made:

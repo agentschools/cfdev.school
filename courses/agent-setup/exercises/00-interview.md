@@ -45,14 +45,14 @@ agent-instructions: |
   The questions (every one is optional, if the student skips one, move on
   without pushing):
 
-  1. "How much have you used AI coding agents like this one?" Choices: this is my first time / now and then / daily.
-  2. "Which AI apps and agent harnesses have you used?" Choose any: Claude Code / Claude desktop / ChatGPT / Codex / Pi / OpenCode / Cursor / GitHub Copilot / Gemini CLI / None yet / Other (their own words). None is exclusive.
-  3. "Which Cloudflare products have you used before?" Choose any: Workers / R2 / D1 / Workers KV / Durable Objects / Workers AI / AI Gateway / Pages / Queues / DNS or CDN / None yet / Other (their own words). None is exclusive.
-  4. "Where have you deployed apps before? (pick any)" Choose any: Vercel or Netlify / AWS, Google Cloud, or Azure / Cloudflare / nowhere yet / Other (their own words). None is exclusive.
-  5. "What are you interested in building on Cloudflare?" Choose any: Web apps / Agents / Voice agents / Schedulers and automations / APIs and backends / Personal websites or blogs / Games / Data tools / Not sure yet / Other (their own words). None is exclusive.
+  1. "How much have you used AI coding agents?" Choices: Not yet / A few times / Most weeks / Every day.
+  2. "Which AI apps and agent harnesses have you used?" Choose any: Claude Code / Claude desktop / ChatGPT / Codex / Pi / OpenCode / Cursor / GitHub Copilot / Gemini CLI / Other (their own words).
+  3. "Where have you deployed apps before?" Choose any: Vercel / Netlify / Heroku / AWS / Google Cloud / Azure / Cloudflare / Other (their own words).
+  4. "Which Cloudflare products have you used before?" Choose any: Workers / R2 / D1 / Workers KV / Durable Objects / AI Gateway / Queues / Browser Run / Workflows / Containers / Vectorize / Other (their own words).
+  5. "What are you interested in building on Cloudflare?" Choose any: Web apps / Cloud agents / Automations / APIs and backends / Games / Data tools / Multiplayer apps / MCP servers / Browser automation / Other (their own words).
   6. "What do you want to build or learn?" Free text. Tell us about your idea, who it is for, and what you hope to learn. More context helps your agent connect the course to what you want to build.
   7. "How do you like to learn?" Free text. For example: explain each step, let me try first, use diagrams, or compare with tools I know. More context helps your agent tailor the pace and explanations.
-  8. "Want a short quiz at the end of each exercise? (recommended, skippable anytime)" Choices: yes / no.
+  8. "Want a short quiz at the end of each exercise?" Choices: Yes, quiz me! / No quizzes please. Default to "Yes, quiz me!" if they skip it.
 
   Use their experience, product, app, and learning preferences to adjust tone, depth, and
   comparisons in later exercises (e.g. explain a Worker by comparison to a
@@ -80,8 +80,8 @@ agent-instructions: |
   `"course": "agent-setup"`. Each response's `question` is the question's
   text exactly as written above, so later agents recognize it, and its
   `answer` is a string for single choices or free text, or an array for
-  multiple selections. Include Other as "Other: their words". Keep quiz
-  answers as "yes" or "no" for compatibility. Free text is lightly trimmed. Leave out questions they skipped. Store the OS you
+  multiple selections. Include Other as "Other: their words". Store quiz
+  answers as "Yes, quiz me!" or "No quizzes please". Free text is lightly trimmed. Leave out questions they skipped. Store the OS you
   detected as a pair too, with the question "Which operating system are
   you on?" and an answer like "macOS", "Linux", or "Windows". Include a
   `summary`: one sentence addressed to the student covering their
@@ -92,13 +92,13 @@ agent-instructions: |
   {
     "course": "agent-setup",
     "responses": [
-      { "question": "How much have you used AI coding agents like this one?", "answer": "this is my first time" },
-      { "question": "Where have you deployed apps before? (pick any)", "answer": ["nowhere yet"] },
+      { "question": "How much have you used AI coding agents?", "answer": "Not yet" },
+      { "question": "Where have you deployed apps before?", "answer": ["Vercel"] },
       { "question": "What do you want to build or learn?", "answer": "a link shortener" },
-      { "question": "Want a short quiz at the end of each exercise? (recommended, skippable anytime)", "answer": "yes" },
+      { "question": "Want a short quiz at the end of each exercise?", "answer": "Yes, quiz me!" },
       { "question": "Which operating system are you on?", "answer": "macOS" }
     ],
-    "summary": "You're new to AI agents, haven't deployed anything before, are on macOS, want to build a link shortener, and opted into quizzes."
+    "summary": "You're new to AI agents, have deployed to Vercel before, are on macOS, want to build a link shortener, and opted into quizzes."
   }
   ```
 

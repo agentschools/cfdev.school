@@ -3,34 +3,56 @@
   "questions": [
     {
       "id": "audience",
-      "question": "Who is your game for?",
-      "type": "short",
-      "hint": "My kids, friends at a party, my coworkers, just me\u2026"
+      "question": "Who will play your game?",
+      "type": "multi",
+      "options": [
+        "Just me",
+        "My kids",
+        "Friends or family",
+        "Coworkers",
+        "A classroom",
+        "A party crowd"
+      ],
+      "other": true
     },
     {
       "id": "drawings",
       "question": "What should players draw?",
       "type": "long",
-      "hint": "Farm animals, things in a kitchen, Cloudflare products, inside jokes\u2026 Start with 8 to 15 things that look different when drawn."
+      "hint": "A theme or a list: farm animals, things in a kitchen, Cloudflare products, inside jokes\u2026 It works best with 8 to 15 things that look different when drawn."
     },
     {
-      "id": "experience",
-      "question": "How much have you built for the browser before?",
-      "type": "single",
+      "id": "look",
+      "question": "What should it look and feel like?",
+      "type": "multi",
       "options": [
-        "nothing yet",
-        "some HTML, CSS, or JavaScript",
-        "I've built React apps"
-      ]
+        "Silly and cartoony",
+        "Clean and minimal",
+        "Retro arcade",
+        "Hand-drawn and cozy",
+        "Bright and colorful",
+        "Dark and moody"
+      ],
+      "other": true
     },
     {
       "id": "device",
       "question": "Where will people mostly play it?",
       "type": "single",
       "options": [
-        "on a phone",
-        "on a laptop or desktop",
-        "both"
+        "On a phone",
+        "On a laptop or desktop",
+        "Both"
+      ]
+    },
+    {
+      "id": "experience",
+      "question": "How much have you built for the browser before?",
+      "type": "single",
+      "options": [
+        "Nothing yet",
+        "Some HTML, CSS, or JavaScript",
+        "I've built React apps"
       ]
     }
   ],

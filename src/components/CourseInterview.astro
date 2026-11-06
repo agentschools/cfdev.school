@@ -4,36 +4,31 @@ import { SAVED_ANSWER, type InterviewDefinition } from "../lib/course-interview"
 interface Props { definition: InterviewDefinition }
 const { definition } = Astro.props;
 ---
-<section data-course-interview data-definition={JSON.stringify(definition)} aria-labelledby="personalize-heading">
-  <h2 id="personalize-heading">Make this course yours</h2>
-  <p>Answer these questions so your agent can personalize the course to what you want to build and how you like to learn. More context helps it choose useful examples and the right pace.</p>
-  <p class="note">Every question is optional. Skip any you like, and change your answers later.</p>
-  <p class="note">When you submit, we'll save your answers and complete the interview. If you don't have a student ID, we'll create a free anonymous one automatically. It is saved in this browser, not a password-protected account. Avoid personal or sensitive information.</p>
+<section data-course-interview data-definition={JSON.stringify(definition)} aria-label="Interview">
   <noscript><p>Enable JavaScript for the form, or <a href={`/courses/${definition.course}/exercises/00-interview.md`}>read the agent interview instructions</a>.</p></noscript>
   <p data-interview-status role="status" aria-live="polite">Loading your saved answers…</p>
   <button type="button" data-interview-reload hidden>Reload saved answers (discard current edits)</button>
   <form data-interview-form>
     <fieldset data-interview-fields disabled>
-      {definition.questions.map((question, index) => (
+      {definition.questions.map((question, index) => (<>
+        {index > 0 && <hr />}
         <fieldset class="question">
-          <legend>{index + 1}. {question.question} <span>(optional)</span></legend>
+          <legend>{question.question}</legend>
           {question.hint && <p id={`${question.id}-hint`} class="note">{question.hint}</p>}
           {question.type === "short" || question.type === "long" ? (
             question.type === "long" ? <textarea aria-label={question.question} aria-describedby={question.hint ? `${question.id}-hint` : undefined} name={question.id} rows="4" maxlength="2000" /> :
             <input aria-label={question.question} aria-describedby={question.hint ? `${question.id}-hint` : undefined} type="text" name={question.id} maxlength="2000" />
           ) : (
-            <div class="choices">
-              {question.type === "multi" && <p class="note">Choose any that apply.</p>}
-              {[...(question.options ?? []), ...(question.none ? [question.none] : []), ...(question.other ? ["Other"] : [])].map(option => <label><input type={question.type === "multi" ? "checkbox" : "radio"} name={question.id} value={option} data-none={option === question.none ? "" : undefined} /> {option}</label>)}
+            <div class={question.type === "multi" ? "choices columns" : question.options?.length === 2 ? "choices inline" : "choices"}>
+              {(question.options ?? []).map(option => <label><input type={question.type === "multi" ? "checkbox" : "radio"} name={question.id} value={option} checked={option === question.default} /> {option}</label>)}
               {question.type === "single" && <>
                 <label data-saved-choice={question.id} hidden><input type="radio" name={question.id} value={SAVED_ANSWER} /><span></span></label>
-                <label><input type="radio" name={question.id} value="" checked /> Skip this question</label>
               </>}
-              {question.other && <label class="other-text">Other (describe)<input type="text" name={`${question.id}-other`} maxlength="2000" /></label>}
+              {question.other && <input class="other-text" type="text" name={`${question.id}-other`} placeholder="Other..." aria-label={`${question.question} Other`} maxlength="2000" />}
             </div>
           )}
         </fieldset>
-      ))}
+      </>))}
       <button class="start" type="submit">Start the course</button>
     </fieldset>
   </form>
@@ -50,20 +45,25 @@ const { definition } = Astro.props;
 </script>
 <style>
   section { margin-top: 2rem; }
-  .note, legend span { color: var(--muted-fg); font-size: .9rem; }
+  .note { color: var(--muted-fg); font-size: .9rem; }
   fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-  .question { border-top: 1px solid var(--border); padding: 1.5rem 0; }
+  .question:first-child { margin-top: 2.25rem; }
+  hr { border: 0; border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent); margin: 1.75rem 0 2rem; }
+  .question > .note { margin: 0 0 .5rem; }
+  [data-interview-status]:empty { display: none; }
   legend { font-weight: 600; padding: 0 .25rem 0 0; }
-  legend span { font-weight: normal; }
   input[type=text], textarea { box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: .4rem; padding: .8rem; background: var(--bg); color: var(--fg); font: inherit; }
   textarea { resize: vertical; }
-  .choices { display: grid; gap: .35rem; margin-top: .75rem; }
-  .choices p { margin: 0; }
+  .choices { display: grid; gap: .35rem; margin-top: .5rem; }
+  .choices.inline { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+  .choices.columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .5rem; }
+  @media (min-width: 48rem) { .choices.columns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .choices.columns .other-text { grid-column: 1 / -1; }
   label { display: flex; align-items: center; gap: .6rem; padding: .6rem; cursor: pointer; }
-  .other-text { flex-direction: column; align-items: stretch; }
+  .other-text { margin-top: .35rem; }
   input[type=radio], input[type=checkbox] { accent-color: var(--accent); flex-shrink: 0; width: 1rem; height: 1rem; }
   button { font: inherit; cursor: pointer; }
-  .start { width: 100%; padding: 1rem; margin: .5rem 0 1.5rem; border: 0; border-radius: .5rem; background: var(--accent); color: var(--accent-contrast); font-weight: 700; font-size: 1.15rem; }
+  .start { width: 100%; padding: 1rem; margin: 2.5rem 0 1.5rem; border: 0; border-radius: .5rem; background: var(--accent); color: var(--accent-contrast); font-weight: 700; font-size: 1.15rem; }
   :disabled .start { cursor: wait; opacity: .65; }
   :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
   .alternative { border-top: 1px solid var(--border); padding-top: 1rem; color: var(--muted-fg); font-size: .9rem; }

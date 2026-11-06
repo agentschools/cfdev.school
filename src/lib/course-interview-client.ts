@@ -1,4 +1,4 @@
-import { courseInterview, interviewBody, interviewPrompt, savedSingleAnswer, SAVED_ANSWER, type InterviewDefinition } from "./course-interview";
+import { courseInterview, interviewBody, interviewPrompt, matchingOption, savedSingleAnswer, SAVED_ANSWER, type InterviewDefinition } from "./course-interview";
 import { ENROLLED_EVENT, enrollStudent, readCachedStudent, type CachedStudent } from "./enroll-client";
 import { initPromptCopy } from "./agent-prompt-copy";
 import { buildPrompt } from "./agent-prompt";
@@ -60,7 +60,7 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
     form.reset();
     for (const input of form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea")) {
       const answers = entries.filter(([name]) => name === input.name).map(([, value]) => value);
-      if (input instanceof HTMLInputElement && ["radio", "checkbox"].includes(input.type)) input.checked = answers.includes(input.value) || (!answers.length && input.type === "radio" && input.value === "");
+      if (input instanceof HTMLInputElement && ["radio", "checkbox"].includes(input.type)) input.checked = answers.includes(input.value) || (!answers.length && input.type === "radio" && input.value === definition.questions.find(question => question.id === input.name)?.default);
       else input.value = answers[0] ?? "";
     }
   }
@@ -74,10 +74,10 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
       }
       if (previous) return [[question.id, SAVED_ANSWER]] as [string, string][];
       const answer = saved?.responses.find(response => response.question === question.question)?.answer;
-      const answers = Array.isArray(answer) ? answer : answer ? [answer] : [];
-      const custom = question.other ? answers.filter(value => ![...(question.options ?? []), question.none].includes(value)) : [];
+      const answers = (Array.isArray(answer) ? answer : answer ? [answer] : []).map(value => matchingOption(question, value) ?? value);
+      const custom = question.other ? answers.filter(value => !question.options?.includes(value)) : [];
       const entries: [string, string][] = answers.filter(value => !custom.includes(value)).map(value => [question.id, value]);
-      if (custom.length) entries.push([question.id, "Other"], [`${question.id}-other`, custom.map(value => value.replace(/^Other: /, "")).join("; ")]);
+      if (custom.length) entries.push([`${question.id}-other`, custom.map(value => value.replace(/^Other: /, "")).join("; ")]);
       return entries;
     });
   }
@@ -88,7 +88,7 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
       const draft = JSON.parse(raw);
       if (draft.version !== version()) return "Saved answers changed since your unfinished draft. The latest saved answers are shown; review before submitting.";
       populate(draft.values);
-      return "Your unfinished answers are restored. Submit when ready.";
+      return "";
     } catch { return ""; }
   }
   async function load(restore = true): Promise<void> {
@@ -105,7 +105,7 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
       }
       if (current !== generation) return;
       saved = interview; populate(savedEntries());
-      status.textContent = (restore && restoreDraft()) || (saved ? "Review your saved answers, then start the course. If completion was interrupted, submit to finish it." : "All questions are optional. Start when you're ready.");
+      status.textContent = (restore && restoreDraft()) || (saved ? "Review your saved answers, then start the course. If completion was interrupted, submit to finish it." : "");
       ready = true; submit.textContent = "Start the course";
     } catch (error) {
       if (current !== generation) return;
@@ -113,20 +113,7 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
       reload.hidden = false;
     } finally { if (current === generation) fields.disabled = !ready; }
   }
-  form.addEventListener("input", event => {
-    const input = event.target;
-    if (input instanceof HTMLInputElement && input.name.endsWith("-other") && input.value.trim()) {
-      const name = input.name.slice(0, -6);
-      for (const option of form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)) {
-        if (option.value === "Other") option.checked = true;
-        if (option.hasAttribute("data-none")) option.checked = false;
-      }
-    }
-    if (input instanceof HTMLInputElement && input.type === "checkbox" && input.checked) {
-      for (const other of form.querySelectorAll<HTMLInputElement>(`input[name="${input.name}"]`)) {
-        if (other !== input && (input.hasAttribute("data-none") || other.hasAttribute("data-none"))) other.checked = false;
-      }
-    }
+  form.addEventListener("input", () => {
     hidePrompt(); submit.textContent = "Start the course"; saveDraft();
   });
   reload.addEventListener("click", () => {

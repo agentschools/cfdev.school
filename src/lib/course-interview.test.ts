@@ -17,15 +17,15 @@ describe("course-authored web interviews", () => {
       const markdown = rawCourses().find(course => course.name === definition.course)!.exercises["00-interview.md"];
       for (const question of definition.questions) expect(markdown).toContain(question.question);
     }
-    expect(drawing.questions).toHaveLength(4);
+    expect(drawing.questions).toHaveLength(5);
     expect(setup.questions).toHaveLength(8);
   });
   it("supports empty submissions, trims free text, and preserves detected OS", () => {
     expect(interviewBody(drawing, new FormData()).responses).toEqual([]);
-    const data = new FormData(); data.set("goals", "  A scheduling app  "); data.set("quizzes", "no");
+    const data = new FormData(); data.set("goals", "  A scheduling app  "); data.set("quizzes", "No quizzes please");
     const body = interviewBody(setup, data, [{ question: "Which operating system are you on?", answer: "macOS" }]);
     expect(saveInterviewSchema.safeParse(body).success).toBe(true);
-    expect(body.responses.map(response => response.answer)).toEqual(["A scheduling app", "no", "macOS"]);
+    expect(body.responses.map(response => response.answer)).toEqual(["A scheduling app", "No quizzes please", "macOS"]);
   });
   it("visibly retains custom single-choice answers across both courses until explicitly changed or skipped", () => {
     for (const [definition, id, answer] of [
@@ -48,21 +48,21 @@ describe("course-authored web interviews", () => {
     const data = new FormData(); data.set("experience", SAVED_ANSWER);
     expect(() => interviewBody(setup, data)).toThrow("saved answer changed");
     const question = setup.questions.find(question => question.id === "experience")!;
-    expect(savedSingleAnswer(question, [{ question: question.question, answer: "daily" }])).toBeUndefined();
+    expect(savedSingleAnswer(question, [{ question: question.question, answer: "every day" }])).toBeUndefined();
+    const quizzes = setup.questions.find(question => question.id === "quizzes")!;
+    expect(savedSingleAnswer(quizzes, [{ question: quizzes.question, answer: "yes" }])).toBeUndefined();
+    expect(savedSingleAnswer(quizzes, [{ question: quizzes.question, answer: "no" }])).toBeUndefined();
   });
   it("keeps long goals within the summary API limit", () => {
     const data = new FormData(); data.set("goals", "a".repeat(2000));
     expect(saveInterviewSchema.safeParse(interviewBody(setup, data)).success).toBe(true);
   });
-  it("handles multiple choices and Other without conflicting None", () => {
-    const data = new FormData(); data.append("products", "Workers"); data.append("products", "D1"); data.append("products", "Other"); data.set("products-other", "  Vectorize ");
+  it("handles multiple choices and Other", () => {
+    const data = new FormData(); data.append("products", "Workers"); data.append("products", "D1"); data.set("products-other", "  Vectorize ");
     expect(interviewBody(setup, data).responses[0].answer).toEqual(["Workers", "D1", "Other: Vectorize"]);
-    data.append("products", "None yet");
-    expect(() => interviewBody(setup, data)).toThrow("on its own");
   });
-  it("rejects missing Other text, unknown choices, and oversized answers", () => {
-    const data = new FormData(); data.set("harnesses", "Other");
-    expect(() => interviewBody(setup, data)).toThrow("Other choice");
+  it("rejects unknown choices and oversized answers", () => {
+    const data = new FormData();
     data.set("harnesses", "made up"); expect(() => interviewBody(setup, data)).toThrow("listed answer");
     data.delete("harnesses"); data.set("goals", "x".repeat(2001)); expect(() => interviewBody(setup, data)).toThrow("2,000");
   });
