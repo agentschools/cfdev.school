@@ -4,21 +4,21 @@ agent-instructions: |
   Guide the student through this exercise end to end. Do not skip verification.
 
   Teaching approach (use this flexible rhythm across the course, adapting to the student's lead):
-  - **Teach the "why" and mental model first**: Before asking the student for config names or running CLI commands, explain what problem the feature solves, how it changes the request path, and any new terms (like *gateway* and *metadata* tags), pitched to their interview answers (GET /api/students/{id}/interviews). Never rely on the web page's video clip to explain a concept; you can drop a one-line optional link to `<origin>/courses/ai-gateway/see-every-request` (or `/media/courses/ai-gateway/see-every-request.mp4`), but teach everything directly in chat.
-  - **Show a compact Before/After diagram in chat**: Draw a short ASCII diagram in chat showing how requests flow without vs. with AI Gateway so visual and text learners both get the mental model immediately.
+  - **Give beginners solid ground first**: Before asking the student for config names, introducing jargon, or running CLI commands, explain in plain language what problem the feature solves and how it changes the request path, pitched to their interview answers (GET /api/students/{id}/interviews). Never rely on the web page's video clip to explain a concept; you can drop a one-line optional link to `<origin>/courses/ai-gateway/see-every-request` (or `/media/courses/ai-gateway/see-every-request.mp4`), but teach everything directly in chat.
+  - **Build the diagram up progressively across the course**: Each exercise adds one new stage to the same gateway pipeline. Start with the base flow here (Logs + Metadata), and in each later exercise redraw the flow and add that exercise's piece so the student watches the system assemble step by step.
   - **Never link a dead `GET /` Worker**: If you give the student a `.workers.dev` URL, clicking it in a browser must work. When scaffolding a new Worker for this course, serve an interactive HTML playground on `GET /` alongside `POST /ask` so the student can send prompts, switch teams, toggle cache bypass, and see the live response + `logId` in their browser.
   - **Let the student drive and explore**: Keep features live while the student tries them, and link them directly to their Cloudflare Dashboard when visual inspection adds value.
 
   1. Teach the concept first (before setup):
-     - Explain what an AI gateway is: a proxy checkpoint between your application and the AI models it calls. Without it, your app calls OpenAI, Anthropic, or Workers AI directly and you can't easily see per-team spend, cache repeat answers, swap models without redeploying, or block bad prompts in one place.
-     - Show a compact Before/After flow in chat, tailored to the provider they picked in question 2 of the interview (e.g. `env.AI.run()` for Workers AI, or pointing an SDK's `baseURL` at `https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>/<provider>`):
+     - Explain what an AI gateway is: a proxy checkpoint between your application and the AI models it calls. Without it, your app calls OpenAI, Anthropic, or Workers AI directly and you have no single place to see which team is driving up token spend.
+     - Draw Stage 1 of the gateway pipeline in chat, tailored to the provider they picked in question 2 of the interview (e.g. `env.AI.run()` for Workers AI, or pointing an SDK's `baseURL` at `https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>/<provider>`):
        ```text
-       Before:  Your App ──────────────────────────────► Model Provider (no central logs or controls)
-       After:   Your App ──(prompt + metadata)──► AI Gateway ──► Workers AI / OpenAI / Anthropic
-                                                      │
-                                           Logs · Cache · Limits · Routes · Guardrails
+       Before:   Your Worker ───────────────────────────────────────► Model Provider
+       Stage 1:  Your Worker ──(prompt + metadata)──► AI Gateway ───► Model Provider
+                                                          │
+                                                     [ 1. Logs ]
        ```
-     - Explain **metadata** (tags): up to 5 flat key-value labels (like `{ user: "alex", team: "interns" }`) that your server attaches to each request so you can filter logs, attribute cost, and route traffic by team or user even when the whole app shares one model credential.
+     - Once that picture is clear, introduce **metadata** (tags): up to 5 flat key-value labels (like `{ user: "alex", team: "interns" }`) that your server attaches to each request so you can filter logs, attribute cost, and later enforce budgets or route traffic by team even when the whole app shares one model credential.
      - Then, in the same message, ask the student if they'd like to use an existing Worker or create a new interactive lab Worker, and ask what gateway ID and two team names they want to use (or offer defaults: `dev-school-gateway`, `interns`, and `escalations`). Wait for their reply.
 
   2. Create the gateway and interactive lab Worker:
@@ -36,11 +36,14 @@ agent-instructions: |
        1. Their live lab Worker URL (`https://<worker>.<subdomain>.workers.dev/`) — invite them to open it and send a question under either team.
        2. Their direct AI Gateway Logs dashboard URL: `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`
      - Give them a quick dashboard exploration mission: open the Logs link, click one of their recent requests to expand it, and look at what the gateway captured (the model used, token counts, duration, cost estimate, and their custom `metadata` tags).
-     - Also ask the comprehension check in the same turn so they can reply once they've looked: why should a real app attach `user` and `team` metadata on the server rather than trusting tags sent from the browser? Wait for their reply.
+     - In the same turn, offer a scenario check tailored to their interview profile (and let them know they can also reply `"next"` anytime to keep moving):
+       - For a builder or developer: what could go wrong in their app if the Worker trusted `team` or `user` metadata sent from the browser instead of attaching it on the server?
+       - For someone in a sales, SE, or customer-facing role: if a customer says *"All of our internal apps share one OpenAI API key, so we have no idea which team is driving up our bill,"* how would you explain how AI Gateway and server-side metadata solve that (or want to try pitching me as that customer)?
+       Wait for their reply.
 
   4. Mark complete:
      - Confirm via `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` that requests for both teams appear in the gateway logs with `metadata`.
-     - Gently correct anything off in their answer, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cache-responses".
+     - If they answered the scenario question, connect their answer to the concrete consequence (skip hollow `"Correct!"` praise); if they replied `"next"` or skipped it, share a one-line takeaway on why server-attached metadata is trustworthy, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cache-responses".
 
   Out of scope here: routes, caching, rate limits, spend limits, and Guardrails/DLP — those are the next exercises.
 ---
@@ -72,17 +75,16 @@ Your agent can help you with these.
 
 ## Where AI Gateway sits: before and after
 
-Without a gateway, each part of your application calls model providers directly, leaving you with no single place to see usage, attach team tags, or enforce policies. With AI Gateway, every request passes through a proxy checkpoint on Cloudflare's network first:
+Without a gateway, each part of your application calls model providers directly, leaving you with no single place to see usage or attach team tags. In this first stage, every request passes through AI Gateway so it can log the call and record your `metadata` before forwarding to the model:
 
 ```mermaid
-flowchart TD
+flowchart LR
   subgraph Before["Before: Direct model calls"]
-    AppDirect["Your Worker or App"] -->|"direct API call"| ProviderDirect["Workers AI · OpenAI · Anthropic"]
+    AppDirect["Your Worker"] -->|"direct call"| ProviderDirect["Model Provider"]
   end
-  subgraph After["After: Through AI Gateway"]
-    App["Your Worker or App"] -->|"prompt + metadata"| Gateway["Cloudflare AI Gateway\nLogs · Cache · Limits · Routes · Guardrails"]
-    Gateway --> WorkersAI["Workers AI"]
-    Gateway --> External["OpenAI · Anthropic · Google"]
+  subgraph Stage1["Stage 1: Visibility through AI Gateway"]
+    App["Your Worker"] -->|"prompt + metadata"| Gateway["AI Gateway\n1. Logs & Metadata"]
+    Gateway --> Provider["Model Provider"]
   end
 ```
 
