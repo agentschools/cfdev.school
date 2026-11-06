@@ -23,7 +23,7 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
     if (courseFile) {
       // A course in a track (courses/<track>/<name>/) has the same flat URL as one that isn't.
       const [, course, file, exerciseFile] = courseFile;
-      // Same slug rule as @agentschools/course-spec: no leading number prefix.
+      // Same slug rule as the create-course skill: no leading number prefix.
       const page = exerciseFile ? `/courses/${course}/${exerciseFile.replace(/^\d+[-_]/, "")}` : `/courses/${course}`;
       add(page, `/courses/${course}/${file}`);
     } else if (filename === "src/data/harnesses.ts") {
@@ -50,9 +50,11 @@ export function previewPaths(files, readFile = (path) => readFileSync(path, "utf
       filename === "src/lib/authors-client.ts" ||
       filename === "src/content/authors.md" ||
       filename === "src/pages/authors.md.ts" ||
-      filename === "src/pages/course-spec.md.ts"
+      filename === "src/pages/course-spec.md.ts" ||
+      filename.startsWith("src/pages/course-authoring/") ||
+      filename.startsWith(".agents/skills/create-course/")
     ) {
-      add("/authors", "/authors.md", "/course-spec.md");
+      add("/authors", "/authors.md", "/course-spec.md", "/course-authoring/SKILL.md", "/course-authoring/SPEC.md");
     } else if (filename === "src/pages/agents.astro") {
       add("/agents");
     } else if (filename === "src/pages/disenroll.astro" || filename === "src/lib/disenroll-client.ts") {

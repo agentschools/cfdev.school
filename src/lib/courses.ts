@@ -8,7 +8,7 @@ import {
   INTERVIEW_SLUG,
   titleFromMarkdown,
   withInterviewFirst,
-} from "@agentschools/course-spec";
+} from "./course-format";
 
 export interface BuiltInExercise {
   slug: string;

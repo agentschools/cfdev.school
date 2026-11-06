@@ -1,5 +1,5 @@
 import defaultInterview from "../content/default-interview.md?raw";
-import { exerciseSlugFromFilename, INTERVIEW_SLUG } from "@agentschools/course-spec";
+import { exerciseSlugFromFilename, INTERVIEW_SLUG } from "./course-format";
 
 /**
  * The built-in courses' files exactly as they are in the repo, bundled at

@@ -12,7 +12,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "vitest run",
+    "test": "npm run skill:check && vitest run",
     "lint": "eslint .",
     "deploy": "wrangler d1 migrations apply cloudflare-dev-school --remote && astro build && wrangler deploy",
     "preview:deploy": "node scripts/preview-env.mjs deploy",
@@ -20,10 +20,11 @@
     "verify:interview": "node scripts/fake-agent-interview.mjs",
     "verify:exercise": "node scripts/fake-agent-exercise.mjs",
     "verify:exercise-kv": "node scripts/fake-agent-exercise-kv.mjs",
-    "verify:external-course": "node scripts/fake-agent-external-course.mjs"
+    "verify:external-course": "node scripts/fake-agent-external-course.mjs",
+    "skill:update": "node scripts/sync-course-skill.mjs",
+    "skill:check": "node scripts/sync-course-skill.mjs --check"
   },
   "dependencies": {
-    "@agentschools/course-spec": "github:agentschools/course-spec#c6e731941f9a20157b7f80c6f81f1813965c3110",
     "@astrojs/cloudflare": "14.2.6",
     "@floating-ui/dom": "1.8.0",
     "astro": "7.2.10",

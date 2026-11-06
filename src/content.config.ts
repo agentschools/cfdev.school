@@ -48,9 +48,9 @@ const authorsGuide = defineCollection({
   schema: exerciseFrontmatterSchema,
 });
 
-/** The COURSE.md format, from the pinned @agentschools/course-spec dependency. Rendered on /authors. */
+/** The COURSE.md format, from the pinned create-course project skill. Rendered on /authors. */
 const courseSpec = defineCollection({
-  loader: glob({ base: "node_modules/@agentschools/course-spec", pattern: "SPEC.md" }),
+  loader: glob({ base: ".agents/skills/create-course", pattern: "SPEC.md" }),
 });
 
 export const collections = { courses, exercises, defaultInterview, authorsGuide, courseSpec };

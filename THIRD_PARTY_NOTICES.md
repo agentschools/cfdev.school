@@ -39,3 +39,7 @@ must confirm authority to license the original project material under MIT,
 confirm the proposed copyright attribution, and review third-party assets and
 any additional upstream notice requirements. This draft does not establish
 Cloudflare, Inc. approval or an exhaustive third-party rights audit.
+
+## Course Spec
+
+`.agents/skills/create-course/` is copied from [agentschools/course-spec](https://github.com/agentschools/course-spec), licensed under MIT. Its license is included in that directory; `.agents/course-spec.json` records the exact revision and file hashes.

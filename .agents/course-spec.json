@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/agentschools/course-spec",
+  "revision": "95516d39583876d18c1188622b66aac750f0ebc8",
+  "files": {
+    "LICENSE": "b393ebd2e074d0e862f6a2c4c5cce0ba2b79558e032aadbd7395e287067fe8bf",
+    "SKILL.md": "fa3a368e8446863829b54019cb0f94b307646fd8ceeffb8a59513bc855ec334d",
+    "SPEC.md": "a7ca04a07434cb6cce426877ffd6dbd66c06b0852b31ae8ac05433597d50161e",
+    "src/index.ts": "3c516b51b0f6d42cc3510f7bc10a534d0b2c47b3943727c89479660585897b1a",
+    "src/rules.test.ts": "a3e14406ae67609147219babe955e2defe22ade5b20916ca637cad91cb031c03",
+    "src/rules.ts": "37ddbcb284495f236ba99078c294f179b18451581ba4fce35579d1f86a5b4088",
+    "src/schemas.test.ts": "0193e7a4c54e0abea737aa2100a81114befbf51e9e1d84c81e13dcc4b24c47e0",
+    "src/schemas.ts": "371af6e7ae004561128283f3e70dd13d3e8dfc2c265876d03272414167c5176e",
+    "src/spec.test.ts": "9082c265e07db86a7b8163be6460e524d9ad25f5ec7b6accf85b7850a0e044b3"
+  }
+}

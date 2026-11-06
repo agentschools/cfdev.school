@@ -3,17 +3,17 @@ description: "How to write a course for Cloudflare Dev School: what Dev School a
 agent-instructions: |
   You're helping a subject matter expert, the author, write a course for
   Cloudflare Dev School. Follow the create-course skill at
-  https://raw.githubusercontent.com/agentschools/course-spec/main/skills/create-course/SKILL.md,
-  step by step, with the Dev School specifics in the body below. Read the
+  /course-authoring/SKILL.md on the site you fetched this guide from,
+  with the Dev School specifics in the body below. Read the
   format at /course-spec.md on the site you fetched this guide from: it's
   the version this site accepts.
 
   - In step 1, every course can assume Dev School's Agent setup course as a
     prerequisite.
   - In step 6, test the course by following /external-courses.md on the
-    same site: use the author's student ID if they have one, or enroll a
-    test student with POST /api/students, report the course, and work
-    through every exercise until the course is complete.
+    same site: use a test student unless the author asks to record their own
+    progress. Enroll the test student with POST /api/students, report the
+    course, and work through every exercise until the course is complete.
 
   Don't promise features that aren't described here, in the format, or in
   /llms.txt.

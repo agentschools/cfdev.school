@@ -1,10 +1,10 @@
-import { courseFrontmatterSchema, courseNameSchema, exerciseSlugSchema } from "@agentschools/course-spec";
+import { courseFrontmatterSchema, courseNameSchema, exerciseSlugSchema } from "../lib/course-format";
 import { z } from "zod";
 import { TRACKS } from "../data/courses";
 
 /**
  * Courses and their exercises (see #73), in the COURSE.md format
- * (https://github.com/agentschools/course-spec). That package defines the
+ * (https://github.com/agentschools/course-spec). The pinned project skill defines the
  * frontmatter schemas and the ordering, slug, and title rules; this file adds
  * what Dev School serves and stores. Built-in courses live in `courses/` at
  * the repo root.
@@ -23,7 +23,7 @@ export {
   type ExerciseFrontmatter,
   exerciseFrontmatterSchema,
   exerciseSlugSchema,
-} from "@agentschools/course-spec";
+} from "../lib/course-format";
 
 const httpsUrlSchema = z.url({ protocol: /^https$/ });
 
