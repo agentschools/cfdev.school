@@ -14,6 +14,7 @@ const PROPER_NOUNS = [
   "Durable Objects",
   "EmDash",
   "Guardrails",
+  "Lovable",
   "OpenCode",
   "Pi",
   "Unified Billing",

@@ -252,6 +252,10 @@ Tested with `cf` v1.0.0-beta.12, `@cloudflare/vite-plugin` 2.0.0-beta.v.4, React
 
 The course hasn't been taken end to end as a student.
 
+## Move from Lovable course
+
+`courses/projects/move-from-lovable/` starts with an interview choosing an existing app or a new shared reading list. The prepare-your-app exercise has inspect/create routes to one readiness checkpoint, with no skipped-exercise completion or framework branching changes. Existing apps keep their identity and explicitly inventory retained services. The reading-list route uses public reads, owner edits in the dashboard, one application table exported as CSV into a separate Supabase project, then the exported app on Workers. It deliberately excludes auth, storage, AI and other backend services. Verification compares every migrated row, rejects public writes, and changes only the destination to prove independence. The initial course is a draft recipe; a real Lovable export and end-to-end migration still need an instructor walkthrough (see #195).
+
 ## Courses hosted elsewhere
 
 Students can take a course hosted anywhere (#77): a git repo in the built-in format, or a single-file `COURSE.md` whose `##` sections are exercises. The server never fetches course content. The student's agent reads the course and reports its manifest with `PUT /api/students/{id}/courses` (`{ url, title, description?, author?, exercises: [{ slug, title, url }] }`), stored in `external_courses` (`migrations/0011_create_external_courses.sql`, schemas in `src/schemas/course.ts`). The procedure lives in `src/content/external-courses.md`, served raw at `/external-courses.md` (`src/pages/external-courses.md.ts`); `/llms.txt` only points at it, to keep the file every new student's agent reads short. It doesn't repeat the format's rules: it points the agent at `/course-spec.md`.
