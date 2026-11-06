@@ -1,13 +1,13 @@
-// Preview deployment strategy: SHARED PRODUCTION RESOURCES.
-// Preview Workers use the same D1 database and SESSION KV namespace as
-// production (both are pinned by ID in wrangler.jsonc). There is no app
-// data or schema yet, so isolation doesn't matter today. Revisit this
-// once a lesson/enrollment ticket introduces real writes: switch to
-// empty or seeded per-PR D1 resources at that point (see
-// zeke/preview-deployments-skill's resource-strategies reference).
+// Preview deployment strategy: SEEDED PER-PR D1, SHARED SESSION KV.
+// Each PR gets its own D1 database, copied from production on the first
+// deploy and reused by later pushes, then deleted when the PR closes. The
+// PR's migrations are applied to that copy, never to production. The
+// SESSION KV namespace is still shared with production.
 
 import { spawn } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { previewPaths, updateBody } from "./preview-links.mjs";
 
 const appName = "cloudflare-dev-school";
@@ -25,6 +25,9 @@ requiredEnv("CLOUDFLARE_ACCOUNT_ID");
 requiredEnv("CLOUDFLARE_API_TOKEN");
 
 const workerName = `${appName}-pr-${prNumber}`;
+const productionDatabase = appName;
+const previewDatabase = workerName;
+const builtConfig = "dist/server/wrangler.json";
 const environment = `preview/pr-${prNumber}`;
 const environmentUrl = `https://${workerName}.${workersSubdomain}.workers.dev`;
 const logUrl = `${githubServerUrl}/${repo}/actions/runs/${githubRunId}`;
@@ -42,12 +45,11 @@ async function deploy() {
   await createDeploymentStatus(deployment.id, "in_progress", "Creating preview.");
 
   try {
-    // Shared production resources strategy (see AGENTS.md): previews use the
-    // same D1 database as production, so apply migrations against it here too.
-    await wrangler(["d1", "migrations", "apply", "cloudflare-dev-school", "--remote"]);
+    const databaseId = await ensurePreviewDatabase();
     await run("npx", ["astro", "build"]);
-    await removeRoutes();
-    await wrangler(["deploy", "--name", workerName]);
+    await writePreviewConfig(databaseId);
+    await wrangler(["d1", "migrations", "apply", previewDatabase, "--remote", "--config", builtConfig]);
+    await wrangler(["deploy", "--name", workerName, "--config", builtConfig]);
 
     if (!(await isCurrentPullRequestHead())) {
       await createDeploymentStatus(deployment.id, "inactive", "Superseded by a newer commit.");
@@ -71,14 +73,47 @@ async function deploy() {
   }
 }
 
-// The built config inherits wrangler.jsonc's cfdev.school custom domain;
-// a preview deploy must not move it off production.
-async function removeRoutes() {
-  const path = "dist/server/wrangler.json";
-  const config = JSON.parse(await readFile(path, "utf8"));
+// Returns the PR's D1 database ID, creating it from a copy of production
+// the first time. The export includes d1_migrations, so only the PR's new
+// migrations are applied to the copy afterward.
+async function ensurePreviewDatabase() {
+  const existing = await databaseInfo(previewDatabase);
+  if (existing) return existing.uuid;
+
+  await wrangler(["d1", "create", previewDatabase]);
+  const dir = await mkdtemp(join(tmpdir(), "cfds-preview-"));
+  const dump = join(dir, "production.sql");
+  try {
+    await wrangler(["d1", "export", productionDatabase, "--remote", "--output", dump]);
+    await wrangler(["d1", "execute", previewDatabase, "--remote", "--file", dump]);
+  } catch (error) {
+    // Don't leave a half-seeded database for the next run to reuse.
+    await wrangler(["d1", "delete", previewDatabase, "--skip-confirmation"], { allowFailure: true });
+    throw error;
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+
+  return (await databaseInfo(previewDatabase)).uuid;
+}
+
+async function databaseInfo(name) {
+  const { stdout, code } = await wrangler(["d1", "info", name, "--json"], { allowFailure: true });
+  return code === 0 ? JSON.parse(stdout) : undefined;
+}
+
+// The built config inherits wrangler.jsonc's cfdev.school custom domain and
+// production database; a preview deploy must use neither.
+async function writePreviewConfig(databaseId) {
+  const config = JSON.parse(await readFile(builtConfig, "utf8"));
   delete config.routes;
   delete config.route;
-  await writeFile(path, JSON.stringify(config));
+  config.d1_databases = config.d1_databases.map((database) =>
+    database.binding === "DB"
+      ? { ...database, database_name: previewDatabase, database_id: databaseId }
+      : database,
+  );
+  await writeFile(builtConfig, JSON.stringify(config));
 }
 
 async function updatePullRequestLinks() {
@@ -100,7 +135,10 @@ async function updatePullRequestLinks() {
 
 async function destroy() {
   const results = await Promise.allSettled([
-    wrangler(["delete", "--name", workerName], { allowFailure: true, input: "y\n" }),
+    (async () => {
+      await wrangler(["delete", "--name", workerName], { allowFailure: true, input: "y\n" });
+      await wrangler(["d1", "delete", previewDatabase, "--skip-confirmation"], { allowFailure: true });
+    })(),
     markDeploymentsInactive(),
   ]);
 

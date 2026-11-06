@@ -26,7 +26,7 @@ agent-instructions: |
      - Create the gateway with `cf ai-gateway gateways create --id <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding` (or `cf ai-gateway gateways get <gateway-id>` if it already exists; if they reuse an existing gateway, note any settings it already has, such as `authentication` or `workers_ai_billing_mode`, because later exercises' `gateways update` commands replace the whole configuration and must carry them over).
      - If they don't have an existing Worker for this course, scaffold one with `cf init <dir>` (e.g. `ai-gateway-lab`), add `AI: bindings.ai({ dev: { remote: true } })` to `worker.env` in `cloudflare.config.ts` (importing `bindings` from `"cf/config"`), and run `cf workers types`. Mention in one sentence why `dev: { remote: true }` is set: even in local dev, calls go through their real AI Gateway and Workers AI on Cloudflare.
      - In `src/index.ts`, implement two routes:
-       - `POST /ask`: reads `{ prompt, user, team, skipCache }` from JSON, calls `env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", { messages: [{ role: "user", content: prompt }] }, { gateway: { id: "<gateway-id>", metadata: { user, team }, skipCache: Boolean(skipCache) }, returnRawResponse: true })` with the error handling shown below. Return `429` only when that call's raw response has status `429`; preserve other upstream HTTP error statuses (including `424` for Guardrails blocks), and use `502` for thrown errors or responses without a valid HTTP error status. Parse successful JSON and return `{ response, logId, metadata: { user, team } }`. Do not assume thrown errors have a `status` property or classify every gateway error as a limit.
+       - `POST /ask`: reads `{ prompt, user, team, skipCache }` from JSON, calls `env.AI.run(<chat-model>, { messages: [{ role: "user", content: prompt }] }, { gateway: { id: "<gateway-id>", metadata: { user, team }, skipCache: Boolean(skipCache) }, returnRawResponse: true })` with the error handling shown below. Return `429` only when that call's raw response has status `429`; preserve other upstream HTTP error statuses (including `424` for Guardrails blocks), and use `502` for thrown errors or responses without a valid HTTP error status. Parse successful JSON and return `{ response, logId, metadata: { user, team } }`. Do not assume thrown errors have a `status` property or classify every gateway error as a limit. For `<chat-model>`, choose an affordable, low-latency Workers AI chat model whose docs page shows no planned deprecation (`@cf/google/gemma-4-26b-a4b-it` is a good default today). Response shape varies by model — some return `{ response }`, newer ones return OpenAI-style `{ choices: [{ message: { content } }] }` — so extract the answer text defensively instead of hardcoding one model's shape.
        - `GET /`: serves a clean, self-contained HTML lab page where the student can type a prompt, pick a `team` from a `<select>` (using their two team names), toggle a `Bypass cache (skipCache)` checkbox, click **Ask through the gateway**, and see the model's answer, the returned `logId`, and the attached `metadata` tags right on the page. (If the student brought their own Worker, make sure `GET /` either serves a working page or explains how to call `/ask` so clicking the Worker URL never returns a dead 404.)
      - Show the student the key `env.AI.run(..., { gateway: { id, metadata } })` code and point out that `user` and `team` are attached on the server, where a caller can't spoof another team's tag.
      - Deploy with `cf deploy` and send two initial `POST /ask` requests (one per team) so the gateway has live log entries ready to inspect.
@@ -91,7 +91,7 @@ In a Worker using the [Workers AI binding](https://developers.cloudflare.com/ai-
 ```ts title="src/index.ts"
 try {
   const result = await env.AI.run(
-    "@cf/meta/llama-3.1-8b-instruct-fp8",
+    "@cf/google/gemma-4-26b-a4b-it", // any affordable Workers AI chat model
     { messages: [{ role: "user", content: prompt }] },
     {
       gateway: {
@@ -113,9 +113,15 @@ try {
     );
   }
 
-  const answer = await result.json() as { response?: string };
+  const body = await result.json();
+  // Response shape varies by model: { response } or OpenAI-style choices[].
+  const answer =
+    (body as { response?: string }).response ??
+    (body as { choices?: Array<{ message?: { content?: string } }> }).choices?.[0]?.message
+      ?.content ??
+    body;
   return Response.json({
-    response: answer.response ?? answer,
+    response: answer,
     logId,
     metadata: { user, team },
   });

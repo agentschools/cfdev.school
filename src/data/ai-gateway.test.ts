@@ -20,14 +20,19 @@ function request(run: ReturnType<typeof vi.fn>) {
 afterEach(() => vi.restoreAllMocks());
 
 describe("AI Gateway lab response handling", () => {
-  it("keeps the model answer, metadata, cache bypass, and per-response log ID", async () => {
-    const run = vi.fn().mockResolvedValue(Response.json({ response: "Hello back" }, {
+  it.each([
+    { format: "classic", answer: { response: "Hello back" }, expected: "Hello back" },
+    { format: "OpenAI", answer: { choices: [{ message: { content: "Hello back" } }] }, expected: "Hello back" },
+    { format: "empty choices", answer: { choices: [] }, expected: { choices: [] } },
+    { format: "missing message", answer: { choices: [{}] }, expected: { choices: [{}] } },
+  ])("keeps the $format answer, metadata, cache bypass, and per-response log ID", async ({ answer, expected }) => {
+    const run = vi.fn().mockResolvedValue(Response.json(answer, {
       headers: { "cf-aig-log-id": "this-call" },
     }));
     const response = await request(run);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ response: "Hello back", logId: "this-call", metadata: { user: "alex", team: "interns" } });
-    expect(run).toHaveBeenCalledWith("@cf/meta/llama-3.1-8b-instruct-fp8", { messages: [{ role: "user", content: "Hello" }] }, {
+    expect(await response.json()).toEqual({ response: expected, logId: "this-call", metadata: { user: "alex", team: "interns" } });
+    expect(run).toHaveBeenCalledWith("@cf/google/gemma-4-26b-a4b-it", { messages: [{ role: "user", content: "Hello" }] }, {
       gateway: { id: "dev-school-gateway", metadata: { user: "alex", team: "interns" }, skipCache: true },
       returnRawResponse: true,
     });
