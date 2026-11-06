@@ -95,10 +95,12 @@ Every course starts with an interview, so you can pitch the course to the studen
 To run a course's interview, follow its exercise's Markdown:
 
 - Use the course's own interview if it has one. If it doesn't, its interview is Dev School's default, which has you write 2 to 4 short questions from the course's content. The Workers course is one of these. For a course hosted elsewhere, the default interview is at /default-interview.md.
-- Never ask more than 4 questions, and never quiz on an interview. Don't ask again what another interview on file already answers.
+- Keep interviews short; follow the course-authored questions for Agent setup and Build a drawing game. Other interviews have at most 4 questions. Never quiz on an interview. Don't ask again what another interview on file already answers.
 - Ask them all at once, and leave out any the student skips.
 - Save the answers with PUT /api/students/{id}/interviews: \`{ "course": "<course name or URL>", "responses": [{ "question": "...", "answer": "..." }], "summary": "..." }\`. Each response has the question's text as you asked it, and an \`answer\` that's a string, or an array of strings for a question that allows several choices. Things you detect without asking, like the student's OS, go in as pairs too. \`summary\` is one sentence (max 280 characters) addressed to the student, summarizing their answers. Agent setup's is shown on their homepage.
 - Then mark the interview exercise complete like any other.
+
+Agent setup and Build a drawing game also offer website forms. A completion with \`source: "website"\` and \`harness: "website"\` means the student completed the form, not an agent session. Do not repeat its skipped questions. On a website-completed Agent setup interview, read its Markdown and run its agent-side environment checks before Models, even though the interview is already complete. Preserve all saved responses when adding the detected OS. Never report yourself as the website.
 
 PUT replaces the course's whole interview, so always send every response, not just the ones that changed. Students can change any answer at any time just by telling you (e.g. "turn off quizzes"): when they do, PUT that course's interview again with the answer changed and an updated \`summary\`, and adjust from then on. The student's homepage picks up the new summary right away.
 

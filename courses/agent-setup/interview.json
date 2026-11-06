@@ -1,0 +1,142 @@
+{
+  "course": "agent-setup",
+  "title": "Agent setup",
+  "next": "models",
+  "questions": [
+    {
+      "id": "experience",
+      "question": "How much have you used AI coding agents?",
+      "type": "single",
+      "options": [
+        "I haven't tried one yet",
+        "I've used one a few times",
+        "I use one most weeks",
+        "I use one every day"
+      ]
+    },
+    {
+      "id": "harnesses",
+      "question": "Which AI apps and agent harnesses have you used?",
+      "type": "multi",
+      "options": [
+        "Claude Code",
+        "Claude desktop",
+        "ChatGPT",
+        "Codex",
+        "Pi",
+        "OpenCode",
+        "Cursor",
+        "GitHub Copilot",
+        "Gemini CLI"
+      ],
+      "other": true
+    },
+    {
+      "id": "deployments",
+      "question": "Where have you deployed apps before?",
+      "type": "multi",
+      "options": [
+        "Vercel",
+        "Netlify",
+        "Heroku",
+        "AWS",
+        "Google Cloud",
+        "Azure",
+        "Cloudflare"
+      ],
+      "other": true
+    },
+    {
+      "id": "products",
+      "question": "Which Cloudflare products have you used before?",
+      "type": "multi",
+      "options": [
+        "Workers",
+        "Pages",
+        "DNS",
+        "R2",
+        "D1",
+        "Workers KV",
+        "Durable Objects",
+        "Workers AI",
+        "AI Gateway",
+        "Queues",
+        "Browser Run",
+        "Workflows",
+        "Containers",
+        "Vectorize",
+        "Email Service"
+      ],
+      "other": true
+    },
+    {
+      "id": "interests",
+      "question": "What are you interested in building on Cloudflare?",
+      "type": "multi",
+      "options": [
+        "Web apps",
+        "Cloud agents",
+        "Automations",
+        "APIs and backends",
+        "Games",
+        "Data tools",
+        "Multiplayer apps",
+        "MCP servers",
+        "Browser automation"
+      ],
+      "other": true
+    },
+    {
+      "id": "skills",
+      "question": "How familiar are you with these coding and web technologies?",
+      "type": "grid",
+      "hint": "Skip any row you're unsure about. Name languages or frameworks you know in the box below.",
+      "rows": [
+        "HTML",
+        "CSS",
+        "JavaScript / TypeScript",
+        "Python",
+        "React",
+        "Browser APIs",
+        "Node.js",
+        "HTTP APIs",
+        "LLM APIs",
+        "Relational databases",
+        "Vector databases",
+        "DNS",
+        "Testing",
+        "CI/CD",
+        "Command line tools",
+        "Git"
+      ],
+      "options": [
+        "New",
+        "Familiar",
+        "Fluent"
+      ],
+      "other": true
+    },
+    {
+      "id": "goals",
+      "question": "What do you want to build or learn?",
+      "type": "long",
+      "hint": "Tell us about your idea, who it is for, and what you hope to learn. More context helps your agent connect the course to what you want to build."
+    },
+    {
+      "id": "learning",
+      "question": "How do you like to learn?",
+      "type": "long",
+      "hint": "For example: explain each step, let me try first, use diagrams, or compare with tools I know. More context helps your agent tailor the pace and explanations."
+    },
+    {
+      "id": "quizzes",
+      "question": "Want a short quiz at the end of each exercise?",
+      "type": "single",
+      "options": [
+        "Yes, quiz me!",
+        "No quizzes please"
+      ],
+      "default": "Yes, quiz me!"
+    }
+  ]
+}

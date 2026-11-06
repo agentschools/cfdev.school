@@ -24,6 +24,7 @@ export function formatCompletedBanner(
         day: "numeric",
         year: "numeric",
       });
+      if (completion.harness === "website") return `on ${date} on the website`;
       return `on ${date} using ${harnessNames[completion.harness] ?? completion.harness}`;
     });
   return `You completed this exercise ${new Intl.ListFormat("en-US", { type: "conjunction" }).format(clauses)}.`;

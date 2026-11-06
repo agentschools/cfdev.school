@@ -24,7 +24,7 @@ export function completionLabels(
 ): string[] {
   return [...completions]
     .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
-    .map((completion) => `${harnessNames[completion.harness] ?? completion.harness}, ${formatDate(completion.completedAt, "short")}`);
+    .map((completion) => `${completion.harness === "website" ? "Completed on the website" : harnessNames[completion.harness] ?? completion.harness}, ${formatDate(completion.completedAt, "short")}`);
 }
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text?: string): HTMLElementTagNameMap[K] {

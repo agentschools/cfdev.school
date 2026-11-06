@@ -1,0 +1,103 @@
+---
+import AgentPrompt from "./AgentPrompt.astro";
+import { gridField, SAVED_ANSWER, type InterviewDefinition } from "../lib/course-interview";
+interface Props { definition: InterviewDefinition }
+const { definition } = Astro.props;
+---
+<section data-course-interview data-definition={JSON.stringify(definition)} aria-label="Interview">
+  <noscript><p>Enable JavaScript for the form, or <a href={`/courses/${definition.course}/exercises/00-interview.md`}>read the agent interview instructions</a>.</p></noscript>
+  <p data-interview-status role="status" aria-live="polite">Loading your saved answers…</p>
+  <button type="button" data-interview-reload hidden>Reload saved answers (discard current edits)</button>
+  <form data-interview-form>
+    <fieldset data-interview-fields disabled>
+      {definition.questions.map((question, index) => (<>
+        {index > 0 && <hr />}
+        <fieldset class="question">
+          <legend>{question.question}</legend>
+          {question.hint && <p id={`${question.id}-hint`} class="note">{question.hint}</p>}
+          {question.type === "short" || question.type === "long" ? (
+            question.type === "long" ? <textarea aria-label={question.question} aria-describedby={question.hint ? `${question.id}-hint` : undefined} name={question.id} rows="4" maxlength="2000" /> :
+            <input aria-label={question.question} aria-describedby={question.hint ? `${question.id}-hint` : undefined} type="text" name={question.id} maxlength="2000" />
+          ) : question.type === "grid" ? (
+            <div class="grid">
+              <table aria-describedby={question.hint ? `${question.id}-hint` : undefined}>
+                <thead><tr><td></td>{(question.options ?? []).map(option => <th scope="col">{option}</th>)}</tr></thead>
+                <tbody>
+                  {(question.rows ?? []).map((row, index) => (
+                    <tr>
+                      <th scope="row">{row}</th>
+                      {(question.options ?? []).map(option => <td><label><input type="radio" name={gridField(question, index)} value={option} aria-label={`${row}: ${option}`} /></label></td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {question.other && <input class="other-text" type="text" name={`${question.id}-other`} placeholder="Other..." aria-label={`${question.question} Other`} maxlength="2000" />}
+            </div>
+          ) : (
+            <div class={question.type === "multi" ? "choices columns" : question.options?.length === 2 ? "choices inline" : "choices"}>
+              {(question.options ?? []).map(option => <label><input type={question.type === "multi" ? "checkbox" : "radio"} name={question.id} value={option} checked={option === question.default} /> {option}</label>)}
+              {question.type === "single" && <>
+                <label data-saved-choice={question.id} hidden><input type="radio" name={question.id} value={SAVED_ANSWER} /><span></span></label>
+              </>}
+              {question.other && <input class="other-text" type="text" name={`${question.id}-other`} placeholder="Other..." aria-label={`${question.question} Other`} maxlength="2000" />}
+            </div>
+          )}
+        </fieldset>
+      </>))}
+      <button class="start" type="submit">Start the course</button>
+    </fieldset>
+  </form>
+  <p class="alternative">Prefer a conversation? <button type="button" data-interview-agent>Take the interview with your agent</button></p>
+  <div data-interview-result tabindex="-1" hidden>
+    <p data-interview-result-message></p>
+    <AgentPrompt />
+    <p class="note">If the copy button is unavailable, select and copy the prompt text.</p>
+  </div>
+</section>
+<script>
+  import { initCourseInterview } from "../lib/course-interview-client";
+  initCourseInterview();
+</script>
+<style>
+  section { margin-top: 2rem; }
+  .note { color: var(--muted-fg); font-size: .9rem; }
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .question:first-child { margin-top: 2.25rem; }
+  hr { border: 0; border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent); margin: 1.75rem 0 2rem; }
+  .question > .note { margin: 0 0 .5rem; }
+  [data-interview-status]:empty { display: none; }
+  legend { font-weight: 600; font-size: 1.15rem; padding: 0 .25rem 0 0; margin-bottom: .25rem; }
+  input[type=text], textarea { box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: .4rem; padding: .8rem; background: var(--bg); color: var(--fg); font: inherit; }
+  textarea { resize: vertical; }
+  .choices { display: grid; gap: .35rem; margin-top: .5rem; }
+  .choices.inline { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+  .choices.columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .5rem; }
+  @media (min-width: 48rem) { .choices.columns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .choices.columns .other-text { grid-column: 1 / -1; }
+  label { display: flex; align-items: center; gap: .6rem; padding: .6rem; cursor: pointer; }
+  .other-text { margin-top: .35rem; }
+  .grid { margin-top: .5rem; }
+  .grid table { width: 100%; border-collapse: collapse; }
+  .grid th { font-weight: 400; text-align: left; padding: .25rem .5rem .25rem 0; }
+  .grid thead th { font-size: .85rem; color: var(--muted-fg); text-align: center; padding: 0 .5rem .25rem; width: 1%; white-space: nowrap; }
+  .grid tbody tr + tr { border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent); }
+  .grid td label { justify-content: center; padding: .6rem .25rem; }
+  .grid tbody th { padding-left: .5rem; }
+  .grid tbody th, .grid tbody td { transition: background-color .12s; }
+  .grid tbody th { border-radius: .4rem 0 0 .4rem; }
+  .grid tbody td:last-child { border-radius: 0 .4rem .4rem 0; }
+  .grid tbody tr:focus-within > * { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  @media (hover: hover) { .grid tbody tr:hover > * { background: color-mix(in srgb, var(--accent) 10%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .grid tbody th, .grid tbody td { transition: none; } }
+  .grid .other-text { margin-top: .75rem; }
+  input[type=radio], input[type=checkbox] { accent-color: var(--accent); flex-shrink: 0; width: 1rem; height: 1rem; }
+  button { font: inherit; cursor: pointer; }
+  .start { width: 100%; padding: 1rem; margin: 2.5rem 0 1.5rem; border: 0; border-radius: .5rem; background: var(--accent); color: #fff; font-weight: 700; font-size: 1.15rem; }
+  :disabled .start { cursor: wait; opacity: .65; }
+  :focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+  .alternative { border-top: 1px solid var(--border); padding-top: 1rem; color: var(--muted-fg); font-size: .9rem; }
+  .alternative button { background: none; border: none; color: var(--accent-text); text-decoration: underline; padding: .35rem 0; }
+  [data-interview-result] { margin-top: 1rem; }
+  section :global(.agent-prompt-text) { overflow-wrap: anywhere; }
+  [hidden] { display: none; }
+</style>
