@@ -702,13 +702,6 @@ export const harnesses: HarnessProfile[] = [
         bestFor: "OpenAI's near-Astra performance for complex work at a lower cost. Switch with /model.",
         notes: "Listed with a 1M context window in Copilot CLI (checked 2026-10-22); plan availability not confirmed.",
       },
-      {
-        name: "Claude Sonnet 4.5",
-        contextWindowTokens: 200000,
-        vision: true,
-        toolUse: true,
-        notes: "Default Copilot CLI model per the repo README as of 2026-10-03, but the README may be stale: the GitHub changelog shows newer models (Claude Fable 5.1, GPT-6.1 Sol) added in September 2026 and some models deprecated on 2026-09-01. Could not confirm the current default; switch with the /model slash command.",
-      },
     ],
     lastVerified: "2026-10-03",
     sources: [
@@ -734,7 +727,11 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://docs.github.com/en/copilot/reference/ai-models/supported-models",
-        note: "Checked 2026-10-22: Copilot CLI models with 1M context include Claude Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra and Luna, and Kimi K3. The page names no default model and no deprecations, so Sonnet 4.5 (200K, from the old README) wasn't removed but is unconfirmed; its context window wasn't rechecked. Availability depends on plan.",
+        note: "Checked 2026-10-22: Copilot CLI models with 1M context include Claude Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra and Luna, and Kimi K3. Availability depends on plan. Retirement checked 2026-11-06: the model retirement history lists Claude Sonnet 4.5 as retired on 2026-09-01, so it has been removed from this profile's models. The current default remains unverified; other model entries were not rechecked in this pass.",
+      },
+      {
+        url: "https://github.blog/changelog/2026-08-31-selected-github-copilot-models-deprecated/",
+        note: "Checked 2026-11-06: Claude Sonnet 4.5 retired from Copilot on 2026-09-01, with Claude Sonnet 5 suggested as an alternative. This confirms the retirement only, not the current CLI default or the rest of this profile.",
       },
       {
         url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers",
@@ -754,7 +751,7 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://cdn.jsdelivr.net/gh/github/copilot-cli@main/README.md",
-        note: "Default model (Claude Sonnet 4.5) and the /model slash command.",
+        note: "Historical source for the /model slash command and the former Claude Sonnet 4.5 default claim. The default claim is stale: GitHub's retirement history and changelog confirm Sonnet 4.5 retired on 2026-09-01. This README is not evidence of the current default.",
       },
       {
         url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills",

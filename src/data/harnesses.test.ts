@@ -29,6 +29,12 @@ describe("harnesses data", () => {
     expect(() => getHarness("nonexistent")).toThrow();
   });
 
+  // GitHub retired this model on 2026-09-01. Keep the daily refresh from
+  // restoring the old README default as a currently available Copilot model.
+  it("excludes retired Claude Sonnet 4.5 from Copilot's current models", () => {
+    expect(getHarness("copilot").models.map((model) => model.name)).not.toContain("Claude Sonnet 4.5");
+  });
+
   // Anthropic doesn't allow Claude Pro/Max plans in third-party harnesses, so
   // no harness but Claude Code may claim a Claude plan counts against its limits.
   // The daily refresh job edits this file; this keeps it from drifting on the
