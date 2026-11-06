@@ -13,6 +13,15 @@ agent-instructions: |
      - **Two kinds of ceilings (Rate Limits vs. Spend Limits)**:
        - *Rate limits* cap the **number of requests** across the entire gateway in a window (`fixed` clock reset vs. `sliding` trailing window).
        - *Spend limits* cap **dollars spent** over a window and can be scoped to specific `metadata` values (like `team = "interns"` or `agent_id`), so an over-budget team gets `429` while other teams keep working.
+     - Redraw the gateway pipeline from Exercise 2 and add Stage 3 (rate and spend limits checked on a cache miss before calling the model):
+       ```text
+       Stage 3:  Your Worker ──(prompt + metadata)──► AI Gateway
+                                                          │
+                                       [ 1. Logs ──► 2. Cache? ──► 3. Limits? ]
+                                                     ├── Hit         │
+                                                     ▼               ├── Over limit (e.g. interns) ──► HTTP 429
+                                                ~20ms ($0)           └── Under limit ──► Model Provider
+       ```
      - Ask the student which of their two teams (e.g. `interns`) should get a tiny budget ceiling so we can watch it trip while the other team keeps working. Wait for their reply.
 
   2. Configure and verify the request rate limit and team-scoped spend limit:
@@ -25,11 +34,14 @@ agent-instructions: |
        `cf ai-gateway gateways update <gateway-id> --body '{"collect_logs":true,"cache_ttl":0,"cache_invalidate_on_update":true,"rate_limiting_interval":0,"rate_limiting_limit":0,"rate_limiting_technique":"sliding","spend_limits":{"enabled":true,"rules":[{"id":"interns-monthly-budget","enabled":true,"limitType":"cost","limit":0.00001,"window":2592000,"technique":"fixed","metadata":{"team":{"mode":"filter","values":["interns"]}}}]}}'`
        Note: spend limit rules take ~45-60 seconds to propagate, and budgets are evaluated after a request finishes. Send one `team: "interns"` request to use up the `$0.00001` budget, wait ~45-60 seconds, then send another `team: "interns"` request and confirm it is blocked (`Spend limit exceeded: rule 'interns-monthly-budget'`) while a `team: "escalations"` request still succeeds (`200`).
      - **Leave the spend limit active while the student replies** so they can try clicking **Ask through the gateway** on their lab page as `interns` (blocked) vs. `escalations` (allowed) if they want to see it live.
-     - Ask the comprehension check: why is a metadata-scoped spend limit safer than a single gateway-wide rate limit when running autonomous agents, and why can a simultaneous burst of requests briefly overshoot a spend limit? Wait for their reply.
+     - Offer a scenario check tailored to their interview profile (or let them reply `"next"` anytime to keep moving):
+       - For a builder or developer: why is a metadata-scoped spend limit safer than a single gateway-wide rate limit when running background jobs or autonomous agents in your app, and why can a simultaneous burst briefly overshoot a spend limit?
+       - For someone in a sales, SE, or customer-facing role: if a customer asks *"How do we let internal teams experiment with AI agents without one runaway loop blowing our monthly OpenAI bill or taking down production?"*, how would you frame rate limits vs. metadata-scoped spend limits (or want to try pitching me as that customer)?
+       Wait for their reply.
 
   3. Mark complete:
      - Disable the spend limit rule (`"spend_limits":{"enabled":false,"rules":[]}`) so the next exercise's routing tests aren't blocked, and let the student know you cleared the temporary ceiling.
-     - Gently correct anything off in their answer, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "route-and-fall-back".
+     - Connect their answer to the concrete mechanism (or share a one-line takeaway if they replied `"next"`), mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "route-and-fall-back".
 
   Out of scope here: buying prepaid Unified Billing credits or configuring Stripe usage events.
 ---
@@ -66,7 +78,17 @@ The gateway checks credentials in a fixed order — a key on the request, then a
 
 ## Two kinds of ceilings: rate limits and spend limits
 
-You can cap traffic on your gateway by request count or by dollar spend:
+You can cap traffic on your gateway by request count or by dollar spend. Adding rate and spend limits to the pipeline from Exercise 2 stops over-budget or runaway callers on a cache miss before they reach the model provider:
+
+```mermaid
+flowchart LR
+  App["Your Worker"] -->|"prompt + metadata"| Logs["1. Logs & Metadata"]
+  Logs --> Cache{"2. Cache hit?"}
+  Cache -->|"Hit"| Edge["Cached response\n~20ms · $0"]
+  Cache -->|"Miss"| Limits{"3. Rate / Spend\nlimit exceeded?"}
+  Limits -->|"Over limit"| Blocked["HTTP 429\nToo Many Requests"]
+  Limits -->|"Under limit"| Provider["Model Provider"]
+```
 
 - **Rate limiting** caps the **number of requests** the gateway accepts in a time window (for example, 60 requests per 60 seconds). A `fixed` window resets on the clock; a `sliding` window counts the trailing window whenever a request arrives.
 - **Spend limits** cap **dollars spent** over a time window, and can be filtered or split by `metadata` keys (`team`, `user`, or `agent_id`):

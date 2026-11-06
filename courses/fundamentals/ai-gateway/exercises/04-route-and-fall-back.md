@@ -11,16 +11,18 @@ agent-instructions: |
        1. **Branch on metadata** (e.g. `metadata.team == "interns"` → fast model; otherwise → capable model).
        2. **Fall back automatically** if a primary model times out, errors, or hits a rate limit (even across different providers like OpenAI → Anthropic → Workers AI).
        3. **Deploy new versions or roll back** in the gateway with zero application redeploys.
-     - Draw a compact route diagram in chat so the student can see the flow:
+     - Redraw the gateway pipeline from Exercise 3 and add Stage 4 (expanding the single `Model Provider` box at the end into the `"dynamic/support"` route):
        ```text
-       Worker calls "dynamic/support"
-                     │
-          [ metadata.team == "interns"? ]
-              ├── true  ──► Gemma 4 26B (fast & economical)
-              └── false ──► Llama 3.3 70B (capable)
-                                 │ (on error / timeout)
-                                 ▼
-                            GPT-OSS 120B (automatic fallback)
+       Stage 4:  Your Worker ──("dynamic/support" + metadata)──► AI Gateway
+                                                                     │
+                                  [ 1. Logs ──► 2. Cache? ──► 3. Limits? ──► 4. Route: support ]
+                                                                                    │
+                                                                     [ metadata.team == "interns"? ]
+                                                                         ├── true  ──► Gemma 4 26B (economical)
+                                                                         └── false ──► Llama 3.3 70B (capable)
+                                                                                            │ (on error / timeout)
+                                                                                            ▼
+                                                                                       GPT-OSS 120B (fallback)
        ```
      - Ask the student if they want to use those default models for their two branches and fallback (`@cf/google/gemma-4-26b-a4b-it`, `@cf/meta/llama-3.3-70b-instruct-fp8-fast`, and `@cf/openai/gpt-oss-120b`), or pick different Workers AI models. Wait for their reply.
 
@@ -69,10 +71,13 @@ agent-instructions: |
        `cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id <gateway-id> --version-id <version-id>`
        Note: route deployments can take ~30-60 seconds to propagate to the edge.
      - Send a `team: "interns"` request (retrying after ~30 seconds if the log still shows the v1 model) and confirm in `cf ai-gateway logs list` that `@cf/ibm-granite/granite-4.0-h-micro` served the request without redeploying the Worker.
-     - Ask the comprehension check: what happens in this route if the primary model on the `escalations` branch errors or times out, and why does keeping routing and fallbacks in the gateway help when you run multiple apps or agents? Wait for their reply.
+     - Offer a scenario check tailored to their interview profile (or let them reply `"next"` anytime to keep moving):
+       - For a builder or developer: how does moving model selection and fallbacks out of Worker code into a versioned gateway route change how you handle provider outages or test new models across multiple services?
+       - For someone in a sales, SE, or customer-facing role: if a customer says *"We're stuck on one expensive model provider because switching models or adding fallbacks means editing and redeploying 15 microservices,"* how would you explain AI Gateway Routes (or want to try pitching me as that customer)?
+       Wait for their reply.
 
   4. Mark complete:
-     - Gently correct anything off in their answer, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "block-bad-prompts".
+     - Connect their answer to the concrete mechanism (or share a one-line takeaway if they replied `"next"`), mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "block-bad-prompts".
 
   Out of scope here: Auto Router (`cloudflare/auto`, which picks models by analyzing the prompt rather than rules you write) and percentage-split A/B testing (mention in one sentence that percentage nodes work in the same route graph).
 ---
@@ -115,13 +120,13 @@ const result = await env.AI.run(
 );
 ```
 
-Inside AI Gateway, the `support` route evaluates your versioned decision graph: it checks `metadata.team`, routes each team to the right model, falls back to a backup model if the primary model fails or times out, and lets you publish a new version of the route without redeploying your Worker:
+Inside AI Gateway, the `support` route replaces the single model provider at the end of the pipeline from Exercise 3 with a versioned decision graph: it checks `metadata.team`, routes each team to the right model, falls back to a backup model if the primary model fails or times out, and lets you publish a new version of the route without redeploying your Worker:
 
 ```mermaid
-flowchart TD
-  App["Your Worker\nenv.AI.run('dynamic/support')"] -->|"prompt + metadata"| Start["AI Gateway Route: support"]
-  Start --> Check{"metadata.team == interns?"}
-  Check -->|"true"| Economical["Gemma 4 26B\n(swap to Granite in v2 — no app redeploy)"]
+flowchart LR
+  App["Your Worker\nenv.AI.run('dynamic/support')"] -->|"prompt + metadata"| Gate["1. Logs · 2. Cache · 3. Limits"]
+  Gate --> Check{"4. Route: support\nmetadata.team == interns?"}
+  Check -->|"true"| Economical["Gemma 4 26B\n(swap to Granite in v2)"]
   Check -->|"false"| Capable["Llama 3.3 70B"]
-  Capable -->|"on error or timeout"| Backup["GPT-OSS 120B (fallback)"]
+  Capable -->|"on error / timeout"| Backup["GPT-OSS 120B (fallback)"]
 ```
