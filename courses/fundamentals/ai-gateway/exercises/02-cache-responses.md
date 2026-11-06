@@ -57,7 +57,7 @@ When caching is enabled on your gateway (or per call with `cacheTtl`), AI Gatewa
 
 ```ts title="src/index.ts"
 const result = await env.AI.run(
-  "@cf/meta/llama-3.1-8b-instruct-fp8",
+  "@cf/google/gemma-4-26b-a4b-it", // any affordable Workers AI chat model
   { messages: [{ role: "user", content: prompt }] },
   {
     gateway: {
