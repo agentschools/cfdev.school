@@ -1,23 +1,16 @@
 ---
 description: "Export your app’s data from Lovable and migrate it to another database provider."
 agent-instructions: |
-  Follow the interview's app and scope throughout, using a disposable copy and synthetic records. Adapt book names, row counts and policies to that app. Verify all selected data, relationships and sequences. Pause if CSV cannot preserve them. Document retained services and verify their integrations; code deployment alone doesn't complete data migration.
-
-  1. Help the student prepare a new Supabase project after reviewing its plan. Confirm source and destination project IDs differ. Keep secrets in local ignored files or the provider's dashboard, never conversation logs or Git. Ask what should be in the new database before importing any rows; wait for their prediction.
-  2. Review the exported application migration. Recreate only public.books, its SELECT grant, RLS and SELECT-only policy at the destination, using the small reference below to check the result. Exclude seeds, auth/storage schemas, unrelated objects and source-specific roles. Apply once to a fresh destination; never use DROP or --clean to work around conflicts.
-  3. In Lovable, open More → Database, open books and Export CSV. Verify this is a complete three-row export with id,title,is_read, including the dashboard edit from exercise 1. Save it outside the repo. Import it through the destination Table Editor's CSV import into the empty books table, preserving IDs and booleans. Do not regenerate the rows from the original seed prompt.
-  4. Query both databases with the ordered SELECT below. Compare every ID, title and boolean, not just the count. Confirm no extra seed rows, no missing IDs and no unexpected columns. Record a synthetic before/after comparison in the learner's notes. Check SELECT with the destination public key and test that public writes are rejected and leave records unchanged.
-  5. Ask the student why running only the schema migration wouldn't have brought their changed read state across. Wait for their explanation.
-  6. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes.
+  Follow the course's teaching approach and the steps below with the learner. Use their chosen app; don't replace it with the example. Independently verify the completion checks and pause on unsupported dependencies.
+  1. Mark complete only after the page's checks pass, using the progress procedure in /llms.txt.
 ---
 
 # Move the records
 
-Using your own app? Keep its schema and features. Your agent adapts these checks to your agreed scope; the book names and three rows below describe the reading-list path. Some services may remain on the original backend, and your migration notes should say which.
+We'll use a separate Supabase project and its HTTP API. Prepare the database before changing the app's connection. Predict what's in an empty destination before importing anything.
 
-Prepare the destination before changing the app's connection. We're moving one small table with CSV, which makes the difference between structure and records easy to see.
-
-Your agent reviews the source migration against this contract, then applies the equivalent to the new Supabase project. Don't insert the seed books again.
+1. Review the destination plan, create a new project, and confirm its project ID differs from the source. Keep secrets in ignored local files or provider dashboards, never Git or conversation logs.
+2. Review the source application migration with your agent. Apply only the selected application schema and policies to the fresh destination, excluding seeds and managed auth/storage schemas. Don't use `DROP` or `--clean` to work around conflicts. For the reading list, check against this contract:
 
 ```sql
 create table public.books (
@@ -31,14 +24,19 @@ create policy "Anyone can read books"
   on public.books for select to anon using (true);
 ```
 
-With RLS enabled and no write policies, the public client can read but can't change these rows. The owner dashboard remains your editing tool. See [Supabase's RLS guide](https://supabase.com/docs/guides/database/postgres/row-level-security).
+RLS and the SELECT-only policy allow public reads while preventing public changes. The owner dashboard remains the editor. See [Supabase's RLS guide](https://supabase.com/docs/guides/database/postgres/row-level-security).
 
-Export `books` from Lovable and import the CSV into the empty destination table. Then run this in both dashboards:
+3. In Lovable, open More → Database, open `books`, and Export CSV. Check it contains all three rows and the `id,title,is_read` columns, including your changed read state. Save the export outside the repo. Import it through the destination Table Editor's CSV import into the empty table. Preserve IDs and booleans; don't recreate rows from the seed prompt.
+4. Run this query in both dashboards and compare every value, not just the count:
 
 ```sql
 select id, title, is_read from public.books order by id;
 ```
 
-Compare all three rows, including the state you changed earlier. Keep the CSV private and outside the repository, even though this lab uses synthetic records.
+5. Check for missing IDs, duplicate seeds and unexpected columns. Verify SELECT with the destination public key. Try public INSERT, UPDATE and DELETE against disposable probe records: they must be denied or affect zero rows, and no records may change. Save the synthetic comparison in your notes.
 
-Lovable also offers full database exports. Those require a different restore procedure, including managed schemas and roles; this CSV exercise doesn't demonstrate user, storage, or whole-database migration. See [Lovable's migration guide](https://docs.lovable.dev/tips-tricks/external-deployment-hosting) before attempting a larger move.
+For an existing app, use its selected tables and intended access policies instead. Preserve all selected rows, relationships and generated IDs/sequences. If CSV can't represent that data safely, pause and plan a supported restore. Keep excluded services explicitly on the original backend.
+
+[Lovable's full database exports](https://docs.lovable.dev/tips-tricks/external-deployment-hosting) use a different restore procedure involving managed schemas and roles. This small CSV exercise doesn't migrate user accounts or storage.
+
+Before continuing, explain why running only a schema migration wouldn't preserve the changed read state.

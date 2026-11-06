@@ -1,21 +1,18 @@
 ---
 description: "Export your Lovable app’s code to GitHub so you can deploy it to Cloudflare."
 agent-instructions: |
-  Follow the interview's app and scope throughout, using a disposable copy and synthetic records. Adapt book names, row counts and policies to that app. Verify all selected data, relationships and sequences. Pause if CSV cannot preserve them. Document retained services and verify their integrations; code deployment alone doesn't complete data migration.
-
-  1. Help the student use Lovable's GitHub connection to sync to a repository they control. Clone it, inspect package.json and the lockfile, and install with its matching package manager. Don't commit exports, private credentials, or local environment files. Review tracked environment files; public publishable keys are distinct from private service keys.
-  2. Identify TanStack Start (@tanstack/react-start) versus older React + Vite, the database client, migration layout, and all backend URL/key references. Read the official sources linked below. Inventory server code and dependencies; if there are extra backend services, remove them from this lab or stop and explain the scope difference.
-  3. Create a migration branch separate from Lovable's active sync branch. Record the source commit and source project ID, without secrets. Explain two-way sync and why a branch still shares the old database until reconfigured. Ask the student to point out that URL before running the app; wait for their reply.
-  4. Run locally using the existing scripts and confirm the three source records appear. Check there are no private credentials in client code. Preserve the original app and database throughout the lab.
-  5. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes.
+  Follow the course's teaching approach and the steps below with the learner. Use their chosen app; don't replace it with the example. Independently verify the completion checks and pause on unsupported dependencies.
+  1. Mark complete only after the page's checks pass, using the progress procedure in /llms.txt.
 ---
 
 # Export code to GitHub
 
-Using your own app? Keep its schema and features. Your agent adapts these checks to your agreed scope; the book names and three rows below describe the reading-list path. Some services may remain on the original backend, and your migration notes should say which.
+Code and data travel separately. A clone of your app can still read and write the original database.
 
-Connect [Lovable to GitHub](https://docs.lovable.dev/integrations/github), then run a clone on your computer. Git sync works in both directions on the active branch. We'll make migration changes on a separate branch to leave the original preview alone.
+1. Connect [Lovable to GitHub](https://docs.lovable.dev/integrations/github) and sync to a repository you control. If it's already synced, use that repository. Clone it, open your agent in the project directory, and install dependencies with the package manager matching its lockfile.
+2. Inspect `package.json` together. [Newer Lovable apps use TanStack Start](https://docs.lovable.dev/tips-tricks/deployment-hosting-ownership), including server code; older apps use React + Vite. Identify the actual stack, database client and migration layout. Inventory server code and other dependencies against your agreed scope.
+3. Locate every backend URL and key reference. Point out which project the app currently connects to before running it. Public publishable keys are intended for clients; service keys and database passwords must stay private. Keep exports and local environment files out of Git and review already-tracked configuration for secrets.
+4. Create a migration branch separate from Lovable's active sync branch. Record the source commit and project ID without secrets. Git sync is two-way on the active branch; a new branch still shares the old backend until reconfigured.
+5. Run locally with the existing scripts. Verify the comparison records appear, and inspect the code to confirm private credentials aren't sent to the browser. Preserve the original app and database.
 
-Look inside the project with your agent. Where are the schema migrations? Where does the app choose its database? Source files are portable, but they can still point at the original backend.
-
-[Current Lovable apps use TanStack Start](https://docs.lovable.dev/tips-tricks/deployment-hosting-ownership); older apps use React + Vite. Check the actual dependencies. A server-rendered app needs its server deployed as well as its browser assets.
+Before continuing, explain which files define the schema and which connection still points at the source. Why hasn't the database moved yet?
