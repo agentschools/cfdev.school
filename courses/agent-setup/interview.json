@@ -15,36 +15,6 @@
       ]
     },
     {
-      "id": "skills",
-      "question": "How familiar are you with these coding and web technologies?",
-      "type": "grid",
-      "hint": "Skip any row you're unsure about. Name languages or frameworks you know in the box below.",
-      "rows": [
-        "HTML",
-        "CSS",
-        "JavaScript / TypeScript",
-        "Python",
-        "React",
-        "Browser APIs",
-        "Node.js",
-        "HTTP APIs",
-        "LLM APIs",
-        "Relational databases",
-        "Vector databases",
-        "DNS",
-        "Testing",
-        "CI/CD",
-        "Command line tools",
-        "Git"
-      ],
-      "options": [
-        "New",
-        "Familiar",
-        "Fluent"
-      ],
-      "other": true
-    },
-    {
       "id": "harnesses",
       "question": "Which AI apps and agent harnesses have you used?",
       "type": "multi",
@@ -109,6 +79,36 @@
         "Multiplayer apps",
         "MCP servers",
         "Browser automation"
+      ],
+      "other": true
+    },
+    {
+      "id": "skills",
+      "question": "How familiar are you with these coding and web technologies?",
+      "type": "grid",
+      "hint": "Skip any row you're unsure about. Name languages or frameworks you know in the box below.",
+      "rows": [
+        "HTML",
+        "CSS",
+        "JavaScript / TypeScript",
+        "Python",
+        "React",
+        "Browser APIs",
+        "Node.js",
+        "HTTP APIs",
+        "LLM APIs",
+        "Relational databases",
+        "Vector databases",
+        "DNS",
+        "Testing",
+        "CI/CD",
+        "Command line tools",
+        "Git"
+      ],
+      "options": [
+        "New",
+        "Familiar",
+        "Fluent"
       ],
       "other": true
     },

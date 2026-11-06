@@ -46,11 +46,11 @@ agent-instructions: |
   without pushing):
 
   1. "How much have you used AI coding agents?" Choices: Not yet / A few times / Most weeks / Every day.
-  2. "How familiar are you with these coding and web technologies?" Rate each row as New, Familiar, or Fluent. Rows: HTML; CSS; JavaScript / TypeScript; Python; React; Browser APIs; Node.js; HTTP APIs; LLM APIs; Relational databases; Vector databases; DNS; Testing; CI/CD; Command line tools; Git. Plus Other (their own words, e.g. languages or frameworks they know). In plain text, show the rows on one line and let them answer like "2: HTML fluent, CSS familiar, SQL new, Python fluent". With a structured question tool, offer "New to all of these" and "Fluent in all of these" as choices and let them type a mix in the type-your-own answer.
-  3. "Which AI apps and agent harnesses have you used?" Choose any: Claude Code / Claude desktop / ChatGPT / Codex / Pi / OpenCode / Cursor / GitHub Copilot / Gemini CLI / Other (their own words).
-  4. "Where have you deployed apps before?" Choose any: Vercel / Netlify / Heroku / AWS / Google Cloud / Azure / Cloudflare / Other (their own words).
-  5. "Which Cloudflare products have you used before?" Choose any: Workers / R2 / D1 / Workers KV / Durable Objects / AI Gateway / Queues / Browser Run / Workflows / Containers / Vectorize / Other (their own words).
-  6. "What are you interested in building on Cloudflare?" Choose any: Web apps / Cloud agents / Automations / APIs and backends / Games / Data tools / Multiplayer apps / MCP servers / Browser automation / Other (their own words).
+  2. "Which AI apps and agent harnesses have you used?" Choose any: Claude Code / Claude desktop / ChatGPT / Codex / Pi / OpenCode / Cursor / GitHub Copilot / Gemini CLI / Other (their own words).
+  3. "Where have you deployed apps before?" Choose any: Vercel / Netlify / Heroku / AWS / Google Cloud / Azure / Cloudflare / Other (their own words).
+  4. "Which Cloudflare products have you used before?" Choose any: Workers / R2 / D1 / Workers KV / Durable Objects / AI Gateway / Queues / Browser Run / Workflows / Containers / Vectorize / Other (their own words).
+  5. "What are you interested in building on Cloudflare?" Choose any: Web apps / Cloud agents / Automations / APIs and backends / Games / Data tools / Multiplayer apps / MCP servers / Browser automation / Other (their own words).
+  6. "How familiar are you with these coding and web technologies?" Rate each row as New, Familiar, or Fluent. Rows: HTML; CSS; JavaScript / TypeScript; Python; React; Browser APIs; Node.js; HTTP APIs; LLM APIs; Relational databases; Vector databases; DNS; Testing; CI/CD; Command line tools; Git. Plus Other (their own words, e.g. languages or frameworks they know). In plain text, show the rows on one line and let them answer like "6: HTML fluent, CSS familiar, SQL new, Python fluent". With a structured question tool, offer "New to all of these" and "Fluent in all of these" as choices and let them type a mix in the type-your-own answer.
   7. "What do you want to build or learn?" Free text. Tell us about your idea, who it is for, and what you hope to learn. More context helps your agent connect the course to what you want to build.
   8. "How do you like to learn?" Free text. For example: explain each step, let me try first, use diagrams, or compare with tools I know. More context helps your agent tailor the pace and explanations.
   9. "Want a short quiz at the end of each exercise?" Choices: Yes, quiz me! / No quizzes please. Default to "Yes, quiz me!" if they skip it.
@@ -100,8 +100,8 @@ agent-instructions: |
     "course": "agent-setup",
     "responses": [
       { "question": "How much have you used AI coding agents?", "answer": "Not yet" },
-      { "question": "How familiar are you with these coding and web technologies?", "answer": ["HTML: Fluent", "CSS: Familiar", "Relational databases: New"] },
       { "question": "Where have you deployed apps before?", "answer": ["Vercel"] },
+      { "question": "How familiar are you with these coding and web technologies?", "answer": ["HTML: Fluent", "CSS: Familiar", "Relational databases: New"] },
       { "question": "What do you want to build or learn?", "answer": "a link shortener" },
       { "question": "Want a short quiz at the end of each exercise?", "answer": "Yes, quiz me!" },
       { "question": "Which operating system are you on?", "answer": "macOS" }
@@ -141,9 +141,9 @@ Depending on your app and its permissions, you may see prompts to allow commands
 This is saved with your student ID so your agent can pick up where you left off in later exercises:
 
 - How much you've used AI coding agents
-- How familiar you are with coding and web technologies like HTML, CSS, JavaScript, React, APIs, and databases
 - Where you've deployed apps before, if anywhere
 - Cloudflare products and AI apps you have used, and what interests you
+- How familiar you are with coding and web technologies like HTML, CSS, JavaScript, React, APIs, and databases
 - What you want to build or learn, and how you like to learn, in your own words
 - Whether you want a short quiz at the end of each exercise
 - Your operating system, which your agent detects by itself so it can give you the right commands
