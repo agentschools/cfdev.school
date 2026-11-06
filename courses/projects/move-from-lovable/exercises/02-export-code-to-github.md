@@ -1,5 +1,5 @@
 ---
-description: "Sync the project to GitHub and identify its stack and backend connection."
+description: "Export your Lovable app’s code to GitHub so you can deploy it to Cloudflare."
 agent-instructions: |
   Follow the interview's app and scope throughout, using a disposable copy and synthetic records. Adapt book names, row counts and policies to that app. Verify all selected data, relationships and sequences. Pause if CSV cannot preserve them. Document retained services and verify their integrations; code deployment alone doesn't complete data migration.
 
