@@ -53,7 +53,9 @@ describe("built-in courses", () => {
       });
 
       // Steps after completion get skipped: agents mark the exercise done and
-      // move on, so try-it steps have to come before it.
+      // move on, so try-it steps have to come before it. Tutorial exercises
+      // (#182) have no numbered steps; /llms.txt's "Teaching an exercise"
+      // covers completion for them.
       if (course.track) {
         it("ends every exercise's numbered agent-instructions with Mark complete", () => {
           for (const [file, markdown] of Object.entries(course.exercises)) {
@@ -62,7 +64,8 @@ describe("built-in courses", () => {
             // Top-level steps only; nested lists are indented.
             const steps = [...instructions.matchAll(/^\d+\. .*$/gm)];
             const last = steps.at(-1);
-            expect(last?.[0], file).toMatch(/^\d+\. Mark complete/);
+            if (!last) continue;
+            expect(last[0], file).toMatch(/^\d+\. Mark complete/);
             // Only the out-of-scope note may follow it, not an unnumbered step.
             // Indented lines continue a wrapped step, so they're skipped.
             const after = instructions

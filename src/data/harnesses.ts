@@ -734,6 +734,10 @@ export const harnesses: HarnessProfile[] = [
       },
       {
         url: "https://docs.github.com/en/copilot/reference/ai-models/supported-models",
+        note: "Checked 2026-11-05: the page's Auto model selection list for Copilot CLI shows Claude Opus 5.5, Sonnet 5.5, Opus 5, Sonnet 5, Opus 4.8, Haiku 4.5, GPT-6.1 Sol, GPT-6 Astra/Sol/Luna, GPT-5.6 Luna/Sol/Terra, Gemini 3.8 Flash, and MAI-Code-1.1-Flash, and names GPT-5.3-Codex as the fallback model. It no longer lists Claude Sonnet 4.5, Fable 5.1, Haiku 5.5, or Kimi K3, but the fetch summary was of the auto-selection list only, so none of those were removed; the Sonnet 4.5 entry stays unconfirmed. The 1M context window is stated for VS Code and Copilot CLI.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/reference/ai-models/supported-models",
         note: "Checked 2026-10-22: Copilot CLI models with 1M context include Claude Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5.1, GPT-6.1 Sol, GPT-6 Astra and Luna, and Kimi K3. The page names no default model and no deprecations, so Sonnet 4.5 (200K, from the old README) wasn't removed but is unconfirmed; its context window wasn't rechecked. Availability depends on plan.",
       },
       {

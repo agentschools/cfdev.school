@@ -17,7 +17,7 @@ export function claimFirstPromptCopy(getStorage: () => Pick<Storage, "getItem" |
 
 /**
  * Copy button for AgentPrompt.astro. Shows the "Copied!" line on every copy,
- * plus the "Don't have an agent yet?" help only on the first one.
+ * plus the "No agent yet?" help only on the first one.
  */
 export function initPromptCopy(copyButton: HTMLElement, promptText: HTMLElement, copyConfirm: HTMLElement): void {
   const help = copyConfirm.querySelector<HTMLElement>("#agent-prompt-help");

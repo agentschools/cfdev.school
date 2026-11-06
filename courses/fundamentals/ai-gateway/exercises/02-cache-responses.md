@@ -7,6 +7,14 @@ agent-instructions: |
 
   1. Teach the concept and ask the student to predict (before enabling cache):
      - Explain how AI Gateway caching works: when exact-match caching is enabled, the gateway hashes the provider, endpoint, model, provider auth header, and full request body (`messages` and any parameters), so only an exact repeat matches. On a **cache miss**, it calls the model and stores the response for your TTL; on a **cache hit**, it returns the stored response directly from Cloudflare's edge in tens of milliseconds for `$0` in model tokens.
+     - Redraw the diagram from Exercise 1 and add Stage 2 (the cache check right after logs):
+       ```text
+       Stage 2:  Your Worker ──(prompt + metadata)──► AI Gateway
+                                                          │
+                                               [ 1. Logs ──► 2. Cache? ]
+                                                     ├── Hit  ──► Return in ~20ms ($0)
+                                                     └── Miss ──► Model Provider
+       ```
      - Point out a critical design detail: the default cache key covers the request itself, **not** `metadata`.
      - Ask the student to predict: if `riley` (on `interns`) and `sam` (on `escalations`) send the exact same question while caching is on, what happens on Sam's request—and when would that be helpful vs. dangerous? Also ask what cache TTL (in seconds, at least 60, e.g. `300` for 5 minutes) they'd like to turn on. Wait for their reply.
 
@@ -19,13 +27,16 @@ agent-instructions: |
      - Send the exact same prompt twice with `skipCache: false` (waiting ~3 seconds between them so the cache write finishes), and a third time with `skipCache: true`.
      - **Important: leave caching ON** so the student can experience it themselves. Invite the student to:
        1. Click **Ask through the gateway** twice with the same prompt on their lab page (and then once with **Bypass cache** checked) to feel the speed difference.
-       2. Check their gateway Logs dashboard (`https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`) and look for the cached indicator on the repeat request—comparing its duration and `$0` cost to the uncached requests.
-     - In the same message, ask the comprehension check: when should an app pass `skipCache: true` vs. a custom per-user `cacheKey`? Wait for their reply.
+        2. Check their gateway Logs dashboard (`https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`) and look for the cached indicator on the repeat request—comparing its duration and `$0` cost to the uncached requests.
+     - In the same message, offer a scenario check tailored to their interview profile (or let them reply `"next"` anytime to keep moving):
+       - For a builder or developer: in the app they're building (or a real app with logged-in users), which endpoints are safe to serve from the default shared cache vs. needing `skipCache: true` or a per-user `cacheKey`?
+       - For someone in a sales, SE, or customer-facing role: if a customer asks *"Can we cache repeat AI answers to cut latency and cost without leaking one user's private answer to another?"*, how would you walk them through default caching vs. `skipCache` and custom `cacheKey`s (or want to try pitching me as that customer)?
+       Wait for their reply.
 
   3. Mark complete:
      - Confirm via `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` that the logs show both `"cached": true` and `"cached": false` (on the `skipCache: true` call).
      - Reset `--cache-ttl 0` on the gateway now that the student has tried it (`cf ai-gateway gateways update <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding`) and tell the student you turned caching back off so later exercises always hit the live models.
-     - Gently correct anything off in their answer, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cap-requests-and-spend".
+     - Connect their answer to the concrete trade-off (or share a one-line takeaway if they replied `"next"`), mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "cap-requests-and-spend".
 
   Out of scope here: semantic caching (AI Gateway caching is exact-match only), rate limiting, and spend limits (rate limits and spend limits are the next exercise).
 ---
@@ -53,11 +64,21 @@ Exact-match [response caching](https://developers.cloudflare.com/ai-gateway/feat
 
 ## Exact-match caching and `skipCache`
 
-When caching is enabled on your gateway (or per call with `cacheTtl`), AI Gateway [hashes](https://developers.cloudflare.com/ai-gateway/features/caching/#how-the-cache-key-works) the provider, endpoint, model, provider auth header, and full request body. If an identical request arrives before the TTL expires, the gateway returns the stored response without calling the provider:
+When caching is enabled on your gateway (or per call with `cacheTtl`), AI Gateway [hashes](https://developers.cloudflare.com/ai-gateway/features/caching/#how-the-cache-key-works) the provider, endpoint, model, provider auth header, and full request body. Adding caching to the pipeline from Exercise 1 short-circuits repeat requests before they reach the model provider:
+
+```mermaid
+flowchart LR
+  App["Your Worker"] -->|"prompt + metadata"| Logs["1. Logs & Metadata"]
+  Logs --> Cache{"2. Cache hit?"}
+  Cache -->|"Hit"| Edge["Cached response\n~20ms · $0 tokens"]
+  Cache -->|"Miss"| Provider["Model Provider"]
+```
+
+If an identical request arrives before the TTL expires, the gateway returns the stored response without calling the provider:
 
 ```ts title="src/index.ts"
 const result = await env.AI.run(
-  "@cf/meta/llama-3.1-8b-instruct-fp8",
+  "@cf/google/gemma-4-26b-a4b-it", // any affordable Workers AI chat model
   { messages: [{ role: "user", content: prompt }] },
   {
     gateway: {
