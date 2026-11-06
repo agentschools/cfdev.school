@@ -1,6 +1,6 @@
 import { rawCourses } from "./course-files";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { courseInterview, courseInterviews, interviewBody, interviewPrompt } from "./course-interview";
+import { courseInterview, courseInterviews, interviewBody, interviewPrompt, savedSingleAnswer, SAVED_ANSWER } from "./course-interview";
 import { completeWebInterview } from "./course-interview-client";
 import { saveInterviewSchema } from "../schemas/interview";
 
@@ -26,6 +26,29 @@ describe("course-authored web interviews", () => {
     const body = interviewBody(setup, data, [{ question: "Which operating system are you on?", answer: "macOS" }]);
     expect(saveInterviewSchema.safeParse(body).success).toBe(true);
     expect(body.responses.map(response => response.answer)).toEqual(["A scheduling app", "no", "macOS"]);
+  });
+  it("visibly retains custom single-choice answers across both courses until explicitly changed or skipped", () => {
+    for (const [definition, id, answer] of [
+      [setup, "experience", "weekly"], [setup, "quizzes", "only when I ask"],
+      [drawing, "experience", "I have built Svelte apps"], [drawing, "device", "a drawing tablet"],
+      [drawing, "experience", ["Svelte", "Vue"]],
+    ] as const) {
+      const question = definition.questions.find(question => question.id === id)!;
+      const previous = { question: question.question, answer: typeof answer === "string" ? answer : [...answer] };
+      expect(savedSingleAnswer(question, [previous])).toEqual(previous);
+      const data = new FormData(); data.set(id, SAVED_ANSWER);
+      expect(interviewBody(definition, data, [previous]).responses).toContainEqual(previous);
+      data.set(id, question.options![0]);
+      expect(interviewBody(definition, data, [previous]).responses).toContainEqual({ question: question.question, answer: question.options![0] });
+      data.set(id, "");
+      expect(interviewBody(definition, data, [previous]).responses).not.toContainEqual(previous);
+    }
+  });
+  it("does not accept a retained-answer marker without a current custom answer", () => {
+    const data = new FormData(); data.set("experience", SAVED_ANSWER);
+    expect(() => interviewBody(setup, data)).toThrow("saved answer changed");
+    const question = setup.questions.find(question => question.id === "experience")!;
+    expect(savedSingleAnswer(question, [{ question: question.question, answer: "daily" }])).toBeUndefined();
   });
   it("keeps long goals within the summary API limit", () => {
     const data = new FormData(); data.set("goals", "a".repeat(2000));

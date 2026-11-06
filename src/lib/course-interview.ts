@@ -20,9 +20,22 @@ export function courseInterview(course: string): InterviewDefinition | undefined
   return courseInterviews.find(definition => definition.course === course);
 }
 
+export const SAVED_ANSWER = "__saved-answer__";
+
+/** A previous agent answer can be more specific than the website's fixed choices. */
+export function savedSingleAnswer(question: InterviewDefinition["questions"][number], responses: InterviewResponse[]): InterviewResponse | undefined {
+  const previous = responses.find(response => response.question === question.question);
+  return question.type === "single" && previous && (typeof previous.answer !== "string" || !question.options?.includes(previous.answer)) ? previous : undefined;
+}
+
 export function interviewBody(definition: InterviewDefinition, data: FormData, existing: InterviewResponse[] = []): SaveInterview {
   const responses: InterviewResponse[] = definition.questions.flatMap(question => {
     const values = data.getAll(question.id).map(String).map(answer => answer.trim()).filter(Boolean);
+    if (values.length === 1 && values[0] === SAVED_ANSWER) {
+      const previous = savedSingleAnswer(question, existing);
+      if (!previous) throw new Error("The saved answer changed. Reload before continuing.");
+      return [previous];
+    }
     if (values.some(answer => answer.length > 2000)) throw new Error("Please keep each answer under 2,000 characters.");
     if (question.options && values.some(answer => ![...question.options!, question.none, "Other"].includes(answer))) throw new Error("Please choose a listed answer.");
     if (question.none && values.includes(question.none) && values.length > 1) throw new Error(`Choose ${question.none} on its own, or select your other answers.`);

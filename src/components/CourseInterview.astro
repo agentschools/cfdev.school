@@ -1,6 +1,6 @@
 ---
 import AgentPrompt from "./AgentPrompt.astro";
-import type { InterviewDefinition } from "../lib/course-interview";
+import { SAVED_ANSWER, type InterviewDefinition } from "../lib/course-interview";
 interface Props { definition: InterviewDefinition }
 const { definition } = Astro.props;
 ---
@@ -25,7 +25,10 @@ const { definition } = Astro.props;
             <div class="choices">
               {question.type === "multi" && <p class="note">Choose any that apply.</p>}
               {[...(question.options ?? []), ...(question.none ? [question.none] : []), ...(question.other ? ["Other"] : [])].map(option => <label><input type={question.type === "multi" ? "checkbox" : "radio"} name={question.id} value={option} data-none={option === question.none ? "" : undefined} /> {option}</label>)}
-              {question.type === "single" && <label><input type="radio" name={question.id} value="" checked /> Skip this question</label>}
+              {question.type === "single" && <>
+                <label data-saved-choice={question.id} hidden><input type="radio" name={question.id} value={SAVED_ANSWER} /><span></span></label>
+                <label><input type="radio" name={question.id} value="" checked /> Skip this question</label>
+              </>}
               {question.other && <label class="other-text">Other (describe)<input type="text" name={`${question.id}-other`} maxlength="2000" /></label>}
             </div>
           )}

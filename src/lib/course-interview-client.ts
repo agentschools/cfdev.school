@@ -1,4 +1,4 @@
-import { courseInterview, interviewBody, interviewPrompt, type InterviewDefinition } from "./course-interview";
+import { courseInterview, interviewBody, interviewPrompt, savedSingleAnswer, SAVED_ANSWER, type InterviewDefinition } from "./course-interview";
 import { ENROLLED_EVENT, enrollStudent, readCachedStudent, type CachedStudent } from "./enroll-client";
 import { initPromptCopy } from "./agent-prompt-copy";
 import { buildPrompt } from "./agent-prompt";
@@ -66,6 +66,13 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
   }
   function savedEntries(): [string, string][] {
     return definition.questions.flatMap(question => {
+      const previous = savedSingleAnswer(question, saved?.responses ?? []);
+      const choice = form.querySelector<HTMLElement>(`[data-saved-choice="${question.id}"]`);
+      if (choice) {
+        choice.hidden = !previous;
+        choice.querySelector("span")!.textContent = previous ? `Your saved answer: ${Array.isArray(previous.answer) ? previous.answer.join("; ") : previous.answer}` : "";
+      }
+      if (previous) return [[question.id, SAVED_ANSWER]] as [string, string][];
       const answer = saved?.responses.find(response => response.question === question.question)?.answer;
       const answers = Array.isArray(answer) ? answer : answer ? [answer] : [];
       const custom = question.other ? answers.filter(value => ![...(question.options ?? []), question.none].includes(value)) : [];
@@ -184,6 +191,7 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
         if (!response.ok) throw new Error("Could not save your answers. Reload saved answers to check the result before retrying. Your draft is kept in this tab.");
         saved = interviewsSchema.parse(await response.json()).interviews.find(item => item.course === definition.course);
         if (!saved || JSON.stringify(saved.responses) !== JSON.stringify(body.responses)) throw new Error("The saved interview changed. Reload saved answers before continuing.");
+        populate(savedEntries());
         // Keep the draft tied to the confirmed version for partial-save/reload recovery.
         saveDraft();
       }
