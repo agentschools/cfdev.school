@@ -10,4 +10,4 @@ metadata:
 
 Time to ship something real. You'll create a [Cloudflare Worker](https://developers.cloudflare.com/workers/), deploy it to your own account, and then give it a [Workers KV](https://developers.cloudflare.com/kv/) binding so it can store data.
 
-Both exercises build on the same Worker, and your agent checks each step itself before marking it complete.
+Both exercises build on the same Worker. Each one teaches in short sections, with a quick question after each and room for yours, and your agent checks each step itself before marking it complete.

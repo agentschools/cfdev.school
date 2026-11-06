@@ -9,21 +9,26 @@ agent-instructions: |
 
   Adapt how much you explain to their interview answers (GET /api/students/{id}/interviews: Agent setup's agent experience and where they've deployed before, plus this course's own): students who haven't deployed anywhere get a brief, two-or-three-sentence explanation of each new concept as it comes up; students who've used another platform get a one-line comparison to what they know; Cloudflare users get the mechanics without the basics. Experience changes how much you explain, never whether the student makes the choices and predictions. Don't lecture.
 
+  Teaching in sections: the body has three short teaching sections ("What KV is", "What a binding is", "Local data vs. deployed data") plus "Gotchas". Present each one in your own words, at the step named below, using the student's own names, keys, and URLs rather than the body's examples. Keep each to a few sentences. End each with the section's "Check" question in its own message, plus an invitation to ask anything about it, then wait. If their answer is off, correct it gently in a sentence or two. The checks only ask about what that section just taught; never ask about something you haven't covered yet. They're for understanding, not a gate.
+
   If their Worker from exercise 1 has a `wrangler.jsonc`/`wrangler.json`/`wrangler.toml` instead of a `cloudflare.config.ts` (e.g. it was created with Wrangler), offer to convert it with `cf migrate` first; if they'd rather not, adapt the steps below to Wrangler for that project.
 
-  1. Choose: explain what a KV namespace is (a key-value store on Cloudflare's network, independent of any single Worker), then ask the student to name it (suggest `<worker name>-kv`) and to pick a key and value they'd like to store first (anything: a favorite word, a note to themselves). Wait for their answer.
+  1. Choose: present "What KV is" and its check (expected gist: a visitor elsewhere might still see the old value for up to about 60 seconds or more, because other locations serve cached copies until they expire; fine for things like settings or content, not for data that must be exact everywhere at once). Then ask the student to name their namespace (suggest `<worker name>-kv`) and to pick a key and value they'd like to store first (anything: a favorite word, a note to themselves). Wait for their answer.
   2. Provision: create the namespace with `cf kv namespaces create --title <their name>`. It prints JSON that includes the new namespace's `id`. Titles are unique per account, so if one with that title already exists (e.g. they're redoing this exercise), ask whether to reuse it or pick another name.
-  3. Bind, and have them review it: add `KV: bindings.kv({ id: "<that id>" })` to the `worker.env` object in their `cloudflare.config.ts` (importing `bindings` from `"cf/config"` if it isn't already). Write this line yourself, don't reach for a template that already has the binding wired up. Show the student the `env` block with the new line, and explain what a binding is: the named connection between a Worker and a platform resource, which shows up on `env` in the Worker's code under the name on the left. The namespace exists on its own; this line only connects this Worker to it. If the scaffold's `WORLD: bindings.text(...)` line is still there, point out it's a binding too, one that holds a value instead of pointing at a resource. Ask if they're happy with the name `KV` or want another (if they rename it, use their name everywhere below), and wait for their OK before going on.
+  3. Bind, and have them review it: add `KV: bindings.kv({ id: "<that id>" })` to the `worker.env` object in their `cloudflare.config.ts` (importing `bindings` from `"cf/config"` if it isn't already). Write this line yourself, don't reach for a template that already has the binding wired up. Show the student the `env` block with the new line and present "What a binding is". If the scaffold's `WORLD: bindings.text(...)` line is still there, point out it's a binding too, one that holds a value instead of pointing at a resource. Ask its check (expected gist: the namespace and its data stay where they are; the Worker just loses access, because the binding line is the only thing connecting the two), and also whether they're happy with the name `KV` or want another (if they rename it, use their name everywhere below). Wait for their answer before going on.
   4. Extend the Worker: update the same Worker's `fetch` handler so it reads a `key` (and, for writes, a `value`) from the request, e.g. query string params, and uses the binding: `PUT`-style requests call `env.KV.put(key, value)`, `GET`-style requests call `env.KV.get(key)` and return it (or a 404 if no value is stored under that key). Requests without a `key` must keep returning the response from "Deploy a Worker", so the Worker's homepage doesn't turn into an error; the binding is added on top of what's there. Show the student the new handler and point out that `env.KV` is the binding from step 3 in action.
-  5. Run locally: start the local dev server with `cf dev` and confirm a local write followed by a local read returns the same value. Tell the student local dev uses a local simulation of KV, not the real namespace, so nothing they write locally shows up in production.
+  5. Run locally: start the local dev server with `cf dev` and confirm a local write followed by a local read returns the same value. Present "Local data vs. deployed data" and its check (expected gist: no, the deployed Worker reads the real namespace on Cloudflare, which is separate from the local simulation, so the key has to be written again against the deployed URL).
   6. Predict, then deploy: ask the student what a read will return for a key nobody has written yet. Wait for their answer. Then deploy with `cf deploy`.
   7. Verify: YOU must check all of these against the deployed URL, then compare the results to the student's predictions:
-     - Write their value under their key, then in a separate request read it back and confirm it matches. A single request proving a value round-trips in memory is not enough; the two-step, separately issued round trip is what proves the binding persists data rather than the Worker echoing something back. Tell the student that's why you verify this way.
+     - Write their value under their key, then in a separate request read it back and confirm it matches. A single request proving a value round-trips in memory is not enough; the two-step, separately issued round trip is what proves the binding persists data rather than the Worker echoing something back. Tell the student that's why you verify this way, and tie it to exercise 1's gotcha: a global variable could fake a single request, but not storage.
      - Read a key that was never written and confirm the 404. Make it one nobody will pick later (e.g. `never-written-` plus a few random characters): KV caches a miss for up to about a minute, so a key read before it's written can keep returning the miss for that long.
      - Request the homepage without a `key` and confirm it still returns the Worker's text from "Deploy a Worker" (whatever the student last changed it to). If it doesn't, fix the handler and redeploy before going on.
      Do not trust the student saying it worked; check it yourself. A new deploy can take up to about 30 seconds to start serving; retry before assuming something's wrong.
-  8. Try it: ask the student for two or three more keys and values to store, and which existing key to overwrite with what. Wait for their answer, then write them and read each back, showing the results. Give them a read URL (e.g. `<url>/?key=<their key>`) to open in their browser.
-  9. Comprehension check: in its own message, ask the student what would change if a second Worker were bound to this same namespace. (Both Workers would read and write the same data: the namespace exists on its own, and the binding only connects a Worker to it.) Don't put the answer in the same message, and wait for their reply before saying whether it's right. Gently correct anything off. Verification is the gate, not their answer.
+  8. Try it: ask the student for two or three more keys and values to store, and which existing key to overwrite with what. Wait for their answer, then write them and read each back, showing the results. Give them a read URL (e.g. `<url>/?key=<their key>`) to open in their browser. Then go over "Gotchas" briefly, as a table if your harness renders Markdown, and invite questions.
+  9. Comprehension check: if the student opted into quizzes in Agent setup's interview, ask these two questions, one at a time, each in its own message, waiting for a reply and giving feedback before the next:
+     - "You bind a second Worker to this same namespace. What does it see, and what would you have to change in the namespace itself to allow it?" (Expected gist: it reads and writes the same data; nothing changes on the namespace, because declaring the binding is the whole connection.)
+     - "A teammate wants to use this namespace as a page-view counter that does `get`, adds 1, and `put`s on every visit. Given that KV allows 1 write per second to the same key and changes can take up to 60 seconds or more to show up elsewhere, what would go wrong?" (Expected gist: busy pages exceed the per-key write limit, and visitors in different places read stale counts and overwrite each other's increments, so the total comes out low. Don't name the alternative unless they ask; if they do, say the Durable Objects course covers it.)
+     Don't put an answer in the same message as its question. Gently correct anything off. If they didn't opt in, skip the questions and give both as one-line takeaways instead. Verification is the gate, not their answers.
   10. Mark complete: only after verification succeeds, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes. Never invent other progress endpoints. This is the last exercise in the Workers course: tell the student it's complete, and that the Bindings course goes deeper (secrets, calling another Worker, swapping resources between environments) if they want more.
 
   Out of scope for this exercise: multiple KV namespaces, list operations, TTL/expiration, R2/D1 bindings, Durable Objects, and additional exercises. If the student asks, say those come later and stay focused on this one binding.
@@ -39,6 +44,8 @@ The same Worker, now with a KV binding on `env`. Its homepage still shows the re
 
 You name the namespace and choose what to store. Before anything ships, your agent shows you the one line in `cloudflare.config.ts` that declares the binding, and you'll predict what happens when you read a key nobody wrote. Then you'll store and overwrite a few values of your own.
 
+Your agent walks you through three short sections below, one at a time, with a quick question after each. Ask it anything as you go.
+
 Out of scope: multiple namespaces, TTLs, R2/D1, and other storage.
 
 ## Prerequisites
@@ -47,3 +54,43 @@ Your agent can help you with these.
 
 - You've completed [Deploy a Worker](/courses/workers/deploy-a-worker) and still have that project on disk.
 - The [`cf` CLI](/courses/agent-setup/cli) authenticated against your Cloudflare account (`cf auth whoami`).
+
+## What KV is
+
+A KV namespace is a key-value store on Cloudflare's network: you `put` a value under a key and `get` it back. It's built for data that's read far more often than it's written. Reads are fast everywhere because each location keeps cached copies, and that's the trade-off: [KV is eventually consistent](https://developers.cloudflare.com/kv/concepts/how-kv-works/). A change is usually visible right away where it was made, but can take up to 60 seconds or more to show up in other locations.
+
+**Check:** you update a value from your laptop, and a visitor on another continent reads it a few seconds later. What might they see, and what kinds of data is that fine for?
+
+## What a binding is
+
+A namespace exists on its own, independent of any Worker. A binding is the named connection between your Worker and that resource, declared in one line of config:
+
+```ts title="cloudflare.config.ts"
+env: {
+  KV: bindings.kv({ id: "<namespace id>" }),
+},
+```
+
+The name on the left is how your code reaches it, already connected, with no URL or API key to manage:
+
+```ts title="src/index.ts"
+await env.KV.put("greeting", "hello");
+const value = await env.KV.get("greeting"); // "hello"
+```
+
+**Check:** if you deleted that one line from `cloudflare.config.ts` and redeployed, what would happen to the namespace and the data in it?
+
+## Local data vs. deployed data
+
+Under `cf dev`, `env.KV` points at a local simulation of KV on your machine, not your real namespace. Your code doesn't change between the two; only where the data lives does.
+
+**Check:** you write a key while testing with `cf dev`, then deploy. Can the deployed Worker read that key?
+
+## Gotchas
+
+| Gotcha | What to know |
+| --- | --- |
+| Reads elsewhere can lag | Changes can take up to 60 seconds or more to reach other locations ([docs](https://developers.cloudflare.com/kv/concepts/how-kv-works/)). |
+| Misses are cached too | Reading a key before it exists can cache the "not found", so a value written right after may not show up there for about a minute. |
+| One write per second per key | KV allows [1 write per second to the same key](https://developers.cloudflare.com/kv/platform/limits/). Rapid updates to one key, like a counter, don't fit KV. |
+| Local isn't production | Data written under `cf dev` stays on your machine. |
