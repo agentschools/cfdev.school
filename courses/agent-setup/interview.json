@@ -22,17 +22,26 @@
       "rows": [
         "HTML",
         "CSS",
-        "JavaScript or TypeScript",
-        "Other programming languages",
-        "Web frameworks like React or Astro",
+        "JavaScript / TypeScript",
+        "Python",
+        "Node.js",
+        "React",
+        "Browser APIs",
+        "HTTP APIs",
+        "LLM APIs",
         "Relational databases and SQL",
+        "Vector databases",
+        "DNS",
+        "Build tools like Vite",
+        "Testing",
+        "CI/CD",
         "The command line",
         "Git"
       ],
       "options": [
-        "New to it",
-        "Some",
-        "Comfortable"
+        "New",
+        "Familiar",
+        "Fluent"
       ],
       "other": true
     },

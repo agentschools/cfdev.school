@@ -29,7 +29,7 @@ type Question = InterviewDefinition["questions"][number];
 /** Form field name for one row of a grid question. */
 export const gridField = (question: Question, row: number) => `${question.id}-row-${row}`;
 
-/** Splits a stored grid answer ("HTML: Some") into its row index and option, if it matches the grid. */
+/** Splits a stored grid answer ("HTML: Familiar") into its row index and option, if it matches the grid. */
 export function gridAnswer(question: Question, answer: string): { row: number; option: string } | undefined {
   const row = question.rows?.findIndex(label => answer.startsWith(`${label}: `)) ?? -1;
   const option = row < 0 ? undefined : question.options?.find(option => option.toLowerCase() === answer.slice(question.rows![row].length + 2).toLowerCase());

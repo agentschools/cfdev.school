@@ -66,11 +66,11 @@ describe("course-authored web interviews", () => {
   });
   it("stores grid ratings as Row: Level strings, skipping unrated rows", () => {
     const skills = setup.questions.find(question => question.id === "skills")!;
-    const data = new FormData(); data.set("skills-row-0", "Comfortable"); data.set("skills-row-5", "New to it"); data.set("skills-other", " Python ");
-    expect(interviewBody(setup, data).responses).toEqual([{ question: skills.question, answer: ["HTML: Comfortable", "Relational databases and SQL: New to it", "Other: Python"] }]);
+    const data = new FormData(); data.set("skills-row-0", "Fluent"); data.set("skills-row-9", "New"); data.set("skills-other", " Go ");
+    expect(interviewBody(setup, data).responses).toEqual([{ question: skills.question, answer: ["HTML: Fluent", "Relational databases and SQL: New", "Other: Go"] }]);
     data.set("skills-row-1", "Expert"); expect(() => interviewBody(setup, data)).toThrow("listed answer");
-    expect(gridAnswer(skills, "CSS: some")).toEqual({ row: 1, option: "Some" });
-    expect(gridAnswer(skills, "Other: Python")).toBeUndefined();
+    expect(gridAnswer(skills, "CSS: familiar")).toEqual({ row: 1, option: "Familiar" });
+    expect(gridAnswer(skills, "Other: Go")).toBeUndefined();
   });
   it("rejects unknown choices and oversized answers", () => {
     const data = new FormData();

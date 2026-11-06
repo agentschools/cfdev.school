@@ -46,7 +46,7 @@ agent-instructions: |
   without pushing):
 
   1. "How much have you used AI coding agents?" Choices: Not yet / A few times / Most weeks / Every day.
-  2. "How familiar are you with these coding and web technologies?" Rate each as New to it / Some / Comfortable: HTML / CSS / JavaScript or TypeScript / Other programming languages / Web frameworks like React or Astro / Relational databases and SQL / The command line / Git. Plus Other (their own words, e.g. languages or frameworks they know). In plain text, show the rows on one line and let them answer like "2: HTML comfortable, CSS some, SQL new, Python comfortable". With a structured question tool, offer "New to all of these" and "Comfortable with all of these" as choices and let them type a mix in the type-your-own answer.
+  2. "How familiar are you with these coding and web technologies?" Rate each row as New, Familiar, or Fluent. Rows: HTML; CSS; JavaScript / TypeScript; Python; Node.js; React; Browser APIs; HTTP APIs; LLM APIs; Relational databases and SQL; Vector databases; DNS; Build tools like Vite; Testing; CI/CD; The command line; Git. Plus Other (their own words, e.g. languages or frameworks they know). In plain text, show the rows on one line and let them answer like "2: HTML fluent, CSS familiar, SQL new, Python fluent". With a structured question tool, offer "New to all of these" and "Fluent in all of these" as choices and let them type a mix in the type-your-own answer.
   3. "Which AI apps and agent harnesses have you used?" Choose any: Claude Code / Claude desktop / ChatGPT / Codex / Pi / OpenCode / Cursor / GitHub Copilot / Gemini CLI / Other (their own words).
   4. "Where have you deployed apps before?" Choose any: Vercel / Netlify / Heroku / AWS / Google Cloud / Azure / Cloudflare / Other (their own words).
   5. "Which Cloudflare products have you used before?" Choose any: Workers / R2 / D1 / Workers KV / Durable Objects / AI Gateway / Queues / Browser Run / Workflows / Containers / Vectorize / Other (their own words).
@@ -85,7 +85,7 @@ agent-instructions: |
   multiple selections. Include Other as "Other: their words". Store
   the technologies question as an array with one "Row: Level" string per
   row they rated, using the row and level text exactly as written above
-  (e.g. "HTML: Comfortable", "Relational databases and SQL: New to it"),
+  (e.g. "HTML: Fluent", "Relational databases and SQL: New"),
   expanding "all of these" to every row, and anything else they said as
   "Other: their words". Store quiz
   answers as "Yes, quiz me!" or "No quizzes please". Free text is lightly trimmed. Leave out questions they skipped. Store the OS you
@@ -100,7 +100,7 @@ agent-instructions: |
     "course": "agent-setup",
     "responses": [
       { "question": "How much have you used AI coding agents?", "answer": "Not yet" },
-      { "question": "How familiar are you with these coding and web technologies?", "answer": ["HTML: Comfortable", "CSS: Some", "Relational databases and SQL: New to it"] },
+      { "question": "How familiar are you with these coding and web technologies?", "answer": ["HTML: Fluent", "CSS: Familiar", "Relational databases and SQL: New"] },
       { "question": "Where have you deployed apps before?", "answer": ["Vercel"] },
       { "question": "What do you want to build or learn?", "answer": "a link shortener" },
       { "question": "Want a short quiz at the end of each exercise?", "answer": "Yes, quiz me!" },
@@ -141,7 +141,7 @@ Depending on your app and its permissions, you may see prompts to allow commands
 This is saved with your student ID so your agent can pick up where you left off in later exercises:
 
 - How much you've used AI coding agents
-- How familiar you are with coding and web technologies like HTML, CSS, programming languages, web frameworks, and SQL databases
+- How familiar you are with coding and web technologies like HTML, CSS, JavaScript, React, APIs, and databases
 - Where you've deployed apps before, if anywhere
 - Cloudflare products and AI apps you have used, and what interests you
 - What you want to build or learn, and how you like to learn, in your own words
