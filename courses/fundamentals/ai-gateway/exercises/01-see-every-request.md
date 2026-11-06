@@ -26,7 +26,7 @@ agent-instructions: |
      - Create the gateway with `cf ai-gateway gateways create --id <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding` (or `cf ai-gateway gateways get <gateway-id>` if it already exists; if they reuse an existing gateway, note any settings it already has, such as `authentication` or `workers_ai_billing_mode`, because later exercises' `gateways update` commands replace the whole configuration and must carry them over).
      - If they don't have an existing Worker for this course, scaffold one with `cf init <dir>` (e.g. `ai-gateway-lab`), add `AI: bindings.ai({ dev: { remote: true } })` to `worker.env` in `cloudflare.config.ts` (importing `bindings` from `"cf/config"`), and run `cf workers types`. Mention in one sentence why `dev: { remote: true }` is set: even in local dev, calls go through their real AI Gateway and Workers AI on Cloudflare.
      - In `src/index.ts`, implement two routes:
-       - `POST /ask`: reads `{ prompt, user, team, skipCache }` from JSON, calls `env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", { messages: [{ role: "user", content: prompt }] }, { gateway: { id: "<gateway-id>", metadata: { user, team }, skipCache: Boolean(skipCache) }, returnRawResponse: true })` with the error handling shown below. Return `429` only when that call's raw response has status `429`; return `502` for other upstream failures or thrown errors. Parse successful JSON and return `{ response, logId, metadata: { user, team } }`. Do not assume thrown errors have a `status` property or classify every gateway error as a limit.
+       - `POST /ask`: reads `{ prompt, user, team, skipCache }` from JSON, calls `env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", { messages: [{ role: "user", content: prompt }] }, { gateway: { id: "<gateway-id>", metadata: { user, team }, skipCache: Boolean(skipCache) }, returnRawResponse: true })` with the error handling shown below. Return `429` only when that call's raw response has status `429`; preserve other upstream HTTP error statuses (including `424` for Guardrails blocks), and use `502` for thrown errors or responses without a valid HTTP error status. Parse successful JSON and return `{ response, logId, metadata: { user, team } }`. Do not assume thrown errors have a `status` property or classify every gateway error as a limit.
        - `GET /`: serves a clean, self-contained HTML lab page where the student can type a prompt, pick a `team` from a `<select>` (using their two team names), toggle a `Bypass cache (skipCache)` checkbox, click **Ask through the gateway**, and see the model's answer, the returned `logId`, and the attached `metadata` tags right on the page. (If the student brought their own Worker, make sure `GET /` either serves a working page or explains how to call `/ask` so clicking the Worker URL never returns a dead 404.)
      - Show the student the key `env.AI.run(..., { gateway: { id, metadata } })` code and point out that `user` and `team` are attached on the server, where a caller can't spoof another team's tag.
      - Deploy with `cf deploy` and send two initial `POST /ask` requests (one per team) so the gateway has live log entries ready to inspect.
@@ -105,10 +105,11 @@ try {
   const logId = result.headers.get("cf-aig-log-id");
 
   if (!result.ok) {
-    const limited = result.status === 429;
+    const status = result.status >= 400 && result.status <= 599 ? result.status : 502;
+    const limited = status === 429;
     return Response.json(
       { error: limited ? "AI request limit reached" : "AI request failed", logId },
-      { status: limited ? 429 : 502 },
+      { status },
     );
   }
 
@@ -124,6 +125,6 @@ try {
 }
 ```
 
-`returnRawResponse: true` gives this call's HTTP response, so you can distinguish a confirmed `429` from authentication, model, and provider failures. The binding's thrown errors contain a name and message, with no guaranteed `status` property; see [Workers AI errors](https://developers.cloudflare.com/workers-ai/platform/errors/) and the [binding implementation](https://github.com/cloudflare/workerd/blob/main/src/cloudflare/internal/ai-api.ts). Avoid using `env.AI.lastRequestHttpStatusCode` in a generic catch: a failure before a response arrives can leave a previous call's status there. Read the log ID from this response too, and use `null` when no response is available. A `429` alone doesn't tell you whether a request limit, spend limit, or provider capacity limit was reached; inspect the gateway logs to identify the cause.
+`returnRawResponse: true` gives this call's HTTP response. Preserve its HTTP error status so a `429` limit, a `424` Guardrails block, and authentication, model, or provider failures stay distinct. Keep the client message generic and inspect gateway logs for details; use `502` for transport failures or responses without a valid HTTP error status. The binding's thrown errors contain a name and message, with no guaranteed `status` property; see [Workers AI errors](https://developers.cloudflare.com/workers-ai/platform/errors/) and the [binding implementation](https://github.com/cloudflare/workerd/blob/main/src/cloudflare/internal/ai-api.ts). Avoid using `env.AI.lastRequestHttpStatusCode` in a generic catch: a failure before a response arrives can leave a previous call's status there. Read the log ID from this response too, and use `null` when no response is available. A `429` alone doesn't tell you whether a request limit, spend limit, or provider capacity limit was reached; inspect the gateway logs to identify the cause.
 
 If you call OpenAI, Anthropic, or another provider from an SDK, it's the same idea: point `baseURL` at `https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>/<provider>` and pass metadata in the `cf-aig-metadata` header.
