@@ -30,6 +30,12 @@ const collections = vi.hoisted(() => ({
       data: { name: "build-a-drawing-game", description: "Build a drawing game." },
     },
     {
+      id: "move-from-lovable",
+      filePath: "courses/projects/move-from-lovable/COURSE.md",
+      body: "\n# Move from Lovable to Cloudflare\n",
+      data: { name: "move-from-lovable", description: "Move your app." },
+    },
+    {
       id: "durable-objects",
       filePath: "courses/fundamentals/durable-objects/COURSE.md",
       body: "\n# Durable Objects\n",
@@ -65,6 +71,7 @@ describe("getBuiltInCourses", () => {
       ["run-a-blog-with-emdash", "Run a blog with EmDash"],
       ["build-a-guestbook", "Build a guestbook"],
       ["build-a-drawing-game", "Build a drawing game"],
+      ["move-from-lovable", "Move from Lovable to Cloudflare"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
       ["durable-objects", "Durable Objects"],
@@ -81,6 +88,7 @@ describe("getBuiltInCourses", () => {
       ["run-a-blog-with-emdash", "projects"],
       ["build-a-guestbook", "projects"],
       ["build-a-drawing-game", "projects"],
+      ["move-from-lovable", "projects"],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
       ["durable-objects", "fundamentals"],
@@ -119,7 +127,7 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, workers, , durableObjects, aiGateway] = courses;
+    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, moveFromLovable, workers, , durableObjects, aiGateway] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
@@ -137,7 +145,8 @@ describe("nextStep", () => {
     });
     expect(nextStep(courses, buildAGuestbook, buildAGuestbook.exercises.length - 1).url).toBe("/courses/build-a-drawing-game");
     // The last course in Projects doesn't continue into Fundamentals.
-    expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses");
+    expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses/move-from-lovable");
+    expect(nextStep(courses, moveFromLovable, moveFromLovable.exercises.length - 1).url).toBe("/courses");
   });
 
   it("sends a student finishing Agent setup to the catalog to pick a track", async () => {

@@ -98,6 +98,7 @@ describe("GET /api/progress/{studentId}", () => {
       ["run-a-blog-with-emdash", ["interview"]],
       ["build-a-guestbook", ["interview"]],
       ["build-a-drawing-game", ["interview"]],
+      ["move-from-lovable", ["interview"]],
       ["workers", ["interview", "deploy-a-worker"]],
       ["bindings", ["interview", "live-objects"]],
       ["durable-objects", ["interview"]],

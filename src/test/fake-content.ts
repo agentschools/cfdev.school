@@ -40,6 +40,12 @@ const collections = {
       data: { name: "build-a-drawing-game", description: "Build a drawing game." },
     },
     {
+      id: "move-from-lovable",
+      filePath: "courses/projects/move-from-lovable/COURSE.md",
+      body: "\n# Move from Lovable to Cloudflare\n",
+      data: { name: "move-from-lovable", description: "Move your app." },
+    },
+    {
       id: "durable-objects",
       filePath: "courses/fundamentals/durable-objects/COURSE.md",
       body: "\n# Durable Objects\n\nIntro.\n",
