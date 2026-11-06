@@ -10,8 +10,8 @@ metadata:
 
 <figure class="course-header-artwork">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="/media/courses/move-from-lovable/crossing-header-v1-dark.png" />
-    <img src="/media/courses/move-from-lovable/crossing-header-v1-light.png" alt="An app moving from Lovable to Cloudflare." width="1440" height="600" fetchpriority="high" />
+    <source media="(prefers-color-scheme: dark)" srcset="/media/courses/move-from-lovable/three-beats-header-v1-dark.png" />
+    <img src="/media/courses/move-from-lovable/three-beats-header-v1-light.png" alt="Prototype with Lovable, export through GitHub, then scale on Cloudflare." width="1440" height="600" fetchpriority="high" />
   </picture>
 </figure>
 
