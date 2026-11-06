@@ -8,6 +8,13 @@ metadata:
 
 # Move from Lovable to Cloudflare
 
+<figure class="course-header-artwork">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="/media/courses/move-from-lovable/crossing-header-v1-dark.png" />
+    <img src="/media/courses/move-from-lovable/crossing-header-v1-light.png" alt="An app moving from Lovable to Cloudflare." width="1440" height="600" fetchpriority="high" />
+  </picture>
+</figure>
+
 Lovable is a great place to vibe-code an app and get it into people's hands. As it grows, you may want more control over how it's deployed and which services it uses. This course shows you how to export its source code and database records, run the app on Cloudflare Workers, and keep adding features on Cloudflare's global network. The database moves to a separate provider in your own account; here, we'll use Supabase.
 
 Bring your existing Lovable app, or build a little shared reading list. The interview chooses which app you use throughout. For an existing app, first inspect its stack and dependencies and agree on a migration scope using a disposable copy with synthetic records. Keep services outside that scope on the original backend explicitly, or pause for a separate migration plan.
