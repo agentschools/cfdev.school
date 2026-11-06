@@ -7,7 +7,7 @@ import { type Interviews, interviewsSchema, saveInterviewSchema } from "../../..
 
 export const prerender = false;
 
-const jsonHeaders = { "Content-Type": "application/json" };
+const jsonHeaders = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 
 interface InterviewRow {
   course_id: string;
@@ -70,16 +70,31 @@ export const PUT: APIRoute = async ({ params, request }) => {
     );
   }
 
-  await env.DB.prepare(
+  // Optional compare-and-save for browser forms; agent clients keep their existing PUT semantics.
+  const expected = request.headers?.get("X-Interview-Version") ?? null;
+  const result = await env.DB.prepare(
     `INSERT INTO interviews (student_id, course_id, responses, summary, updated_at)
-     VALUES (?, ?, ?, ?, ?)
+     SELECT ?, ?, ?, ?, ?
+     WHERE ? IS NULL OR (? = 'none' AND NOT EXISTS (
+       SELECT 1 FROM interviews WHERE student_id = ? AND course_id = ?
+     )) OR EXISTS (
+       SELECT 1 FROM interviews WHERE student_id = ? AND course_id = ? AND updated_at = ?
+     )
      ON CONFLICT(student_id, course_id) DO UPDATE SET
        responses = excluded.responses,
        summary = excluded.summary,
-       updated_at = excluded.updated_at`,
+       updated_at = CASE WHEN excluded.updated_at <= interviews.updated_at
+         THEN strftime('%Y-%m-%dT%H:%M:%fZ', julianday(interviews.updated_at) + 1.0 / 86400000)
+         ELSE excluded.updated_at END
+     WHERE ? IS NULL OR interviews.updated_at = ?`,
   )
-    .bind(studentId, course.id, JSON.stringify(body.responses), body.summary, new Date().toISOString())
+    .bind(studentId, course.id, JSON.stringify(body.responses), body.summary, new Date().toISOString(),
+      expected, expected, studentId, course.id, studentId, course.id, expected, expected, expected)
     .run();
+
+  if (result.meta.changes === 0) {
+    return new Response(JSON.stringify({ error: "This interview changed in another session. Reload saved answers before submitting." }), { status: 409, headers: jsonHeaders });
+  }
 
   await broadcastProgress(await loadProgress(studentId, student.created_at, courses));
   const interviews = await loadInterviews(studentId, courses);

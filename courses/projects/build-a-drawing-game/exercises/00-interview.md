@@ -1,6 +1,12 @@
 ---
 description: "Tell your agent who your game is for, what players will draw, and how they'll play it."
 agent-instructions: |
+  Students can answer these questions on the course's interview page or
+  with you. If the website interview is complete, read its saved answers
+  and progress, do not repeat skipped questions, and continue to the
+  canvas after the prerequisite/context checks below. Never invent a
+  harness or model for the website completion.
+
   This course's interview is four questions. Before asking them:
 
   - GET /api/students/{id}/interviews. If this course's interview is
@@ -51,7 +57,7 @@ agent-instructions: |
 
 # Interview
 
-Your agent asks you four questions before you start: who your game is for, what players should draw, how much you've built for the browser, and where people will mostly play it.
+Answer four optional questions on this page, or take them with your agent: who your game is for, what players should draw, how much you've built for the browser, and where people will mostly play it.
 
 Your answers shape the game you'll build. Two students taking this course should end up with games that look and play differently, even though they learn the same things.
 

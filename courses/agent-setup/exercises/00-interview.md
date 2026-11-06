@@ -1,6 +1,13 @@
 ---
 description: "Personalize your learning experience by sharing a bit about your existing knowledge, your goals, and your preferred style of learning."
 agent-instructions: |
+  If the student used the website form, do not re-ask its questions or
+  questions they left blank. Read their saved answers, then run
+  the read-only environment checks below even if progress says this
+  interview is complete. Store the detected OS alongside all saved
+  responses without dropping the website's extra context. Continue to
+  Models after explaining what you found.
+
   This is the first exercise of the Agent setup course: a short
   interview. Ask all the questions at once, not one at a time, so the
   student only waits on you once. Keep every question to one short line
@@ -10,8 +17,8 @@ agent-instructions: |
 
   Before asking anything, GET /api/students/{id}/interviews (fetch it
   alongside this file if you can). If Agent setup's interview is already
-  on file, show the student what's there and only ask the questions it
-  doesn't answer yet.
+  on file, show the student what's there and ask only whether they'd like
+  to change anything. Don't repeat skipped questions.
 
   How to ask:
 
@@ -38,16 +45,16 @@ agent-instructions: |
   The questions (every one is optional, if the student skips one, move on
   without pushing):
 
-  1. "How much have you used AI coding agents like this one?" Choices:
-     this is my first time / now and then / daily.
-  2. "Where have you deployed apps before? (pick any)" Choices, multiple
-     allowed: nowhere yet / Vercel or Netlify / AWS, Google Cloud, or
-     Azure / Cloudflare.
-  3. "What do you want to build or learn?" Free text, one line is plenty.
-  4. "Want a short quiz at the end of each exercise? (recommended,
-     skippable anytime)" Choices: yes / no.
+  1. "How much have you used AI coding agents like this one?" Choices: this is my first time / now and then / daily.
+  2. "Which AI apps and agent harnesses have you used?" Choose any: Claude Code / Claude desktop / ChatGPT / Codex / Pi / OpenCode / Cursor / GitHub Copilot / Gemini CLI / None yet / Other (their own words). None is exclusive.
+  3. "Which Cloudflare products have you used before?" Choose any: Workers / R2 / D1 / Workers KV / Durable Objects / Workers AI / AI Gateway / Pages / Queues / DNS or CDN / None yet / Other (their own words). None is exclusive.
+  4. "Where have you deployed apps before? (pick any)" Choose any: Vercel or Netlify / AWS, Google Cloud, or Azure / Cloudflare / nowhere yet / Other (their own words). None is exclusive.
+  5. "What are you interested in building on Cloudflare?" Choose any: Web apps / Agents / Voice agents / Schedulers and automations / APIs and backends / Personal websites or blogs / Games / Data tools / Not sure yet / Other (their own words). None is exclusive.
+  6. "What do you want to build or learn?" Free text. Tell us about your idea, who it is for, and what you hope to learn. More context helps your agent connect the course to what you want to build.
+  7. "How do you like to learn?" Free text. For example: explain each step, let me try first, use diagrams, or compare with tools I know. More context helps your agent tailor the pace and explanations.
+  8. "Want a short quiz at the end of each exercise? (recommended, skippable anytime)" Choices: yes / no.
 
-  Use the first two answers only to adjust your tone, depth, and
+  Use their experience, product, app, and learning preferences to adjust tone, depth, and
   comparisons in later exercises (e.g. explain a Worker by comparison to a
   Vercel function for someone who's used Vercel), never to skip exercises
   or change what content you show.
@@ -72,9 +79,9 @@ agent-instructions: |
   Store the answers with PUT /api/students/{id}/interviews, with
   `"course": "agent-setup"`. Each response's `question` is the question's
   text exactly as written above, so later agents recognize it, and its
-  `answer` is the choice the student picked, an array of the choices they
-  picked (or typed) for question 2, or their own words for question 3,
-  lightly trimmed. Leave out questions they skipped. Store the OS you
+  `answer` is a string for single choices or free text, or an array for
+  multiple selections. Include Other as "Other: their words". Keep quiz
+  answers as "yes" or "no" for compatibility. Free text is lightly trimmed. Leave out questions they skipped. Store the OS you
   detected as a pair too, with the question "Which operating system are
   you on?" and an answer like "macOS", "Linux", or "Windows". Include a
   `summary`: one sentence addressed to the student covering their
@@ -111,13 +118,13 @@ agent-instructions: |
 
 # Interview
 
-In this exercise, your agent asks you a few quick questions so it can tailor the rest of the course to you: how much it explains, which examples it reaches for, and what it compares new ideas to.
+Answer the form on this page, or take the interview with your agent, to tailor the rest of the course to you: how much it explains, which examples it reaches for, and what it compares new ideas to.
 
-Your agent asks all the questions at once, and each one takes a few words to answer. Every question is optional. Skip any you'd rather not answer.
+Quick selections cover your experience and interests, with room to describe your goals and learning preferences. More context helps your agent personalize the course. Every question is optional. Skip any you'd rather not answer.
 
 ## What happens next
 
-Answer the questions in your coding-agent app. Your agent also runs read-only checks for your operating system, installed tools, Cloudflare login status, and an existing instructions file. These checks don't install tools or change your setup.
+If you choose the agent interview, answer in your coding-agent app. If you use the website, copy the personalized prompt after submission. Your agent also runs read-only checks for your operating system, installed tools, Cloudflare login status, and an existing instructions file. These checks don't install tools or change your setup.
 
 Depending on your app and its permissions, you may see prompts to allow commands or web requests. Read what each prompt allows before approving it. Your agent needs access to this site's API to save your answers and mark the interview complete; if that access is waiting for permission, the save is still pending. Once saving succeeds, your homepage shows a summary of your answers and the interview is marked complete. Then you'll continue to Models.
 
@@ -127,19 +134,20 @@ This is saved with your student ID so your agent can pick up where you left off 
 
 - How much you've used AI coding agents
 - Where you've deployed apps before, if anywhere
-- What you want to build or learn, in your own words
+- Cloudflare products and AI apps you have used, and what interests you
+- What you want to build or learn, and how you like to learn, in your own words
 - Whether you want a short quiz at the end of each exercise
 - Your operating system, which your agent detects by itself so it can give you the right commands
 - A one-sentence summary of your answers, written by your agent and shown on the homepage
 - Which exercises you've completed
-- Which agent you used for each exercise, like Claude Code or Codex
+- Whether you completed the interview on the website, or which agent completed an exercise, like Claude Code or Codex
 - Which model your agent was running, when it reports one
 
 Your agent also checks whether a few tools it needs are installed, like Node.js and the `cf` CLI. That isn't saved.
 
 ## No personal information
 
-Cloudflare Dev School doesn't have accounts. Your student ID is a random name like `smooth-operator-4629`, not your name or email, and nothing above asks who you are. The one free-text answer, what you want to build, is the only place personal details could end up, so keep it about the project.
+Cloudflare Dev School doesn't have accounts. Your student ID is a random name like `smooth-operator-4629`, not your name or email, and nothing above asks who you are. Keep free-text goals and preferences about the project and learning experience, without personal details.
 
 To clear your progress, or to forget your student ID in this browser, use the [Disenroll](/disenroll) page.
 

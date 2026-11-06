@@ -289,3 +289,31 @@ describe("DELETE /api/progress/{studentId}", () => {
     expect(exercise(other, "agent-setup", "models")?.completions).toHaveLength(1);
   });
 });
+
+
+describe("website interview completion", () => {
+  const version = "2026-11-06T10:00:00.000Z";
+  const web = { course: "agent-setup", exercise: "interview", harness: "website", source: "website", interviewVersion: version };
+  async function save(course = "agent-setup") {
+    await state.db.prepare("INSERT INTO interviews (student_id, course_id, responses, summary, updated_at) VALUES (?, ?, ?, ?, ?)")
+      .bind(STUDENT, course, "[]", "You skipped the optional questions.", version).run();
+  }
+  it("requires a saved matching version and permits retries without duplicate completions", async () => {
+    expect((await put(STUDENT, web)).status).toBe(409);
+    await save();
+    expect((await put(STUDENT, { ...web, interviewVersion: "2026-11-05T10:00:00.000Z" })).status).toBe(409);
+    expect(state.broadcasts).toHaveLength(0);
+    const first = await put(STUDENT, web); expect(first.status).toBe(200);
+    expect(exercise(first.progress, "agent-setup", "interview")?.completions[0]).toMatchObject({ harness: "website", source: "website" });
+    const second = await put(STUDENT, web); expect(exercise(second.progress, "agent-setup", "interview")?.completions).toHaveLength(1);
+    await state.db.prepare("UPDATE interviews SET summary = ?, updated_at = ? WHERE student_id = ?").bind("Changed", "2026-11-07T10:00:00.000Z", STUDENT).run();
+    expect((await put(STUDENT, web)).status).toBe(409);
+  });
+  it("limits website completion to the two interviews without inventing agent/model use", async () => {
+    for (const patch of [{ course: "workers" }, { exercise: "models" }, { model: "gpt" }, { source: undefined }, { harness: "generic" }, { interviewVersion: undefined }]) {
+      expect((await put(STUDENT, { ...web, ...patch })).status).toBe(400);
+    }
+    await save("build-a-drawing-game");
+    expect((await put(STUDENT, { ...web, course: "build-a-drawing-game" })).status).toBe(200);
+  });
+});

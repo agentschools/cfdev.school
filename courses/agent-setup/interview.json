@@ -1,0 +1,104 @@
+{
+  "course": "agent-setup",
+  "title": "Agent setup",
+  "next": "models",
+  "questions": [
+    {
+      "id": "experience",
+      "question": "How much have you used AI coding agents like this one?",
+      "type": "single",
+      "options": [
+        "this is my first time",
+        "now and then",
+        "daily"
+      ]
+    },
+    {
+      "id": "harnesses",
+      "question": "Which AI apps and agent harnesses have you used?",
+      "type": "multi",
+      "options": [
+        "Claude Code",
+        "Claude desktop",
+        "ChatGPT",
+        "Codex",
+        "Pi",
+        "OpenCode",
+        "Cursor",
+        "GitHub Copilot",
+        "Gemini CLI"
+      ],
+      "none": "None yet",
+      "other": true
+    },
+    {
+      "id": "products",
+      "question": "Which Cloudflare products have you used before?",
+      "type": "multi",
+      "options": [
+        "Workers",
+        "R2",
+        "D1",
+        "Workers KV",
+        "Durable Objects",
+        "Workers AI",
+        "AI Gateway",
+        "Pages",
+        "Queues",
+        "DNS or CDN"
+      ],
+      "none": "None yet",
+      "other": true
+    },
+    {
+      "id": "deployments",
+      "question": "Where have you deployed apps before? (pick any)",
+      "type": "multi",
+      "options": [
+        "Vercel or Netlify",
+        "AWS, Google Cloud, or Azure",
+        "Cloudflare"
+      ],
+      "none": "nowhere yet",
+      "other": true
+    },
+    {
+      "id": "interests",
+      "question": "What are you interested in building on Cloudflare?",
+      "type": "multi",
+      "options": [
+        "Web apps",
+        "Agents",
+        "Voice agents",
+        "Schedulers and automations",
+        "APIs and backends",
+        "Personal websites or blogs",
+        "Games",
+        "Data tools"
+      ],
+      "none": "Not sure yet",
+      "other": true
+    },
+    {
+      "id": "goals",
+      "question": "What do you want to build or learn?",
+      "type": "long",
+      "hint": "Tell us about your idea, who it is for, and what you hope to learn. More context helps your agent connect the course to what you want to build."
+    },
+    {
+      "id": "learning",
+      "question": "How do you like to learn?",
+      "type": "long",
+      "hint": "For example: explain each step, let me try first, use diagrams, or compare with tools I know. More context helps your agent tailor the pace and explanations."
+    },
+    {
+      "id": "quizzes",
+      "question": "Want a short quiz at the end of each exercise? (recommended, skippable anytime)",
+      "type": "single",
+      "options": [
+        "yes",
+        "no"
+      ]
+    }
+  ]
+}

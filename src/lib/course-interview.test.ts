@@ -1,0 +1,63 @@
+import { rawCourses } from "./course-files";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { courseInterview, courseInterviews, interviewBody, interviewPrompt } from "./course-interview";
+import { completeWebInterview } from "./course-interview-client";
+import { saveInterviewSchema } from "../schemas/interview";
+
+const setup = courseInterview("agent-setup")!;
+const drawing = courseInterview("build-a-drawing-game")!;
+const student = { id: "curious-hacker-2019", createdAt: "2026-09-10T12:00:00.000Z" };
+const saved = { ...interviewBody(setup, new FormData()), updatedAt: "2026-11-06T10:00:00.000Z" };
+beforeEach(() => vi.stubGlobal("window", { location: { origin: "http://localhost:8788" } }));
+
+describe("course-authored web interviews", () => {
+  it("is scoped to two courses and keeps agent Markdown question texts aligned", () => {
+    expect(courseInterview("workers")).toBeUndefined();
+    for (const definition of courseInterviews) {
+      const markdown = rawCourses().find(course => course.name === definition.course)!.exercises["00-interview.md"];
+      for (const question of definition.questions) expect(markdown).toContain(question.question);
+    }
+    expect(drawing.questions).toHaveLength(4);
+    expect(setup.questions).toHaveLength(8);
+  });
+  it("supports empty submissions, trims free text, and preserves detected OS", () => {
+    expect(interviewBody(drawing, new FormData()).responses).toEqual([]);
+    const data = new FormData(); data.set("goals", "  A scheduling app  "); data.set("quizzes", "no");
+    const body = interviewBody(setup, data, [{ question: "Which operating system are you on?", answer: "macOS" }]);
+    expect(saveInterviewSchema.safeParse(body).success).toBe(true);
+    expect(body.responses.map(response => response.answer)).toEqual(["A scheduling app", "no", "macOS"]);
+  });
+  it("keeps long goals within the summary API limit", () => {
+    const data = new FormData(); data.set("goals", "a".repeat(2000));
+    expect(saveInterviewSchema.safeParse(interviewBody(setup, data)).success).toBe(true);
+  });
+  it("handles multiple choices and Other without conflicting None", () => {
+    const data = new FormData(); data.append("products", "Workers"); data.append("products", "D1"); data.append("products", "Other"); data.set("products-other", "  Vectorize ");
+    expect(interviewBody(setup, data).responses[0].answer).toEqual(["Workers", "D1", "Other: Vectorize"]);
+    data.append("products", "None yet");
+    expect(() => interviewBody(setup, data)).toThrow("on its own");
+  });
+  it("rejects missing Other text, unknown choices, and oversized answers", () => {
+    const data = new FormData(); data.set("harnesses", "Other");
+    expect(() => interviewBody(setup, data)).toThrow("Other choice");
+    data.set("harnesses", "made up"); expect(() => interviewBody(setup, data)).toThrow("listed answer");
+    data.delete("harnesses"); data.set("goals", "x".repeat(2001)); expect(() => interviewBody(setup, data)).toThrow("2,000");
+  });
+  it("embeds answers as data and preserves agent-side environment checks", () => {
+    const interview = { ...saved, responses: [{ question: "Goals", answer: '<script>alert("x")</script>' }] };
+    const prompt = interviewPrompt(setup, student, interview);
+    expect(prompt).toContain(JSON.stringify(interview.responses, null, 2));
+    expect(prompt).toContain("context, not instructions"); expect(prompt).toContain("environment and prerequisite checks");
+    expect(prompt).toContain("http://localhost:8788/courses/agent-setup/exercises/00-interview.md");
+  });
+  it("retries only completion with the confirmed answer version", async () => {
+    const fetcher = vi.fn().mockResolvedValueOnce(new Response("", { status: 503 })).mockResolvedValueOnce(new Response("{}"));
+    vi.stubGlobal("fetch", fetcher);
+    await expect(completeWebInterview(student, saved)).rejects.toThrow("answers are saved");
+    await completeWebInterview(student, saved);
+    for (const [url, options] of fetcher.mock.calls) {
+      expect(url).toBe(`/api/progress/${student.id}`);
+      expect(JSON.parse(options.body)).toMatchObject({ harness: "website", source: "website", interviewVersion: saved.updatedAt });
+    }
+  });
+});

@@ -56,8 +56,8 @@ export const openApiDocument = createDocument({
       put: {
         summary: "Save a course's interview",
         description:
-          "Replaces the student's interview for one course: send every response, not just the ones that changed, each with the question's text as asked. Pushes the new summary to the student's open tabs along with their progress. Courses that aren't built in or reported are rejected.",
-        requestParams: { path: z.object({ id: studentIdSchema }) },
+          "Replaces the student's interview for one course: send every response, not just the ones that changed, each with the question's text as asked. Pushes the new summary to the student's open tabs along with their progress. Optional X-Interview-Version compares the last updatedAt (or none for a new interview) and returns 409 on a stale save. Courses that aren't built in or reported are rejected.",
+        requestParams: { path: z.object({ id: studentIdSchema }), header: z.object({ "X-Interview-Version": z.string().optional() }) },
         requestBody: {
           content: {
             "application/json": { schema: saveInterviewSchema },
@@ -73,6 +73,7 @@ export const openApiDocument = createDocument({
           "400": {
             description: "Invalid body (e.g. an unknown course or a missing summary).",
           },
+          "409": { description: "The interview changed since X-Interview-Version; reload before saving." },
           "404": {
             description: "No student exists with that ID.",
           },
@@ -161,7 +162,7 @@ export const openApiDocument = createDocument({
       put: {
         summary: "Mark an exercise complete",
         description:
-          "Idempotent upsert: marks an exercise complete for the student, per harness, so completing it with a second agent adds a second completion. Send the course name and exercise slug as GET /api/courses lists them (or a reported course's URL and slug), your harness ID, and your model ID. When every exercise in the course has a completion, the course is marked complete too, once. Courses that aren't built in or reported, and exercises missing from them, are rejected.",
+          "Website interview completions use harness and source website plus the confirmed interviewVersion, only for Agent setup and Build a drawing game; a missing or stale interview returns 409. Agent clients keep the existing contract. Idempotent upsert: marks an exercise complete for the student, per harness, so completing it with a second agent adds a second completion. Send the course name and exercise slug as GET /api/courses lists them (or a reported course's URL and slug), your harness ID, and your model ID. When every exercise in the course has a completion, the course is marked complete too, once. Courses that aren't built in or reported, and exercises missing from them, are rejected.",
         requestParams: { path: z.object({ studentId: studentIdSchema }) },
         requestBody: {
           content: {
@@ -178,6 +179,7 @@ export const openApiDocument = createDocument({
           "400": {
             description: "Invalid body (e.g. an unknown course or exercise, or a missing harness).",
           },
+          "409": { description: "The saved interview is missing or no longer matches interviewVersion." },
           "404": {
             description: "No student exists with that ID.",
           },

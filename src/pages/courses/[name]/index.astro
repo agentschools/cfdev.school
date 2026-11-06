@@ -1,5 +1,6 @@
 ---
 import { render } from "astro:content";
+import { courseInterview } from "../../../lib/course-interview";
 import AgentPrompt from "../../../components/AgentPrompt.astro";
 import EnrollBanner from "../../../components/EnrollBanner.astro";
 import Layout from "../../../layouts/Layout.astro";
@@ -16,6 +17,7 @@ if (!course) {
 
 const Content = course ? (await render(course.entry)).Content : null;
 const title = course?.title ?? "Course not found";
+const interview = courseInterview(course?.name ?? "");
 ---
 
 <Layout title={`${title} — Cloudflare Dev School`} description={course?.description ?? "Course not found."}>
@@ -35,13 +37,13 @@ const title = course?.title ?? "Course not found";
             <p class="description">{course.description}</p>
           </header>
 
-          <EnrollBanner id="course-enroll-nudge" />
-
-          <AgentPrompt />
+          {!interview && <><EnrollBanner id="course-enroll-nudge" /><AgentPrompt /></>}
 
           <div class="prose">
             <Content />
           </div>
+
+          {interview && <div class="start-course"><p>Start with a few questions so your agent can personalize the course to your goals and preferences.</p><a href={`/courses/${course.name}/interview`}>Start the course →</a></div>}
 
           <h2 class="exercises-heading">Exercises</h2>
           <ol class="exercise-list">
@@ -72,6 +74,9 @@ const title = course?.title ?? "Course not found";
 </script>
 
 <style>
+  .start-course { margin: 2rem 0; }
+  .start-course a { display: inline-block; background: var(--accent); color: var(--accent-contrast); padding: 1rem 1.5rem; border-radius: .5rem; text-decoration: none; font-weight: 700; }
+
   .page {
     max-width: 1100px;
     margin: 0 auto;
