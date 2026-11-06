@@ -1,5 +1,5 @@
 ---
-description: "Recreate the application table in Supabase and import its existing rows."
+description: "Export your app’s data from Lovable and migrate it to another database provider."
 agent-instructions: |
   Follow the interview's app and scope throughout, using a disposable copy and synthetic records. Adapt book names, row counts and policies to that app. Verify all selected data, relationships and sequences. Pause if CSV cannot preserve them. Document retained services and verify their integrations; code deployment alone doesn't complete data migration.
 
