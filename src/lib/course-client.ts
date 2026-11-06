@@ -1,14 +1,15 @@
 import { type CachedStudent, ENROLLED_EVENT, readCachedStudent } from "./enroll-client";
 import { buildPrompt } from "./agent-prompt";
 import { initPromptCopy } from "./agent-prompt-copy";
-import { hasCompletions } from "./course-progress";
+import { exerciseCompletions, hasCompletions } from "./course-progress";
 import { subscribeToProgress } from "./progress-client";
 
 /**
  * Course page (/courses/{name}). Enrolled students get a prompt for working
- * through the whole course; logged-out visitors get the enroll nudge. The
- * exercise list's completion checks are filled in by the sidebar's client
- * (curriculum-sidebar-client.ts), which marks every exercise on the page.
+ * through the whole course, and the next incomplete exercise is marked;
+ * logged-out visitors get the enroll nudge. The exercise list's completion
+ * checks are filled in by the sidebar's client (curriculum-sidebar-client.ts),
+ * which marks every exercise on the page.
  */
 export function initCoursePage(): void {
   const page = document.querySelector<HTMLElement>("[data-course-page]");
@@ -18,6 +19,8 @@ export function initCoursePage(): void {
   const copyButton = document.getElementById("agent-prompt-copy");
   const copyConfirm = document.getElementById("agent-prompt-confirm");
   if (!page || !enrollNudge || !promptSection || !promptText || !copyButton || !copyConfirm) return;
+
+  const exerciseItems = [...page.querySelectorAll<HTMLElement>(".exercise-list [data-exercise]")];
 
   const { courseName = "", courseTitle = "" } = page.dataset;
   let studentId: string | undefined;
@@ -32,6 +35,10 @@ export function initCoursePage(): void {
     // Once the student has completed some of the course, the prompt continues it.
     subscribeToProgress(student.id, (progress) => {
       promptText!.textContent = buildPrompt(student, { courseTitle, continuing: hasCompletions(progress, courseName) });
+      const next = exerciseItems.find(
+        (item) => exerciseCompletions(progress, courseName, item.dataset.exercise!).length === 0,
+      );
+      for (const item of exerciseItems) item.toggleAttribute("data-next", item === next);
     });
   }
 
