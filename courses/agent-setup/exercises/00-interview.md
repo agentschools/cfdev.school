@@ -45,7 +45,7 @@ agent-instructions: |
   The questions (every one is optional, if the student skips one, move on
   without pushing):
 
-  1. "How much have you used AI coding agents?" Choices: Not yet / A few times / Most weeks / Every day.
+  1. "How much have you used AI coding agents?" Choices: I haven't tried one yet / I've used one a few times / I use one most weeks / I use one every day.
   2. "Which AI apps and agent harnesses have you used?" Choose any: Claude Code / Claude desktop / ChatGPT / Codex / Pi / OpenCode / Cursor / GitHub Copilot / Gemini CLI / Other (their own words).
   3. "Where have you deployed apps before?" Choose any: Vercel / Netlify / Heroku / AWS / Google Cloud / Azure / Cloudflare / Other (their own words).
   4. "Which Cloudflare products have you used before?" Choose any: Workers / R2 / D1 / Workers KV / Durable Objects / AI Gateway / Queues / Browser Run / Workflows / Containers / Vectorize / Other (their own words).
@@ -99,7 +99,7 @@ agent-instructions: |
   {
     "course": "agent-setup",
     "responses": [
-      { "question": "How much have you used AI coding agents?", "answer": "Not yet" },
+      { "question": "How much have you used AI coding agents?", "answer": "I haven't tried one yet" },
       { "question": "Where have you deployed apps before?", "answer": ["Vercel"] },
       { "question": "How familiar are you with these coding and web technologies?", "answer": ["HTML: Fluent", "CSS: Familiar", "Relational databases: New"] },
       { "question": "What do you want to build or learn?", "answer": "a link shortener" },

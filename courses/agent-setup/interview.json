@@ -8,10 +8,10 @@
       "question": "How much have you used AI coding agents?",
       "type": "single",
       "options": [
-        "Not yet",
-        "A few times",
-        "Most weeks",
-        "Every day"
+        "I haven't tried one yet",
+        "I've used one a few times",
+        "I use one most weeks",
+        "I use one every day"
       ]
     },
     {

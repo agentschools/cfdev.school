@@ -51,7 +51,7 @@ describe("course-authored web interviews", () => {
     const data = new FormData(); data.set("experience", SAVED_ANSWER);
     expect(() => interviewBody(setup, data)).toThrow("saved answer changed");
     const question = setup.questions.find(question => question.id === "experience")!;
-    expect(savedSingleAnswer(question, [{ question: question.question, answer: "every day" }])).toBeUndefined();
+    expect(savedSingleAnswer(question, [{ question: question.question, answer: "i use one every day" }])).toBeUndefined();
     const quizzes = setup.questions.find(question => question.id === "quizzes")!;
     expect(savedSingleAnswer(quizzes, [{ question: quizzes.question, answer: "yes" }])).toBeUndefined();
     expect(savedSingleAnswer(quizzes, [{ question: quizzes.question, answer: "no" }])).toBeUndefined();
