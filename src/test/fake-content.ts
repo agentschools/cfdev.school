@@ -40,6 +40,12 @@ const collections = {
       data: { name: "build-a-drawing-game", description: "Build a drawing game." },
     },
     {
+      id: "see-and-control-ai-spend",
+      filePath: "courses/projects/see-and-control-ai-spend/COURSE.md",
+      body: "\n# See and control AI spend\n\nIntro.\n",
+      data: { name: "see-and-control-ai-spend", description: "See and control AI spend." },
+    },
+    {
       id: "durable-objects",
       filePath: "courses/fundamentals/durable-objects/COURSE.md",
       body: "\n# Durable Objects\n\nIntro.\n",
