@@ -37,8 +37,6 @@ const title = course?.title ?? "Course not found";
 
           <EnrollBanner id="course-enroll-nudge" />
 
-          <AgentPrompt />
-
           <div class="prose">
             <Content />
           </div>
@@ -47,19 +45,21 @@ const title = course?.title ?? "Course not found";
           <ol class="exercise-list">
             {course.exercises.map((exercise, index) => (
               <li data-course={course.name} data-exercise={exercise.slug}>
-                <a href={exercisePath(course.name, exercise.slug)}>
-                  <span class="order">Exercise {String(index).padStart(2, "0")}</span>
-                  <span class="title-row">
-                    <span class="title">{exercise.title}</span>
-                    <span class="check" hidden aria-label="Completed">
-                      ✓
-                    </span>
+                <span class="index">{String(index).padStart(2, "0")}.</span>
+                <span>
+                  <a href={exercisePath(course.name, exercise.slug)}>{exercise.title}</a>
+                  {exercise.description && <span class="exercise-description">: {exercise.description}</span>}
+                  <span class="check" hidden aria-label="Completed">
+                    ✓
                   </span>
-                  {exercise.description && <span class="exercise-description">{exercise.description}</span>}
-                </a>
+                </span>
               </li>
             ))}
           </ol>
+
+          <div class="prompt">
+            <AgentPrompt />
+          </div>
         </main>
       )
     }
@@ -122,6 +122,14 @@ const title = course?.title ?? "Course not found";
     margin: 0;
   }
 
+  .prompt {
+    margin-top: 2.5rem;
+  }
+
+  .exercise-list li[data-next] .index {
+    color: var(--accent-text);
+  }
+
   .exercises-heading {
     font-size: 1.35rem;
     margin: 2rem 0 0.75rem;
@@ -131,51 +139,39 @@ const title = course?.title ?? "Course not found";
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .exercise-list li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .exercise-list li:first-child {
+    padding-top: 0;
+  }
+
+  .exercise-list li:last-child {
+    border-bottom: none;
+  }
+
+  .index {
+    color: color-mix(in oklch, var(--fg) 35%, transparent);
+    font-variant-numeric: tabular-nums;
   }
 
   .exercise-list a {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding: 1.15rem 1.25rem;
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    background: var(--card-bg);
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .exercise-list a:hover {
-    border-color: var(--accent-text);
-  }
-
-  .order {
-    font-size: 0.75rem;
     font-weight: 600;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    letter-spacing: 0.04em;
-    color: var(--muted-fg);
-    text-transform: uppercase;
-  }
-
-  .title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .title {
-    font-size: 1.15rem;
-    font-weight: 700;
+    color: var(--accent-text);
   }
 
   .check {
     color: var(--accent-text);
     font-weight: 700;
+    margin-left: 0.35rem;
   }
 
   .check[hidden] {
@@ -184,7 +180,5 @@ const title = course?.title ?? "Course not found";
 
   .exercise-description {
     color: var(--muted-fg);
-    font-size: 0.95rem;
-    line-height: 1.5;
   }
 </style>
