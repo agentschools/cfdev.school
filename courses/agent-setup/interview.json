@@ -24,9 +24,9 @@
         "CSS",
         "JavaScript / TypeScript",
         "Python",
-        "Node.js",
         "React",
         "Browser APIs",
+        "Node.js",
         "HTTP APIs",
         "LLM APIs",
         "Relational databases",
@@ -34,7 +34,7 @@
         "DNS",
         "Testing",
         "CI/CD",
-        "The command line",
+        "Command line tools",
         "Git"
       ],
       "options": [
