@@ -1,5 +1,5 @@
 ---
-description: "Build a simple Lovable app, or check that one you already built is ready to move to Cloudflare."
+description: "Build a simple Lovable app, or check that your existing app is ready to migrate."
 agent-instructions: |
   Read the student's interviews. This exercise has two routes to one readiness checkpoint; complete only the chosen route. Never guide an existing-app learner through creating a replacement.
 
