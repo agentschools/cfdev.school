@@ -52,16 +52,20 @@
       "type": "multi",
       "options": [
         "Workers",
+        "Pages",
+        "DNS",
         "R2",
         "D1",
         "Workers KV",
         "Durable Objects",
+        "Workers AI",
         "AI Gateway",
         "Queues",
         "Browser Run",
         "Workflows",
         "Containers",
-        "Vectorize"
+        "Vectorize",
+        "Email Service"
       ],
       "other": true
     },
