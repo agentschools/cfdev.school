@@ -2,4 +2,4 @@
 # When org ownership changes, refresh this list from the paginated owner roster:
 # gh api 'orgs/agentschools/members?role=admin&per_page=100' --paginate --jq '.[].login'
 # Verify each owner's repository write access and keep all owners on one line.
-* @craigsdennis @fayazara @harshil1712 @jamesqquick @kay-kim @kristianfreeman @lucataco @thomas-desmond @zeke
+* @harshil1712 @jamesqquick @kay-kim @thomas-desmond @zeke
