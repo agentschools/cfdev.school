@@ -7,7 +7,7 @@ agent-instructions: |
   canvas after the prerequisite/context checks below. Never invent a
   harness or model for the website completion.
 
-  This course's interview is five questions. Before asking them:
+  This course's interview is four questions. Before asking them:
 
   - GET /api/students/{id}/interviews. If this course's interview is
     already on file, show the student their answers and ask whether
@@ -37,10 +37,8 @@ agent-instructions: |
      Bright and colorful / Dark and moody / Other (their own words).
   4. "Where will people mostly play it?" Choices: On a phone / On a
      laptop or desktop / Both.
-  5. "How much have you built for the browser before?" Choices: Nothing
-     yet / Some HTML, CSS, or JavaScript / I've built React apps.
 
-  All five are optional; if they skip one, move on. If the second answer
+  All four are optional; if they skip one, move on. If the second answer
   is very broad ("anything"), say the game works best with 8 to 15 words
   that look different from each other when drawn, and offer to narrow it
   together in "add-a-decision-model".
@@ -55,8 +53,10 @@ agent-instructions: |
   Use the first three answers in every exercise: who's playing sets the
   tone and difficulty, what they draw sets the word list, and the look
   sets the page's style. Use where they'll play for canvas size and how
-  much phone testing to do, and browser experience to pitch how much
-  React and browser code you explain. Never skip exercises because of any of them.
+  much phone testing to do. Pitch how much React and browser code you
+  explain from Agent setup's coding and web technologies answer
+  (HTML, CSS, JavaScript / TypeScript, React, Browser APIs) instead of
+  asking again. Never skip exercises because of any of them.
 
   Then mark this exercise complete with PUT /api/progress/{studentId} and
   move on to "build-a-canvas". There's no quiz for this exercise.
@@ -64,8 +64,8 @@ agent-instructions: |
 
 # Interview
 
-Answer five optional questions on this page, or take them with your agent: who'll play your game, what they'll draw, how it should look and feel, where people will play it, and how much you've built for the browser.
+Answer four optional questions on this page, or take them with your agent: who'll play your game, what they'll draw, how it should look and feel, and where people will play it.
 
 Your answers shape the game you'll build. Two students taking this course should end up with games that look and play differently, even though they learn the same things.
 
-All five questions are optional, and you can change your answers later just by telling your agent.
+All four questions are optional, and you can change your answers later just by telling your agent.

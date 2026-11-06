@@ -20,7 +20,7 @@ describe("course-authored web interviews", () => {
         if (question.type === "grid") for (const label of [...question.rows!, ...question.options!]) expect(markdown).toContain(label);
       }
     }
-    expect(drawing.questions).toHaveLength(5);
+    expect(drawing.questions).toHaveLength(4);
     expect(setup.questions).toHaveLength(9);
   });
   it("supports empty submissions, trims free text, and preserves detected OS", () => {
@@ -33,8 +33,7 @@ describe("course-authored web interviews", () => {
   it("visibly retains custom single-choice answers across both courses until explicitly changed or skipped", () => {
     for (const [definition, id, answer] of [
       [setup, "experience", "weekly"], [setup, "quizzes", "only when I ask"],
-      [drawing, "experience", "I have built Svelte apps"], [drawing, "device", "a drawing tablet"],
-      [drawing, "experience", ["Svelte", "Vue"]],
+      [drawing, "device", "a drawing tablet"], [drawing, "device", ["Phone", "Tablet"]],
     ] as const) {
       const question = definition.questions.find(question => question.id === id)!;
       const previous = { question: question.question, answer: typeof answer === "string" ? answer : [...answer] };

@@ -19,7 +19,7 @@
       "id": "drawings",
       "question": "What should players draw?",
       "type": "long",
-      "hint": "A theme or a list: farm animals, things in a kitchen, Cloudflare products, inside jokes\u2026 It works best with 8 to 15 things that look different when drawn."
+      "hint": "A theme or a list: farm animals, things in a kitchen, Cloudflare products, inside jokes… It works best with 8 to 15 things that look different when drawn."
     },
     {
       "id": "look",
@@ -43,16 +43,6 @@
         "On a phone",
         "On a laptop or desktop",
         "Both"
-      ]
-    },
-    {
-      "id": "experience",
-      "question": "How much have you built for the browser before?",
-      "type": "single",
-      "options": [
-        "Nothing yet",
-        "Some HTML, CSS, or JavaScript",
-        "I've built React apps"
       ]
     }
   ],
