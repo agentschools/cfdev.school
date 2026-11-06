@@ -26,7 +26,7 @@ create policy "Anyone can read books"
 
 RLS and the SELECT-only policy allow public reads while preventing public changes. The owner dashboard remains the editor. See [Supabase's RLS guide](https://supabase.com/docs/guides/database/postgres/row-level-security).
 
-3. In Lovable, open More → Database, open `books`, and Export CSV. Check it contains all three rows and the `id,title,is_read` columns, including your changed read state. Save the export outside the repo. Import it through the destination Table Editor's CSV import into the empty table. Preserve IDs and booleans; don't recreate rows from the seed prompt.
+3. In Lovable, open More → Database, open `books`, and Export CSV. Check it contains all three rows and the `id,title,is_read` columns, including your changed read state. Save the export outside the repo. In the destination [Table Editor](https://supabase.com/docs/guides/database/import-data), choose Insert → Import Data from CSV for the existing empty table and review the column mapping before importing. Keep the CSV header and check the imported boolean values explicitly. Preserve IDs and booleans; don't recreate rows from the seed prompt.
 4. Run this query in both dashboards and compare every value, not just the count:
 
 ```sql
