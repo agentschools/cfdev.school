@@ -9,8 +9,10 @@ import type { Interview, InterviewResponse, SaveInterview } from "../schemas/int
 const definitionSchema = z.object({
   course: z.enum(["build-a-drawing-game", "agent-setup"]), title: z.string(), next: z.string(),
   questions: z.array(z.object({
-    id: z.string(), question: z.string(), type: z.enum(["short", "long", "single", "multi"]),
+    id: z.string(), question: z.string(), type: z.enum(["short", "long", "single", "multi", "grid"]),
     hint: z.string().optional(), options: z.array(z.string()).optional(),
+    // Grid questions rate each row with one of `options`, stored as "Row: Option" strings.
+    rows: z.array(z.string()).optional(),
     other: z.boolean().optional(), default: z.string().optional(),
   })),
 });
@@ -21,6 +23,18 @@ export function courseInterview(course: string): InterviewDefinition | undefined
 }
 
 export const SAVED_ANSWER = "__saved-answer__";
+
+type Question = InterviewDefinition["questions"][number];
+
+/** Form field name for one row of a grid question. */
+export const gridField = (question: Question, row: number) => `${question.id}-row-${row}`;
+
+/** Splits a stored grid answer ("HTML: Some") into its row index and option, if it matches the grid. */
+export function gridAnswer(question: Question, answer: string): { row: number; option: string } | undefined {
+  const row = question.rows?.findIndex(label => answer.startsWith(`${label}: `)) ?? -1;
+  const option = row < 0 ? undefined : question.options?.find(option => option.toLowerCase() === answer.slice(question.rows![row].length + 2).toLowerCase());
+  return option ? { row, option } : undefined;
+}
 
 /** Agents stored short lowercase choices ("yes") before the form's longer labels ("Yes, quiz me!"). */
 export function matchingOption(question: InterviewDefinition["questions"][number], answer: string): string | undefined {
@@ -39,19 +53,25 @@ export function savedSingleAnswer(question: InterviewDefinition["questions"][num
 
 export function interviewBody(definition: InterviewDefinition, data: FormData, existing: InterviewResponse[] = []): SaveInterview {
   const responses: InterviewResponse[] = definition.questions.flatMap(question => {
-    const values = data.getAll(question.id).map(String).map(answer => answer.trim()).filter(Boolean);
+    const values = question.type === "grid"
+      ? (question.rows ?? []).flatMap((row, index) => {
+        const option = String(data.get(gridField(question, index)) ?? "").trim();
+        if (option && !question.options?.includes(option)) throw new Error("Please choose a listed answer.");
+        return option ? [`${row}: ${option}`] : [];
+      })
+      : data.getAll(question.id).map(String).map(answer => answer.trim()).filter(Boolean);
     if (values.length === 1 && values[0] === SAVED_ANSWER) {
       const previous = savedSingleAnswer(question, existing);
       if (!previous) throw new Error("The saved answer changed. Reload before continuing.");
       return [previous];
     }
     if (values.some(answer => answer.length > 2000)) throw new Error("Please keep each answer under 2,000 characters.");
-    if (question.options && values.some(answer => !question.options!.includes(answer))) throw new Error("Please choose a listed answer.");
+    if (question.options && question.type !== "grid" && values.some(answer => !question.options!.includes(answer))) throw new Error("Please choose a listed answer.");
     const other = String(data.get(`${question.id}-other`) ?? "").trim();
     if (other.length > 2000) throw new Error("Please keep each answer under 2,000 characters.");
     const answers = other ? [...values, `Other: ${other}`] : values;
     if (!answers.length) return [];
-    return [{ question: question.question, answer: question.type === "multi" ? answers : answers[0] }];
+    return [{ question: question.question, answer: question.type === "multi" || question.type === "grid" ? answers : answers[0] }];
   });
   // Preserve agent-detected OS and legacy context the form doesn't ask about.
   responses.push(...existing.filter(response => !definition.questions.some(question => question.question === response.question)));

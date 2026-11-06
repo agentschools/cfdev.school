@@ -1,4 +1,4 @@
-import { courseInterview, interviewBody, interviewPrompt, matchingOption, savedSingleAnswer, SAVED_ANSWER, type InterviewDefinition } from "./course-interview";
+import { courseInterview, gridAnswer, gridField, interviewBody, interviewPrompt, matchingOption, savedSingleAnswer, SAVED_ANSWER, type InterviewDefinition } from "./course-interview";
 import { ENROLLED_EVENT, enrollStudent, readCachedStudent, type CachedStudent } from "./enroll-client";
 import { initPromptCopy } from "./agent-prompt-copy";
 import { buildPrompt } from "./agent-prompt";
@@ -74,6 +74,17 @@ function initForm(root: HTMLElement, definition: InterviewDefinition): void {
       }
       if (previous) return [[question.id, SAVED_ANSWER]] as [string, string][];
       const answer = saved?.responses.find(response => response.question === question.question)?.answer;
+      if (question.type === "grid") {
+        const answers = Array.isArray(answer) ? answer : answer ? [answer] : [];
+        const entries: [string, string][] = answers.flatMap(value => {
+          const rated = gridAnswer(question, value);
+          return rated ? [[gridField(question, rated.row), rated.option] as [string, string]] : [];
+        });
+        // Anything an agent stored that doesn't fit the grid stays visible in the Other box.
+        const custom = answers.filter(value => !gridAnswer(question, value));
+        if (custom.length) entries.push([`${question.id}-other`, custom.map(value => value.replace(/^Other: /, "")).join("; ")]);
+        return entries;
+      }
       const answers = (Array.isArray(answer) ? answer : answer ? [answer] : []).map(value => matchingOption(question, value) ?? value);
       const custom = question.other ? answers.filter(value => !question.options?.includes(value)) : [];
       const entries: [string, string][] = answers.filter(value => !custom.includes(value)).map(value => [question.id, value]);

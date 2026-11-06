@@ -1,6 +1,6 @@
 import { rawCourses } from "./course-files";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { courseInterview, courseInterviews, interviewBody, interviewPrompt, savedSingleAnswer, SAVED_ANSWER } from "./course-interview";
+import { courseInterview, courseInterviews, gridAnswer, interviewBody, interviewPrompt, savedSingleAnswer, SAVED_ANSWER } from "./course-interview";
 import { completeWebInterview } from "./course-interview-client";
 import { saveInterviewSchema } from "../schemas/interview";
 
@@ -15,10 +15,13 @@ describe("course-authored web interviews", () => {
     expect(courseInterview("workers")).toBeUndefined();
     for (const definition of courseInterviews) {
       const markdown = rawCourses().find(course => course.name === definition.course)!.exercises["00-interview.md"];
-      for (const question of definition.questions) expect(markdown).toContain(question.question);
+      for (const question of definition.questions) {
+        expect(markdown).toContain(question.question);
+        if (question.type === "grid") for (const label of [...question.rows!, ...question.options!]) expect(markdown).toContain(label);
+      }
     }
     expect(drawing.questions).toHaveLength(5);
-    expect(setup.questions).toHaveLength(8);
+    expect(setup.questions).toHaveLength(9);
   });
   it("supports empty submissions, trims free text, and preserves detected OS", () => {
     expect(interviewBody(drawing, new FormData()).responses).toEqual([]);
@@ -60,6 +63,14 @@ describe("course-authored web interviews", () => {
   it("handles multiple choices and Other", () => {
     const data = new FormData(); data.append("products", "Workers"); data.append("products", "D1"); data.set("products-other", "  Vectorize ");
     expect(interviewBody(setup, data).responses[0].answer).toEqual(["Workers", "D1", "Other: Vectorize"]);
+  });
+  it("stores grid ratings as Row: Level strings, skipping unrated rows", () => {
+    const skills = setup.questions.find(question => question.id === "skills")!;
+    const data = new FormData(); data.set("skills-row-0", "Comfortable"); data.set("skills-row-5", "New to it"); data.set("skills-other", " Python ");
+    expect(interviewBody(setup, data).responses).toEqual([{ question: skills.question, answer: ["HTML: Comfortable", "Relational databases and SQL: New to it", "Other: Python"] }]);
+    data.set("skills-row-1", "Expert"); expect(() => interviewBody(setup, data)).toThrow("listed answer");
+    expect(gridAnswer(skills, "CSS: some")).toEqual({ row: 1, option: "Some" });
+    expect(gridAnswer(skills, "Other: Python")).toBeUndefined();
   });
   it("rejects unknown choices and oversized answers", () => {
     const data = new FormData();

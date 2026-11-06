@@ -15,6 +15,28 @@
       ]
     },
     {
+      "id": "skills",
+      "question": "How familiar are you with these coding and web technologies?",
+      "type": "grid",
+      "hint": "Skip any row you're unsure about. Name languages or frameworks you know in the box below.",
+      "rows": [
+        "HTML",
+        "CSS",
+        "JavaScript or TypeScript",
+        "Other programming languages",
+        "Web frameworks like React or Astro",
+        "Relational databases and SQL",
+        "The command line",
+        "Git"
+      ],
+      "options": [
+        "New to it",
+        "Some",
+        "Comfortable"
+      ],
+      "other": true
+    },
+    {
       "id": "harnesses",
       "question": "Which AI apps and agent harnesses have you used?",
       "type": "multi",
