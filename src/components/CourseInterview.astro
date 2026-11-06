@@ -82,6 +82,13 @@ const { definition } = Astro.props;
   .grid thead th { font-size: .85rem; color: var(--muted-fg); text-align: center; padding: 0 .5rem .25rem; width: 1%; white-space: nowrap; }
   .grid tbody tr + tr { border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent); }
   .grid td label { justify-content: center; padding: .6rem .25rem; }
+  .grid tbody th { padding-left: .5rem; }
+  .grid tbody th, .grid tbody td { transition: background-color .12s; }
+  .grid tbody th { border-radius: .4rem 0 0 .4rem; }
+  .grid tbody td:last-child { border-radius: 0 .4rem .4rem 0; }
+  .grid tbody tr:focus-within > * { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  @media (hover: hover) { .grid tbody tr:hover > * { background: color-mix(in srgb, var(--accent) 10%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .grid tbody th, .grid tbody td { transition: none; } }
   .grid .other-text { margin-top: .75rem; }
   input[type=radio], input[type=checkbox] { accent-color: var(--accent); flex-shrink: 0; width: 1rem; height: 1rem; }
   button { font: inherit; cursor: pointer; }
