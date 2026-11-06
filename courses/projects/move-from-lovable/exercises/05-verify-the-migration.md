@@ -10,7 +10,7 @@ agent-instructions: |
   5. Mark complete with PUT /api/progress/{studentId} as /llms.txt describes.
 ---
 
-# Prove the move
+# Verify the migration
 
 Using your own app? Keep its schema and features. Your agent adapts these checks to your agreed scope; the book names and three rows below describe the reading-list path. Some services may remain on the original backend, and your migration notes should say which.
 
