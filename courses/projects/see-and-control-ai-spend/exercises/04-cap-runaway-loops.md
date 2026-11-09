@@ -1,109 +1,160 @@
 ---
-description: "Set a metadata-scoped dollar spend limit on your background agent, trigger a runaway loop to watch it trip or downgrade, and verify human users keep working uninterrupted."
+description: "Give your background bot its own budget, so it's blocked or moved to a small model when it runs out, while your human users keep working."
 agent-instructions: |
-  Guide the student through this exercise end to end. Do not skip verification.
-
-  This builds on "match-models-to-the-job"; check GET /api/progress/{studentId} first.
-
-  1. Teach the concept first (solid ground before setup):
-     - Explain why routing alone doesn't stop a runaway loop: a human eventually closes their laptop, but an autonomous agent or background job in a retry loop runs at machine speed until something stops it.
-     - Explain why **how** you cap spend matters:
-       1. **Dollars, not just request counts**: a rate limit counts requests, where 100 calls to a large model cost far more than 100 calls to a small open-source model. **Spend limits** set a ceiling in dollars over a time window.
-       2. **Scoped by metadata (blast-radius isolation)**: a single company-wide cap freezes paying customers when one bot misbehaves. Scoping a spend limit to `metadata.caller == "agent"` isolates the ceiling to the background agent alone.
-       3. **Block or automatic downgrade**: when a caller hits its dollar ceiling (`429 Spend limit exceeded`), you can either stop that bot or fall back to an economical open-source model so critical drafts or summaries keep flowing at a fraction of the cost.
-       4. **Eventual consistency**: because a request's token cost is tallied as the request finishes, a simultaneous burst near the cap can briefly overshoot before the next requests are blocked — like a credit-card limit that updates as charges post.
-     - Redraw the progressive diagram from Exercise 3 and add Stage 4 (the metadata-scoped spend limit):
-       ```text
-       Stage 4:  [ Callers ] ──► Your Worker ──(+ metadata)──► AI Gateway
-                                                                 ├── [ Spend Limit: caller == "agent" ($ cap) ]
-                                                                 │      └── over budget? ──► 429 Block or Downgrade to 8B (only this bot)
-                                                                 └── [ Route: dynamic/spend-tier ]
-                                                                        ├── tier == "free" ──► Economical open-source model
-                                                                        └── tier == "pro"  ──► 70B Flagship (untouched when bot trips!)
-       ```
-     - Ask the student what should happen in their app when the background agent blows past its dollar budget: **hard-block the agent (`429`)** or **automatically downgrade the agent to the economical open-source model** so work continues cheaply? Wait for their reply.
-
-  2. Configure the agent-scoped dollar spend limit and wire the Worker handler:
-     - Remember that `cf ai-gateway gateways update` replaces the whole gateway configuration (`PUT`). First run `cf ai-gateway gateways get <gateway-id>` so you carry over any existing settings.
-     - Enable a tiny dollar spend limit (`$0.00001` per 30-day window) scoped specifically to `metadata.caller == "agent"`:
-       `cf ai-gateway gateways update <gateway-id> --body '{"collect_logs":true,"cache_ttl":0,"cache_invalidate_on_update":true,"rate_limiting_interval":0,"rate_limiting_limit":0,"rate_limiting_technique":"sliding","spend_limits":{"enabled":true,"rules":[{"id":"background-agent-budget","enabled":true,"limitType":"cost","limit":0.00001,"window":2592000,"technique":"fixed","metadata":{"caller":{"mode":"filter","values":["agent"]}}}]}}'`
-     - Update the Worker's `POST /api/run` handler to match the student's choice when AI Gateway returns a spend-limit error (`Spend limit exceeded`):
-       - If they chose **hard block**: catch the error and return `Response.json({ status: "blocked-by-spend-limit", error: String(err), logId: env.AI.aiGatewayLogId, metadata }, { status: 429 })`.
-       - If they chose **automatic downgrade**: catch the spend-limit error on the primary call and immediately retry the request against the economical open-source model (`@cf/google/gemma-4-26b-a4b-it`) with a separate fallback tag (`{ caller: "agent-downgraded", tier: "free", task: metadata.task }`), returning `Response.json({ status: "downgraded-after-spend-limit", model: "@cf/google/gemma-4-26b-a4b-it", response, logId: env.AI.aiGatewayLogId, metadata })`.
-     - Update the `GET /` **Usage receipt** so blocked or downgraded agent rows highlight clearly alongside a **Before vs. After governance summary**.
-     - Deploy with `cf deploy`. Spend limit rules take ~45–60 seconds to propagate, and cost is recorded as a request completes: send one `caller: "agent"` request to consume the `$0.00001` budget, wait ~45–60 seconds, then send another `caller: "agent"` request and confirm it hits the `background-agent-budget` rule (returning `429` or triggering the downgrade), while a `caller: "human", tier: "pro"` request immediately after succeeds (`200`) on the 70B route.
-
-  3. Let the student test blast-radius isolation live:
-     - Leave the spend limit active while the student replies, and share their live Worker URL (`GET /`) and AI Gateway dashboard link (`https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`).
-     - Invite them to click **Run background agent loop** on their page (watching the bot get capped or downgraded on the receipt) and then click **Pro tier** right next to it to see paying human traffic sail through untouched.
-     - Offer a scenario check tailored to their interview profile (or let them reply `"next"` anytime to finish the course):
-       - For a builder or developer: why can a simultaneous burst of requests briefly overshoot a dollar spend limit before the next call is blocked, and how does scoping limits by `metadata` keep one noisy tenant or bot from taking down the rest of your app?
-       - For someone in a sales, SE, or customer-facing role: if an engineering leader objects *"We can't put hard dollar caps on AI Gateway because it'll break our developers or customer features mid-day"*, how would you walk them through watching usage first, scoping limits per agent or tier, and using downgrade fallbacks instead of a blunt company-wide block?
-       Wait for their reply.
-
-  4. Mark complete:
-     - Confirm via `cf ai-gateway gateways get <gateway-id>` and your live test responses that `background-agent-budget` triggered on `caller: "agent"` while `tier: "pro"` succeeded.
-     - Reset the temporary `$0.00001` ceiling (`"spend_limits":{"enabled":false,"rules":[]}`) or raise it to a realistic dollar budget (e.g. `$10`) if they want to keep using the app, and let the student know.
-     - Connect their answer to the concrete mechanism (skip hollow `"Correct!"` praise), or share a one-line takeaway if they replied `"next"`, and mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes.
-
-  Out of scope here: exporting gateway logs to R2 via Logpush for multi-year SIEM/BI retention and governing MCP tool calls via Cloudflare Access MCP Portals.
+  - This builds on "match-models-to-the-job"; check progress first. Pitch it to the student's role from this course's interview. For an account executive, skip the JSON: "the bot gets its own budget in the gateway, and when it's spent, the bot is stopped (or moved to the small model) and nobody else notices".
+  - If they finished the AI Gateway course, they've set a spend limit before: shorten "Option 1" to the rule and spend the time on the choice between the options and on "One budget per customer".
+  - Before "Choose what happens", explain why a company-wide cap is the wrong tool (it stops paying customers when one bot misbehaves), then ask the student which option fits their app: a hard cap (the bot is blocked) or a downgrade (the bot moves to the small model). Wait for their reply. Do only the option they pick: an agent-wide dollar rule also blocks the downgrade's fallback.
+  - `cf ai-gateway gateways update` replaces the whole gateway configuration. Run `cf ai-gateway gateways get <gateway-id>` first and carry over every setting the body's command doesn't include (for example `authentication`).
+  - Before the check, ask the student to predict: once the bot has used up its budget, will the pro user still get an answer?
+  - "Check it works" (either option): send one bot request, wait about 60 seconds (spend limits and route versions take 45 to 60 seconds to take effect, and a request's cost is counted after it finishes), send more bot requests until one is blocked or downgraded, then a pro request, and confirm in the logs. Then leave the cap in place and invite the student to click the bot and then the pro user on the lab page.
+  - Downgrade option: in testing, a route's limit step with `"limitType": "cost"` never tripped for Workers AI models (requests served through a route were logged at a cost of `0`), so the body counts requests. Say this to a builder or solutions engineer; for an account executive, "the lab counts the bot's requests, a real budget would count dollars" is enough.
+  - Check, by role: builder, why can a burst of simultaneous requests go a little over a dollar limit before it starts blocking, and why does scoping by metadata keep one noisy bot or tenant from taking down the rest of the app? Solutions engineer or account executive: an engineering leader says "we can't put hard caps on AI spend, it'll break features mid-day." How would they walk them through watching spend first, scoping caps to one agent or tier, and downgrading instead of blocking?
+  - "Clean up" comes after the check and is part of the exercise: ask which they want, and do it.
+  - Out of scope: exporting logs with Logpush, and governing an agent's tool calls with MCP server portals.
 ---
 
 # Cap runaway loops
 
-Visibility and model tiering lower your everyday burn rate, but they don't stop a bug. When a background agent gets stuck in a retry loop at 2:00 AM, it doesn't notice the bill climbing. And if your only safeguard is a single gateway-wide rate limit or a hard cap on your provider account, that one runaway bot takes down every paying customer using your app.
+Matching models to tasks lowers your everyday spend, but it doesn't stop a bug. A bot stuck in a retry loop at 2 a.m. keeps calling the model, and if your only safety net is one cap for the whole gateway, or a hard limit at your provider, that bot takes every paying customer down with it.
 
-In this final exercise, you'll give your background agent its own dollar budget in [AI Gateway](https://developers.cloudflare.com/ai-gateway/features/spend-limits/) — isolating its blast radius so it blocks or downgrades to a cheap open-source model when its budget runs out, while human users keep working uninterrupted.
+In this exercise you'll give the bot its own budget, so only the bot is affected when it runs out.
 
 ## What you'll build
 
-A metadata-scoped dollar [spend limit](https://developers.cloudflare.com/ai-gateway/features/spend-limits/) (`metadata.caller == "agent"`) on your gateway and a handler in your Worker that either blocks the runaway loop with `429` or downgrades it to a lower-cost model, while proving that `pro` and `free` human requests continue to succeed.
+A budget for requests labeled `caller: "agent"`, and one of two things that happens when the bot spends it: the bot is blocked, or it's moved to the small model. Your human users keep working either way.
 
 ## Prerequisites
 
 - You've completed [Match models to the job](/courses/see-and-control-ai-spend/match-models-to-the-job) and still have that Worker, gateway, and route.
 
-## Stage 4: the complete spend-control pipeline
+## Show what happened on the receipt
 
-Adding a metadata-scoped spend limit in front of your route completes the four-stage architecture. Every request is now logged, attributed by caller and tier, checked against per-caller dollar budgets, and routed to the right model:
+Whichever option you choose, the receipt should say when the bot was stopped or moved. In `src/index.ts`, replace the two `status` values in `run()`:
 
-```mermaid
-flowchart LR
-  subgraph Callers["Three callers in your app"]
-    Free["Free / routine caller"]
-    Pro["Pro / complex caller"]
-    Bot["Background agent loop"]
-  end
-  Callers --> Worker["Your Worker\nstamps { caller, tier, task }"]
-  Worker --> Gateway["Stage 1 & 2: AI Gateway\nLogs & attribution"]
-  Gateway --> Limit{"Stage 4: Spend limit\ncaller == agent over $ cap?"}
-  Limit -->|"over budget"| Cap["429 Block or Downgrade\n(only the runaway agent)"]
-  Limit -->|"under budget / human"| Route{"Stage 3: Route\nmetadata.tier == free?"}
-  Route -->|"true"| Fast["Economical open-source model"]
-  Route -->|"false"| Flagship["Llama 3.3 70B + fallback"]
+```ts title="src/index.ts"
+// In the try block:
+const status = caller === "bot" && MODEL_SIZES[answeredBy] === "small" ? "downgraded" : "ok";
+return { caller, seenAs, model: answeredBy, modelSize: MODEL_SIZES[answeredBy], status, logId: env.AI.aiGatewayLogId };
+
+// In the catch block:
+const status = /spend limit/i.test(String(err)) ? "blocked" : "error";
+return { caller, seenAs, model, status, error: String(err), logId: env.AI.aiGatewayLogId };
 ```
 
-A spend limit rule is defined in dollars (`"limitType": "cost"`) and scoped to any metadata key your Worker attaches:
+## Choose what happens
 
-```json title="Spend limit rule (scoped to caller = agent)"
+| | Option 1: hard cap | Option 2: downgrade |
+| :--- | :--- | :--- |
+| When the bot's budget runs out | It gets `429 Too Many Requests` until the budget resets. | It's answered by the small model instead. |
+| Where it lives | A [spend limit](https://developers.cloudflare.com/ai-gateway/features/spend-limits/) on the gateway, in dollars. | A limit step in your route. |
+| Fits when | A runaway bot should stop and wait for a person. | The bot's work matters, and a cheaper answer beats no answer. |
+
+## Option 1: hard cap
+
+A spend limit is a budget in dollars over a time window. This rule applies only to requests whose `caller` label is `agent`. The limit is tiny on purpose, a thousandth of a cent per 30 days, so one request uses it up:
+
+```sh
+cf ai-gateway gateways update spend-control-gateway --body '{
+  "collect_logs": true, "cache_ttl": 0, "cache_invalidate_on_update": true,
+  "rate_limiting_interval": 0, "rate_limiting_limit": 0, "rate_limiting_technique": "sliding",
+  "spend_limits": { "enabled": true, "rules": [{
+    "id": "bot-budget", "enabled": true, "limitType": "cost", "limit": 0.00001,
+    "window": 2592000, "technique": "fixed",
+    "metadata": { "caller": { "mode": "filter", "values": ["agent"] } }
+  }]}
+}'
+```
+
+`gateways update` replaces the gateway's whole configuration, so the command repeats its other settings. You can also set spend limits on the dashboard, under your gateway's **Settings** > **Spend limits**.
+
+The bot already calls the big model directly, so there's nothing to change in the Worker. Deploy the receipt change:
+
+```sh
+cf deploy
+```
+
+## Option 2: downgrade
+
+The downgrade goes in your route, next to the rules from the last exercise. Add two steps to a copy of your live route version, saved as `route-v3.json`: a check for the bot, and a limit that lets the bot's requests through to the big model until the limit is reached, then sends them to the small model. Point `start` at the new check:
+
+```json title="route-v3.json (new and changed steps)"
+{ "id": "start", "type": "start", "outputs": { "next": { "elementId": "is_bot" } } },
 {
-  "id": "background-agent-budget",
+  "id": "is_bot",
+  "type": "conditional",
+  "properties": { "conditions": { "metadata.caller": { "$eq": "agent" } } },
+  "outputs": { "true": { "elementId": "bot_budget" }, "false": { "elementId": "task_check" } }
+},
+{
+  "id": "bot_budget",
+  "type": "rate",
+  "properties": { "limitType": "count", "key": "metadata.caller", "limit": 3, "window": 3600 },
+  "outputs": { "success": { "elementId": "big" }, "fallback": { "elementId": "small" } }
+},
+```
+
+The limit counts the bot's requests: three an hour on the big model, then the small one. A route's limit step can also count dollars (`"limitType": "cost"`), but in testing it never tripped for Workers AI models, so this lab counts requests. Publish the version as you did in the last exercise:
+
+```sh
+cf ai-gateway dynamic-routing versions create <route-id> --gateway-id spend-control-gateway --elements @route-v3.json
+cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id spend-control-gateway --version-id <version-id>
+```
+
+Then send the bot through the route too. In `run()`, every caller now calls the route:
+
+```ts title="src/index.ts"
+const model = ROUTE;
+```
+
+Deploy:
+
+```sh
+cf deploy
+```
+
+## Check it works
+
+Run the bot from the lab page. Once its budget is spent, its rows turn `blocked` (option 1) or `downgraded` (option 2). Then click the pro user: it still gets the big model, because the budget only applies to the bot.
+
+## One budget per customer
+
+The rule in option 1 filters on one value. A spend limit can also split by a label instead: every distinct value gets its own budget. With a `customer` label on every request, this rule gives each customer $5 a month, so one heavy customer can't use up anyone else's share:
+
+```json title="Spend limit rule (one budget per customer)"
+{
+  "id": "per-customer-budget",
   "enabled": true,
   "limitType": "cost",
-  "limit": 50,
+  "limit": 5,
   "window": 2592000,
   "technique": "fixed",
-  "metadata": {
-    "caller": { "mode": "filter", "values": ["agent"] }
-  }
+  "metadata": { "customer": { "mode": "partition" } }
 }
 ```
 
-## Key guardrails to keep in mind
+The dashboard calls this **Split by value**. Spend limits are a best-effort estimate from token counts and model prices, and they're counted as each request finishes, so a burst of simultaneous requests can go a little over before blocking starts.
 
-| Question | How AI Gateway handles it |
+## Clean up
+
+The tiny budget will keep the bot capped. You can:
+
+- keep the lab as it is;
+- raise the budget to something realistic, for example `"limit": 10` for $10 a month in option 1, or a higher `limit` in the route in option 2;
+- or delete everything this course created:
+
+```sh
+cf workers delete ai-spend-lab --force
+cf ai-gateway dynamic-routing delete <route-id> --gateway-id spend-control-gateway --force
+cf ai-gateway gateways delete spend-control-gateway --force
+```
+
+## What you built
+
+| Stage | What it answers |
 | :--- | :--- |
-| **Why dollars instead of request rate limits?** | 100 calls to a 70B or frontier model cost far more than 100 calls to an 8B model. Finance and engineering both budget in dollars. |
-| **What happens when a budget is hit?** | AI Gateway returns `429 Too Many Requests` (`Spend limit exceeded`) for that rule's scope. You can stop the caller or catch `429` and fall back to a cheaper open-source model so work continues. |
-| **Is the dollar cap exact to the penny on a traffic spike?** | Spend limits are **eventually consistent**: token cost is recorded as each request finishes, so a simultaneous burst near the cap can briefly overshoot before subsequent calls are blocked. |
-| **Where do logs go if compliance or Finance needs multi-year BI retention?** | [AI Gateway Logpush](https://developers.cloudflare.com/ai-gateway/observability/logging/logpush/) exports full request, token, cost, and metadata logs to [Cloudflare R2](https://developers.cloudflare.com/r2/) with zero egress fees. |
+| See the blind spot | How much are we spending on AI, in one place? |
+| Attribute every caller | Who's spending it? |
+| Match models to the job | Is each task on a model that fits? |
+| Cap runaway loops | What stops one bot from spending everyone's budget? |
+
+Watch spend first, then match models to tasks, then cap the callers that can run away. That's the order to put spend controls in place on any app, with any model provider.

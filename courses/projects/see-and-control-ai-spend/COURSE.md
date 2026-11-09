@@ -1,21 +1,23 @@
 ---
 name: see-and-control-ai-spend
-description: "See who is driving your AI bill across human tiers and background agents, route routine work to lower-cost open-source models, and isolate runaway loops with per-caller dollar budgets."
-compatibility: "Requires a Cloudflare account (the Workers Free plan works) and the cf CLI, both set up in the Agent setup course. Uses Workers AI out of the box, with no external API keys required."
+description: "See who's driving your AI bill, from free users to paying customers to background bots, move routine work to cheaper models, and give runaway bots their own budget. Pitched to your role, from account executive to developer."
+compatibility: "Requires a Cloudflare account (the Workers Free plan works) and the cf CLI, both set up in the Agent setup course. Uses Workers AI, so no provider API keys are needed."
 metadata:
   author: Thomas Desmond
 ---
 
 # See and control AI spend
 
-Shipping an AI feature is fast; explaining the bill a month later is hard. When every user tier, internal team, and background job calls models through the same shared API key or binding, your invoice shows one big number and never tells you *who* spent it. Worse, your biggest spender often isn't a person at all — an automated agent stuck in a retry loop or a free tier running on a flagship model for one-line summaries can quietly burn through your budget over a weekend.
+Shipping an AI feature is fast. Explaining the bill a month later is hard. When every user tier, internal team, and background job calls models with the same key, the invoice shows one big number and never says *who* spent it. And the biggest spender often isn't a person: a bot stuck in a retry loop, or free users getting an expensive model for one-line summaries, can quietly use up a budget over a weekend.
 
-In this project course, you'll take an app you already built (or start a small new one shaped around your own use case) with three callers — two human tiers or teams and one automated background task — plus a live usage receipt on the page. Step by step, you'll put a single control point in front of your model calls so you can **see the spend first, then govern it**:
+In this project course, you'll take a small app with three callers, two kinds of human users and one background bot, and put a single checkpoint in front of its model calls: [AI Gateway](https://developers.cloudflare.com/ai-gateway/). Then you'll see the spend first, and govern it second:
 
 ```mermaid
 flowchart LR
-  Callers["Free · Pro · Background agent"] --> Worker["Your Worker\n(+ caller & tier metadata)"]
-  Worker --> Gateway["Cloudflare AI Gateway\n1. Attribute · 2. Route · 3. Cap"]
-  Gateway -->|"routine / free"| Fast["Economical open-source model"]
-  Gateway -->|"complex / pro"| Flagship["Flagship 70B model + fallback"]
+  Callers["Free · Pro · Background bot"] --> Worker["Your Worker\n(labels who's calling)"]
+  Worker --> Gateway["AI Gateway\n1. See · 2. Attribute · 3. Route · 4. Cap"]
+  Gateway -->|"routine tasks"| Small["Small, low-cost model"]
+  Gateway -->|"hard tasks"| Big["Big model + fallback"]
 ```
+
+Your role sets how technical it gets. Everyone builds the same app, but an account executive hears about the bill and the dashboard, while a developer gets the code and its trade-offs.

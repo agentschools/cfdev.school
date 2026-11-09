@@ -1,57 +1,25 @@
 ---
-description: "Put an AI Gateway in front of a multi-caller app, build a live usage receipt on the page, and watch unattributed calls blend into one blind total."
+description: "Put AI Gateway in front of an app with three callers, add a live usage receipt, and see why one total doesn't tell you who's spending."
 agent-instructions: |
-  Guide the student through this exercise end to end. Do not skip verification.
-
-  Read this course's interview (GET /api/students/{id}/interviews) and Agent setup's interview first.
-
-  1. Teach the concept first (solid ground before setup):
-     - Calibrate to their interview: if they're new to token billing, explain in plain words that model providers meter every request by **tokens** (word-pieces sent in the prompt and returned in the reply, priced per model), and that apps usually authenticate with one shared credential. Because that credential doesn't say *who* inside your app pressed send, human tiers and runaway background jobs all land on one blended invoice.
-     - Draw Stage 1 of the course's progressive diagram in chat:
-       ```text
-       Before:   [ Free · Pro · Background Task ] ──► Your Worker ──► 70B Model (no central logs or cost view)
-       Stage 1:  [ Free · Pro · Background Task ] ──► Your Worker ──► AI Gateway (logs total tokens & cost, all "anonymous") ──► 70B Model
-       ```
-     - Propose a concrete theme and three callers based on their interview answers (for example, `free` users, `pro` users, and a `background-agent` loop on either their existing Worker or a new Worker like `ai-spend-lab`), plus a gateway ID (default `spend-control-gateway`). Ask if they'd like to use those names or tweak them. Wait for their reply.
-
-  2. Build the gateway, the three-caller Worker, and the live usage receipt:
-     - Resolve their `<account-id>` (`cf auth whoami` or `cloudflare.config.ts`). If `cf` stops with "More than one account available", ask which account to use and set `accountId` in `cloudflare.config.ts` and `CLOUDFLARE_ACCOUNT_ID` for CLI calls.
-     - Create the gateway with `cf ai-gateway gateways create --id <gateway-id> --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding` (or `cf ai-gateway gateways get <gateway-id>` if it already exists; note any existing settings so later updates preserve them).
-     - Set up the project:
-       - If they chose an existing project, read its `AGENTS.md` to fit its stack and add the `AI` binding (`AI: bindings.ai({ dev: { remote: true } })` in `cloudflare.config.ts` or `"ai": { "binding": "AI", "remote": true }` in Wrangler projects).
-       - If they chose a new Worker, scaffold it with `cf init <dir>`, add `AI: bindings.ai({ dev: { remote: true } })` to `worker.env` in `cloudflare.config.ts` (importing `bindings` from `"cf/config"`), run `cf workers types`, and write a short `AGENTS.md`.
-     - Implement `POST /api/run` in the Worker so it reads `{ prompt, caller, tier }` from JSON and calls the flagship 70B model through the gateway **without** metadata tags yet (`env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", { messages: [{ role: "user", content: prompt }] }, { gateway: { id: "<gateway-id>", skipCache: true } })`). Have it return `Response.json({ response, model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast", logId: env.AI.aiGatewayLogId, attributedTo: "anonymous (no metadata)" })`.
-     - On `GET /`, serve a clean, interactive HTML page tailored to their chosen app theme that includes:
-       1. Three caller action buttons: one for their first human caller (e.g. **Free tier: quick summary**), one for their second human caller (e.g. **Pro tier: deep analysis**), and one **Run background agent loop (4x)** button that fires 4 rapid automated requests in a loop.
-       2. A live **Usage receipt** table on the page that appends each completed request (`Time · Actual caller clicked · What the gateway sees ("anonymous") · Model (70B) · Status · logId`) and shows a running tally of calls.
-     - Deploy with `cf deploy` and trigger one request for each of the three callers so live entries exist in the gateway.
-
-  3. Let the student experience the blind spot:
-     - Share two clickable links:
-       1. Their deployed Worker URL (`https://<worker>.<subdomain>.workers.dev/`) — invite them to click all three caller buttons (especially the 4x background loop) and look at the **Usage receipt** on the page.
-       2. Their AI Gateway Logs dashboard URL: `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`
-     - Point out the productive failure: the gateway now gives them one total across every call, yet both the receipt's "What the gateway sees" column and the Cloudflare dashboard logs show no distinction between a paying customer, a free user, and a background loop hammering the 70B model.
-     - Offer a scenario check tailored to their interview profile (or let them reply `"next"` anytime to keep moving):
-       - For a builder or developer: why can't a model provider's invoice or a single shared API key tell you whether a sudden 4x traffic jump came from new paying users or a bug in a background loop?
-       - For someone in a sales, SE, or customer-facing role: if a customer says *"We already see our monthly total on our OpenAI or Anthropic invoice — why put a gateway in front?"*, how would you frame the difference between seeing the *aggregate total* across providers and seeing *who* is spending it?
-       Wait for their reply.
-
-  4. Mark complete:
-     - Confirm via `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc` that the Worker's `@cf/meta/llama-3.3-70b-instruct-fp8-fast` calls are recorded in the gateway.
-     - Connect their answer to the concrete mechanism (skip hollow `"Correct!"` praise), or share a one-line takeaway if they replied `"next"`, mark this exercise complete with PUT /api/progress/{studentId} as /llms.txt describes, and move on to "attribute-every-caller".
-
-  Out of scope here: metadata tags, model routing, and spend limits — those are the next three exercises.
+  - Pitch everything to the student's role from this course's interview (account executive, solutions engineer, or builder); the interview's instructions say what each one gets. For an account executive, tokens are "usage" and the code is a one-sentence summary per section.
+  - If they finished the AI Gateway course, shorten "Create the gateway" and "Call the model through the gateway" to a reminder: they've done both. Spend the time on the blind spot itself.
+  - Before "Create the gateway", propose names from their interview answers (the app's theme, the three callers, a Worker name, and a gateway ID; the body's defaults are a support desk, `free`, `pro`, `bot`, `ai-spend-lab`, and `spend-control-gateway`), and ask whether to use them. Wait for their reply. Use their names everywhere the body uses the defaults, including the button labels and prompts.
+  - Existing app: add the AI binding to its config (Wrangler projects: `"ai": { "binding": "AI", "remote": true }`), and put the lab on its own path, e.g. `/spend-lab` for the page and `/spend-lab/api/run` for the API, updating the page's `fetch` URL to match. Never replace the app's homepage. Read its `AGENTS.md` first to fit its stack.
+  - Before "Check it works", ask the student to predict: when the bot runs four times, what will the gateway be able to tell them about who did it? (Account executive: "what will the bill tell you?" Builder: "what will the log entries contain?")
+  - "Check it works": run the three callers yourself against the deployed URL, then send the student the lab page and the gateway's logs page (`https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`) to click through. Compare their prediction to what they saw.
+  - Check, by role: builder, why can't a provider's invoice or a shared API key tell a traffic jump from new paying users apart from a bug in a background loop? Solutions engineer or account executive: a customer says "we already see our total on our OpenAI invoice, why put a gateway in front?" How would they answer? Use the providers they named in the interview.
+  - Out of scope: metadata, routes, and spend limits. Those are the next three exercises.
 ---
 
 # See the blind spot
 
-When teams first ship an AI feature, every caller in the app — free users, paying customers, internal teams, and background jobs — usually shares one model binding or API key. When the monthly bill jumps, Finance asks a simple question Engineering can't answer: *who spent it?*
+When an app ships its first AI feature, every caller usually shares one model binding or one API key: free users, paying customers, internal teams, and background jobs. When the bill jumps, the first question is *who spent it?*, and that shared credential can't answer it.
 
-And the biggest spender often isn't a person. At Cloudflare, a single internal AI code-review agent processed nearly 25 billion tokens in 30 days — running at machine speed with no cost intuition under the same shared infrastructure. Before you can set a budget or optimize models, you need a single checkpoint that sees every request.
+The biggest spender often isn't a person. A background job or an AI agent stuck in a retry loop runs day and night and never notices the bill. In this exercise you'll put [AI Gateway](https://developers.cloudflare.com/ai-gateway/) in front of an app with three callers, so every model call goes through one place you can watch, and then see why that's still not enough.
 
 ## What you'll build
 
-An [AI Gateway](https://developers.cloudflare.com/ai-gateway/) in front of your Worker and a live **Usage receipt** on your app's page with three callers — two human tiers or teams and one automated background loop — all calling a flagship 70B model (`@cf/meta/llama-3.3-70b-instruct-fp8-fast`). You'll fire all three and see why aggregate visibility alone still leaves every caller anonymous.
+A Worker for a small support desk with three callers: a free user asking for a quick summary, a pro user asking for a deep analysis, and a background bot that reviews tickets on its own. Every call goes through your gateway to a big model, `@cf/meta/llama-3.3-70b-instruct-fp8-fast` on [Workers AI](https://developers.cloudflare.com/workers-ai/), and a lab page shows a live usage receipt of who clicked what, next to what the gateway sees.
 
 ## Prerequisites
 
@@ -59,51 +27,202 @@ Your agent can help you with these.
 
 - [Node.js](https://nodejs.org/) installed.
 - A free [Cloudflare account](https://dash.cloudflare.com/sign-up).
-- The [`cf` CLI](/courses/agent-setup/cli) logged in to your Cloudflare account (`cf auth whoami`).
+- The [`cf` CLI](/courses/agent-setup/cli) logged in to your account: `cf auth whoami` should say `"authenticated": true`.
 
-## Stage 1: one checkpoint for every model call
+## Create the gateway
 
-Routing your Worker's calls through AI Gateway gives you a single pane of glass across [Workers AI](https://developers.cloudflare.com/workers-ai/), OpenAI, Anthropic, Bedrock, and other providers. Every request's model, token count, latency, and estimated cost are recorded in one place:
+A gateway is a checkpoint that sits between your code and the models it calls. It records every request: which model answered, how much it used, how long it took, and what it cost. Create one:
 
-```mermaid
-flowchart LR
-  subgraph Callers["Three callers in your app"]
-    Free["Free / routine caller"]
-    Pro["Pro / complex caller"]
-    Bot["Background agent loop"]
-  end
-  Callers --> Worker["Your Worker"]
-  Worker -->|"no metadata yet"| Gateway["Stage 1: AI Gateway\nLogs total requests, tokens & cost\n(all callers appear identical)"]
-  Gateway --> Model["Llama 3.3 70B"]
+```sh
+cf ai-gateway gateways create --id spend-control-gateway \
+  --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true \
+  --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding
 ```
 
-Passing `{ gateway: { id } }` as the third argument to `env.AI.run()` routes the call through your gateway without changing how your app works:
+Caching stays off (`--cache-ttl 0`) so that every click in this course really reaches a model and shows up in your logs.
 
-```ts title="src/index.ts"
-const result = await env.AI.run(
-  "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-  { messages: [{ role: "user", content: prompt }] },
-  {
-    gateway: {
-      id: "spend-control-gateway",
-      skipCache: true,
-    },
-  },
-);
+## Create the Worker
 
-return Response.json({
-  response: (result as { response?: string }).response ?? result,
-  model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-  logId: env.AI.aiGatewayLogId,
-  attributedTo: "anonymous (no metadata)",
+```sh
+cf init ai-spend-lab
+cd ai-spend-lab
+```
+
+Give the Worker the [Workers AI binding](https://developers.cloudflare.com/workers-ai/configuration/bindings/) in `cloudflare.config.ts`, in place of the template's `WORLD` binding:
+
+```ts title="cloudflare.config.ts"
+import { bindings, defineConfig } from "cf/config";
+import * as entrypoint from "./src/index.ts" with { type: "cf-worker" };
+
+export default defineConfig({
+	worker: {
+		name: "ai-spend-lab",
+		compatibilityDate: "2026-10-23",
+		entrypoint,
+		env: {
+			AI: bindings.ai({ dev: { remote: true } }),
+		},
+	},
 });
 ```
 
-## Why a total still isn't attribution
+Keep the `compatibilityDate` that `cf init` wrote. `dev: { remote: true }` means that even under `cf dev` on your machine, calls go to the real Workers AI and through your real gateway. Then regenerate the Worker's types so TypeScript knows about `env.AI`:
 
-| What you can see after Stage 1 | What is still hidden |
+```sh
+cf workers types
+```
+
+## Call the model through the gateway
+
+The Worker has one API route, `POST /api/run`, which takes the name of a caller and sends that caller's prompt to the big model. The third argument to `env.AI.run()` sends the call through your gateway:
+
+```ts title="src/index.ts"
+import { LAB_PAGE } from "./lab";
+
+const GATEWAY_ID = "spend-control-gateway";
+const BIG_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+// Plain-language sizes for the receipt.
+const MODEL_SIZES: Record<string, string> = {
+	"@cf/meta/llama-3.3-70b-instruct-fp8-fast": "big",
+	"@cf/openai/gpt-oss-120b": "big",
+	"@cf/google/gemma-4-26b-a4b-it": "small",
+	"@cf/ibm-granite/granite-4.0-h-micro": "small",
+};
+
+// The three callers, and what each one asks.
+const CALLERS = {
+	free: "Summarize this ticket in one line: my password reset email never arrived.",
+	pro: "Analyze this ticket and propose a fix plan: SSO login fails for 30% of our users since Monday.",
+	bot: "Review this ticket and tag it with one category: the printer shows error 50.4.",
+};
+type Caller = keyof typeof CALLERS;
+
+export default {
+	async fetch(request, env) {
+		const url = new URL(request.url);
+		if (request.method === "POST" && url.pathname === "/api/run") {
+			const { caller } = await request.json<{ caller: Caller }>();
+			if (!(caller in CALLERS)) return Response.json({ error: "Unknown caller" }, { status: 400 });
+			return Response.json(await run(env, caller));
+		}
+		if (url.pathname === "/") {
+			return new Response(LAB_PAGE, { headers: { "content-type": "text/html; charset=utf-8" } });
+		}
+		return new Response("Not found", { status: 404 });
+	},
+} satisfies ExportedHandler<Env>;
+
+async function run(env: Env, caller: Caller) {
+	const model = BIG_MODEL;
+	const seenAs = "anonymous";
+	try {
+		await env.AI.run(
+			model,
+			{ messages: [{ role: "user", content: CALLERS[caller] }] },
+			{ gateway: { id: GATEWAY_ID, skipCache: true } },
+		);
+		return { caller, seenAs, model, modelSize: MODEL_SIZES[model], status: "ok", logId: env.AI.aiGatewayLogId };
+	} catch (err) {
+		return { caller, seenAs, model, status: "error", error: String(err), logId: env.AI.aiGatewayLogId };
+	}
+}
+```
+
+Each response says who really clicked (`caller`) and what the gateway can tell about the request (`seenAs`). For now, that's nothing: the gateway sees every request arrive the same way.
+
+## Add the lab page
+
+The lab page has a button for each caller, a bar chart of who the gateway thinks is spending, and the usage receipt. It's the same page for the rest of the course: later exercises only change what the Worker returns.
+
+```ts title="src/lab.ts"
+export const LAB_PAGE = `<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI spend lab</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; }
+  button { font: inherit; padding: 0.5rem 0.9rem; margin: 0 0.5rem 0.5rem 0; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid #ddd; }
+  .bar { background: #f6821f; color: white; padding: 0.2rem 0.5rem; margin: 0.25rem 0; white-space: nowrap; }
+  .blocked td, .error td { color: #b00020; }
+  .downgraded td { color: #8a5a00; }
+</style>
+<h1>AI spend lab</h1>
+<p>Each button calls the AI as a different caller. The receipt shows who really clicked and what AI Gateway sees.</p>
+<div>
+  <button data-caller="free">Free user: quick summary</button>
+  <button data-caller="pro">Pro user: deep analysis</button>
+  <button data-caller="bot" data-times="4">Run the background bot (4 times)</button>
+</div>
+<h2>Who the gateway thinks is spending</h2>
+<div id="breakdown"></div>
+<h2>Usage receipt</h2>
+<table>
+  <thead><tr><th>Time</th><th>Who clicked</th><th>What the gateway sees</th><th>Model</th><th>Status</th></tr></thead>
+  <tbody id="receipt"></tbody>
+</table>
+<script>
+  const counts = {};
+  function addRow(row) {
+    const tr = document.createElement("tr");
+    tr.className = row.status;
+    const model = row.modelSize ? row.modelSize + " (" + row.model + ")" : row.model;
+    for (const text of [new Date().toLocaleTimeString(), row.caller, row.seenAs, model, row.status]) {
+      const td = document.createElement("td");
+      td.textContent = text ?? "";
+      tr.append(td);
+    }
+    document.getElementById("receipt").prepend(tr);
+    counts[row.seenAs] = (counts[row.seenAs] ?? 0) + 1;
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    document.getElementById("breakdown").replaceChildren(...Object.entries(counts).map(([who, n]) => {
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.width = Math.max(15, (100 * n) / total) + "%";
+      bar.textContent = who + ": " + n + " of " + total + " requests";
+      return bar;
+    }));
+  }
+  async function run(caller) {
+    const res = await fetch("/api/run", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ caller }),
+    });
+    addRow(await res.json());
+  }
+  for (const button of document.querySelectorAll("button[data-caller]")) {
+    button.addEventListener("click", () => {
+      const times = Number(button.dataset.times ?? 1);
+      return Promise.all(Array.from({ length: times }, () => run(button.dataset.caller)));
+    });
+  }
+</script>
+`;
+```
+
+## Deploy
+
+```sh
+cf deploy
+```
+
+`cf deploy` prints the Worker's URL, like `https://ai-spend-lab.<your-subdomain>.workers.dev`. A new Worker can take up to about 30 seconds to start serving.
+
+## Check it works
+
+Open the URL and click each button: the free user, the pro user, and the bot, which runs four times in a row. Then look at the receipt and at your gateway's **Logs** page in the Cloudflare dashboard (**AI** > **AI Gateway** > `spend-control-gateway` > **Logs**).
+
+Every request is there, with its model, its tokens, and its cost. But the "What the gateway sees" column says `anonymous` for all of them, and the chart has one bar. Four of those requests were a bot no one was watching, running a big model, and nothing in the gateway can tell it apart from a paying customer.
+
+## Why one total isn't enough
+
+| What you can see now | What's still hidden |
 | :--- | :--- |
-| Total requests, input/output tokens, and estimated cost across all providers in one dashboard. | Which caller (`free`, `pro`, or `background-agent`) generated the tokens. |
-| Whether the flagship 70B model is being called 4x more than yesterday. | Whether a background retry loop or free-tier traffic is eating your margin. |
+| Every request, and what all of them cost together, in one place. | Which caller made each request. |
+| That traffic jumped when the bot ran. | Whether the jump was new paying users or a bot stuck in a loop. |
 
-In the next exercise, you'll label every request on the server so the receipt and dashboard break spend down by caller.
+That's the blind spot: a total tells you *how much*, not *who*. In the next exercise, [Attribute every caller](/courses/see-and-control-ai-spend/attribute-every-caller), you'll label every request so the gateway can tell your callers apart.
