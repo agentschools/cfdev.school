@@ -19,10 +19,3 @@ flowchart LR
   Gateway -->|"routine / free"| Fast["Economical open-source model"]
   Gateway -->|"complex / pro"| Flagship["Flagship 70B model + fallback"]
 ```
-
-| Stage | What breaks without it | What you'll add |
-| :--- | :--- | :--- |
-| **1. See the blind spot** | Every caller shares one credential, so human requests and runaway background loops blend into one unattributed total. | Route calls through [AI Gateway](https://developers.cloudflare.com/ai-gateway/) and render a live usage receipt on your page. |
-| **2. Attribute every caller** | Seeing the total doesn't tell Finance or Product whether free users, paying customers, or a looping bot caused a spike. | Attach server-verified `metadata` (`caller`, `tier`, `task`) and inspect the breakdown to find the two hidden cost leaks. |
-| **3. Match models to the job** | Everyone defaults to the largest model for every task, eating margin on simple work. | Move model choice into a versioned [route](https://developers.cloudflare.com/ai-gateway/features/dynamic-routing/) that sends routine calls to a fast open-source model on [Workers AI](https://developers.cloudflare.com/workers-ai/) with zero app redeploy. |
-| **4. Cap runaway loops** | A company-wide limit freezes paying customers whenever a background agent loops. | Enforce a metadata-scoped dollar [spend limit](https://developers.cloudflare.com/ai-gateway/features/spend-limits/) that caps or downgrades the background agent while human users keep working. |
