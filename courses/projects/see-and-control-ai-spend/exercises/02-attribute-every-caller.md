@@ -1,14 +1,14 @@
 ---
 description: "Label every request with who's behind it, run a mix of traffic, and find the two places your AI spend is leaking."
 agent-instructions: |
-  - This builds on "see-the-blind-spot"; check progress first. Pitch it to the student's role from this course's interview.
+  - This builds on "see-the-blind-spot"; check progress first. Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on).
   - If they finished the AI Gateway course, they've attached metadata before: shorten "Label every request" to the diff and spend the time on the investigation.
   - Before "Label every request", show the three labels the body uses, renamed for their callers, and ask whether they'd like a different label, e.g. a customer or team name (at most five keys per request). Wait for their reply.
   - In "Label every request", say plainly that the buttons stand in for real users: in a real app the Worker reads the tier from the signed-in session or the job's own config, never from anything the browser sends, so no one can claim to be someone else.
   - "Find the two leaks" is the student's investigation, not yours. Ask them to click the buttons themselves (a couple of free summaries, one pro analysis, and the bot), then guess the two leaks from the lab page before you show them anything. Wait for their guess. Only then pull the last few entries with `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 10 --order-by created_at --order-by-direction desc` and compare. If they can't open a browser, send the traffic yourself and still ask for the guess first.
-  - Don't compute prices yourself. If they want numbers, point them at the cost column on the gateway's Logs page, which is the gateway's own estimate. For an account executive, the two leaks are the story ("one bot nobody watches" and "free users on the expensive model"), not the cents.
+  - Don't compute prices yourself. If they want numbers, point them at the cost column on the gateway's Logs page, which is the gateway's own estimate. For big picture, the two leaks are the story ("one bot nobody watches" and "free users on the expensive model"), not the cents.
   - "Check it works": confirm in the logs that requests carry each caller's labels.
-  - Check, by role: builder, why must the labels be attached in the Worker rather than taken from the browser? Solutions engineer or account executive: a company ships AI to its own customers, so every token is part of the cost of serving them. How does labeling by customer, tier, and feature change a conversation with a Finance or Product buyer who has "one big AI bill"?
+  - Check, by depth: hands-on, why must the labels be attached in the Worker rather than taken from the browser? Big picture or how it works: when a company ships AI to its own customers, every request is part of the cost of serving them. How would they use labels by customer, tier, and feature to explain "one big AI bill" to someone they work with, like a finance team, a product manager, or a customer?
   - Out of scope: routes and spend limits. Those are the next two exercises.
 ---
 

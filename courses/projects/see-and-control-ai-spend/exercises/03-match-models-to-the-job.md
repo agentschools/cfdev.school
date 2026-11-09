@@ -1,14 +1,14 @@
 ---
 description: "Move model choice out of your code into a dynamic route that sends routine tasks to a small model and keeps hard ones on a big model with a fallback, then swap a model without redeploying."
 agent-instructions: |
-  - This builds on "attribute-every-caller"; check progress first. Pitch it to the student's role from this course's interview. For an account executive, the models are "big" and "small", and the route is "a rule in the gateway that picks the model".
+  - This builds on "attribute-every-caller"; check progress first. Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on). For big picture, the models are "big" and "small", and the route is "a rule in the gateway that picks the model".
   - Call the feature a "dynamic route" the first time, then "route". That's the docs' and the `cf` CLI's name for it.
   - If they finished the AI Gateway course, they've built a route before: shorten "Write the route" to the differences (it branches on the task, and the bot stays out of it) and spend the time on "Other ways to pick a model".
   - Before "Write the route", ask which of their tasks are routine enough for the small model (the body's default: `summary` is routine, `analysis` isn't). Use their answer in the route's `$in` list. Wait for their reply.
   - Models: `@cf/google/gemma-4-26b-a4b-it` (small), `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (big), `@cf/openai/gpt-oss-120b` (fallback), and `@cf/ibm-granite/granite-4.0-h-micro` (the v2 swap). If the student wants different ones, check the model's page on developers.cloudflare.com shows no planned deprecation, and that it doesn't need the Workers Paid plan if they're on Free. Don't set a small `max_tokens` on Gemma 4: it's a reasoning model, and in testing a 20-token cap returned an empty answer, which the route treated as a failed call.
   - Before "Swap a model with no redeploy", ask the student to predict: will the Worker need a redeploy for the free user to get the new model?
   - "Check it works" and the swap's check: confirm which model answered in `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc`, not only on the lab page. Route deployments take about 30 to 60 seconds to go live; retry before assuming something's wrong. In testing, requests served through a route showed a cost of `0` in the logs for Workers AI models; if the student sees that, say so rather than treating it as free.
-  - Check, by role: builder, why is it safer to try a new model across several services by publishing a route version than by editing each service? Solutions engineer or account executive: a customer asks "isn't putting a gateway in front of our models just another form of lock-in?" How would they answer, using the providers they named in the interview?
+  - Check, by depth: hands-on, why is it safer to try a new model across several services by publishing a route version than by editing each service? Big picture or how it works: someone they work with asks "isn't putting a gateway in front of our models just another form of lock-in?" How would they answer, using the providers they named in the interview?
   - Out of scope: percentage splits and A/B tests, and capping the bot. That's the next exercise.
 ---
 

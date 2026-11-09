@@ -1,13 +1,13 @@
 ---
 description: "Put AI Gateway in front of an app with three callers, add a live usage receipt, and see why one total doesn't tell you who's spending."
 agent-instructions: |
-  - Pitch everything to the student's role from this course's interview (account executive, solutions engineer, or builder); the interview's instructions say what each one gets. For an account executive, tokens are "usage" and the code is a one-sentence summary per section.
+  - Pitch everything to the depth the student chose in this course's interview (big picture, how it works, or hands-on); the interview's instructions say what each level gets. For big picture, tokens are "usage" and the code is a one-sentence summary per section.
   - If they finished the AI Gateway course, shorten "Create the gateway" and "Call the model through the gateway" to a reminder: they've done both. Spend the time on the blind spot itself.
   - Before "Create the gateway", propose names from their interview answers (the app's theme, the three callers, a Worker name, and a gateway ID; the body's defaults are a support desk, `free`, `pro`, `bot`, `ai-spend-lab`, and `spend-control-gateway`), and ask whether to use them. Wait for their reply. Use their names everywhere the body uses the defaults, including the button labels and prompts.
   - Existing app: add the AI binding to its config (Wrangler projects: `"ai": { "binding": "AI", "remote": true }`), and put the lab on its own path, e.g. `/spend-lab` for the page and `/spend-lab/api/run` for the API, updating the page's `fetch` URL to match. Never replace the app's homepage. Read its `AGENTS.md` first to fit its stack.
-  - Before "Check it works", ask the student to predict: when the bot runs four times, what will the gateway be able to tell them about who did it? (Account executive: "what will the bill tell you?" Builder: "what will the log entries contain?")
+  - Before "Check it works", ask the student to predict: when the bot runs four times, what will the gateway be able to tell them about who did it? (Big picture: "what will the bill tell you?" Hands-on: "what will the log entries contain?")
   - "Check it works": run the three callers yourself against the deployed URL, then send the student the lab page and the gateway's logs page (`https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/<gateway-id>/logs`) to click through. Compare their prediction to what they saw.
-  - Check, by role: builder, why can't a provider's invoice or a shared API key tell a traffic jump from new paying users apart from a bug in a background loop? Solutions engineer or account executive: a customer says "we already see our total on our OpenAI invoice, why put a gateway in front?" How would they answer? Use the providers they named in the interview.
+  - Check, by depth: hands-on, why can't a provider's invoice or a shared API key tell a traffic jump from new paying users apart from a bug in a background loop? Big picture or how it works: someone they work with (a customer, their manager, their finance team) says "we already see our total on the provider's invoice, why put a gateway in front?" How would they answer? Use the providers they named in the interview.
   - Out of scope: metadata, routes, and spend limits. Those are the next three exercises.
 ---
 

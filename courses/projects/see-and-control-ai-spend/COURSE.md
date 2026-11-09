@@ -1,6 +1,6 @@
 ---
 name: see-and-control-ai-spend
-description: "See who's driving your AI bill, from free users to paying customers to background bots, move routine work to cheaper models, and give runaway bots their own budget. Pitched to your role, from account executive to developer."
+description: "See who's driving your AI bill, from free users to paying customers to background bots, move routine work to cheaper models, and give runaway bots their own budget. Go as deep as you like, from the big picture to the code."
 compatibility: "Requires a Cloudflare account (the Workers Free plan works) and the cf CLI, both set up in the Agent setup course. Uses Workers AI, so no provider API keys are needed."
 metadata:
   author: Thomas Desmond
@@ -20,4 +20,4 @@ flowchart LR
   Gateway -->|"hard tasks"| Big["Big model + fallback"]
 ```
 
-Your role sets how technical it gets. Everyone builds the same app, but an account executive hears about the bill and the dashboard, while a developer gets the code and its trade-offs.
+You choose how technical it gets: the big picture with no code, how it works with the key settings, or hands-on with all the code. Everyone builds the same app; only the explanation changes.
