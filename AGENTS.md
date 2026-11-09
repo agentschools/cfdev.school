@@ -274,9 +274,9 @@ Tested in November 2026 with `cf` v1.0.0-beta.26 on the Thomas Development accou
 - A spend limit's `model` filter rejected `@cf/...` IDs ("Malformed glob ... use only * and ? wildcards over an author/model name"), and neither `meta/llama-3.3-70b-instruct-fp8-fast` nor `*llama-3.3-70b*` matched Workers AI calls, so the course doesn't filter by model. Split by value is `"mode": "partition"` in the API (from the API schema, not tested).
 - A route conditional on `metadata.task` with `$in` sent each task to its branch. Gemma 4 26B inside a route failed with "Model execution failed" when the request set `max_tokens: 20`: it's a reasoning model and spent all 20 tokens reasoning, leaving no answer. Without `max_tokens` it worked.
 - The first `cf deploy` of the new Worker failed with "[10007] This Worker does not exist on your account"; running it again worked.
-- Not tested: the lab page and Worker code running deployed (they typecheck at every stage, both exercise 4 options included), whether the binding's route response includes the `model` that answered (the REST response did), the v2 swap, and the cleanup commands for the route and gateway.
+- Not tested: the lab page and Worker code running deployed (they typecheck at every stage, both exercise 4 options included) and whether the binding's route response includes the `model` that answered (the REST response did), because corporate WARP blocked `.workers.dev` and `cf dev`'s remote tunnel.
 
-The course hasn't been taken end to end as a student.
+Taken end to end as a student on the PR #197 preview in November 2026 across all three depth choices (big picture with Option 1 hard cap, how it works with Option 2 route downgrade, and hands-on developer), including the v2 zero-redeploy model swap and the cleanup commands for the Worker, route, and gateway.
 
 ## Courses hosted elsewhere
 

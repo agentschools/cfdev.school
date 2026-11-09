@@ -8,7 +8,7 @@ agent-instructions: |
   - Before the check, ask the student to predict: once the bot has used up its budget, will the pro user still get an answer?
   - "Check it works" (either option): send one bot request, wait about 60 seconds (spend limits and route versions take 45 to 60 seconds to take effect, and a request's cost is counted after it finishes), send more bot requests until one is blocked or downgraded, then a pro request, and confirm in the logs. Then leave the cap in place and invite the student to click the bot and then the pro user on the lab page.
   - Downgrade option: in testing, a route's limit step with `"limitType": "cost"` never tripped for Workers AI models (requests served through a route were logged at a cost of `0`), so the body counts requests. Say this at hands-on and how-it-works depth; for big picture, "the lab counts the bot's requests, a real budget would count dollars" is enough.
-  - Check, by depth: hands-on, why can a burst of simultaneous requests go a little over a dollar limit before it starts blocking, and why does scoping by metadata keep one noisy bot or tenant from taking down the rest of the app? Big picture or how it works: someone they work with, like an engineering lead, says "we can't put hard caps on AI spend, it'll break features mid-day." How would they walk them through watching spend first, scoping caps to one agent or tier, and downgrading instead of blocking?
+  - Check, by depth: hands-on, why can a burst of simultaneous requests go a little over a dollar limit before it starts blocking, and why does scoping by metadata keep one noisy bot or tenant from taking down the rest of the app? Big picture or how it works: someone they work with, like an engineering lead, says "we can't put hard caps on AI spend, it'll break features mid-day." How would they walk them through watching spend first, scoping caps to one agent or tier (or per customer with "Split by value"), and downgrading instead of blocking?
   - "Clean up" comes after the check and is part of the exercise: ask which they want, and do it.
   - Out of scope: exporting logs with Logpush, and governing an agent's tool calls with MCP server portals.
 ---
@@ -29,16 +29,27 @@ A budget for requests labeled `caller: "agent"`, and one of two things that happ
 
 ## Show what happened on the receipt
 
-Whichever option you choose, the receipt should say when the bot was stopped or moved. In `src/index.ts`, replace the two `status` values in `run()`:
+Whichever option you choose, the receipt should say when the bot was stopped or moved. In `src/index.ts`, update `run()` so `status` is `"downgraded"` when the bot is answered by a small model and `"blocked"` when a spend limit rejects the call:
 
 ```ts title="src/index.ts"
-// In the try block:
-const status = caller === "bot" && MODEL_SIZES[answeredBy] === "small" ? "downgraded" : "ok";
-return { caller, seenAs, model: answeredBy, modelSize: MODEL_SIZES[answeredBy], status, logId: env.AI.aiGatewayLogId };
-
-// In the catch block:
-const status = /spend limit/i.test(String(err)) ? "blocked" : "error";
-return { caller, seenAs, model, status, error: String(err), logId: env.AI.aiGatewayLogId };
+async function run(env: Env, caller: Caller) {
+	const model = caller === "bot" ? BIG_MODEL : ROUTE;
+	const metadata = METADATA[caller];
+	const seenAs = `${metadata.caller} · ${metadata.tier} · ${metadata.task}`;
+	try {
+		const result = await env.AI.run(
+			model as typeof BIG_MODEL,
+			{ messages: [{ role: "user", content: CALLERS[caller] }] },
+			{ gateway: { id: GATEWAY_ID, metadata, skipCache: true } },
+		);
+		const answeredBy = (result as { model?: string }).model ?? model;
+		const status = caller === "bot" && MODEL_SIZES[answeredBy] === "small" ? "downgraded" : "ok";
+		return { caller, seenAs, model: answeredBy, modelSize: MODEL_SIZES[answeredBy], status, logId: env.AI.aiGatewayLogId };
+	} catch (err) {
+		const status = /spend limit/i.test(String(err)) ? "blocked" : "error";
+		return { caller, seenAs, model, status, error: String(err), logId: env.AI.aiGatewayLogId };
+	}
+}
 ```
 
 ## Choose what happens
@@ -55,7 +66,7 @@ A spend limit is a budget in dollars over a time window. This rule applies only 
 
 ```sh
 cf ai-gateway gateways update spend-control-gateway --body '{
-  "collect_logs": true, "cache_ttl": 0, "cache_invalidate_on_update": true,
+  "authentication": true, "collect_logs": true, "cache_ttl": 0, "cache_invalidate_on_update": true,
   "rate_limiting_interval": 0, "rate_limiting_limit": 0, "rate_limiting_technique": "sliding",
   "spend_limits": { "enabled": true, "rules": [{
     "id": "bot-budget", "enabled": true, "limitType": "cost", "limit": 0.00001,
