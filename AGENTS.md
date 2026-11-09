@@ -132,6 +132,24 @@ Built-in courses live in `courses/<name>/` at the repo root, or `courses/<track>
 
 Verify the Workers course with `npm run verify:exercise` and `npm run verify:exercise-kv` (sibling scripts, not one parameterized script, to keep each diff small), against `npm run dev:worker` or a PR preview (`BASE_URL=...`). Same caveats as `verify:interview`: real enrollment and completion rows in whatever D1 `BASE_URL` points at, delete them afterward. Neither deploys a Worker or provisions a KV namespace, they only check the HTTP contract.
 
+## Writing a built-in course
+
+Lessons from #197, recorded in #199. The authors guide (`src/content/authors.md`, served as `/authors.md`) holds the advice for anyone writing a Dev School course: personalize every exercise, make it feel like one school, write exercises as tutorials, get the facts right, and test it for real. Follow it for built-in courses too, plus this checklist:
+
+- Personalization is a priority. If the depth students want varies, the course's interview asks how deep to go (big picture, how it works, hands-on), not for a job title; every answer is used somewhere; and every exercise repeats a one-line cue per level. See "See and control AI spend course" for a worked example.
+- Before writing, list the courses this one overlaps with and the apps students might bring from them. Each exercise says what to shorten for students who took those courses, and features added to an existing app go alongside it, never over its homepage.
+- Write exercises as tutorials (#182): the body is the complete default build, `agent-instructions` only cues. `COURSE.md` doesn't repeat the exercise list.
+- Check every Cloudflare fact against the docs and the CLI (see "Cloudflare docs are canon"), models against the Workers AI deprecation changelog and the Free plan, and drop internal numbers without a public source.
+- Test the behavior the course depends on live, on throwaway `cfds-lab-` resources you delete afterward, and typecheck the code as it stands after each exercise (scaffold a project with `cf init` in a temp directory and apply each stage's code blocks).
+- Add a section for the course to this file with its design decisions, what was tested (with the `cf` version and account type), and what wasn't.
+- Get a second review, from another model or a person, before opening the PR, and say in the PR whether the course has been taken end to end as a student.
+
+Testing from this machine:
+
+- The corporate WARP gateway blocks newly deployed workers.dev hostnames and `cf dev`'s remote bindings with error 1050. Send test requests through the REST API instead, e.g. AI Gateway's `POST /accounts/{id}/ai/v1/chat/completions` with `cf-aig-gateway-id` and `cf-aig-metadata` headers, authenticated with the `oauth_token` from `cf`'s config file.
+- The first `cf deploy` of a new Worker can fail with "[10007] This Worker does not exist on your account"; run it again.
+- Reasoning models like Gemma 4 spend tokens on reasoning first, so a small `max_tokens` can return an empty answer.
+
 ## Course media
 
 Videos, posters, captions, and other media for built-in courses live in the `cfdev-school-media` R2 bucket on the personal account, served at `https://media.cfdev.school` (a custom domain on the bucket, with a CORS rule allowing GET and HEAD from any origin so `<track>` captions load cross-origin). Never in `main`.

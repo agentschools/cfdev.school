@@ -61,6 +61,14 @@ describe("GET /llms.txt", () => {
     expect(text).toContain("before you mark it complete");
   });
 
+  it("tailors depth without assuming a job title, and protects existing apps (#199)", async () => {
+    const text = await (await GET({} as APIContext)).text();
+    expect(text).not.toMatch(/sales\/enablement/);
+    expect(text).toContain("explain the idea to someone they work with");
+    expect(text).toContain(`"less code", "go deeper"`);
+    expect(text).toContain("never replace the app's homepage");
+  });
+
   it("keeps teaching an exercise whose setup is already done (#113)", async () => {
     const text = await (await GET({} as APIContext)).text();
     expect(text).toContain("Already set up isn't the same as already taught");
