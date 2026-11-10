@@ -5,9 +5,9 @@ agent-instructions: |
 
   Ask all 3 questions at once. Use the harness's structured question tool if available. Otherwise put them in a numbered plain-text message. Keep the exact question text below when saving the answers:
 
-  1. "Have you built work that continues after a web request ends? What kind of work, if any?"
-  2. "Which of Cloudflare Workflows, Durable Objects, RPC, and WebSockets have you used before, if any?"
-  3. "Which part would you like me to explain in more depth: Workflow steps, Durable Objects, WebSocket delivery, or the React app?"
+  1. "Have you built or worked with asynchronous workflows in the past? For example, a web request kicks of a job that runs in the background? What kind of work, if any?"
+  2. "What level of familiarity do you have with Cloudflare Workflows, Durable Objects, RPC, and WebSockets, if any?"
+  3. "Which part would you like me to explain in more depth: Workflow steps, Durable Objects, or WebSocket delivery?"
 
   All 3 questions are optional. If the student skips a question, continue. Save the question-and-answer pairs with PUT /api/students/{id}/interviews, using course "realtime-workflows" and a 1-sentence summary addressed to the student. If they change an answer later, send the full interview again.
 
