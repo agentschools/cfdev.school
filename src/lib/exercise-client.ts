@@ -33,8 +33,8 @@ export function formatCompletedBanner(
  * Exercise page (/courses/{course}/{exercise}). Enrolled students get a
  * prompt to paste into their agent; the agent marks the exercise complete via
  * PUT /api/progress, and the live progress subscription flips this page to
- * its completed state (banner naming each agent that completed it + next
- * button, with the prompt tucked behind a "Redo this exercise" button),
+ * its completed state (banner naming each agent that completed it,
+ * with the prompt tucked behind a "Redo this exercise" button),
  * animated, without a reload. There's no manual mark-complete button:
  * completion is the agent's call.
  */
@@ -48,9 +48,6 @@ export function initExercisePage(): void {
   const banner = document.getElementById("exercise-completed-banner");
   const bannerText = document.getElementById("exercise-completed-text");
   const redoButton = document.getElementById("exercise-redo");
-  const next = document.getElementById("exercise-next");
-  const nextPending = document.getElementById("exercise-next-pending");
-  const nextLink = document.getElementById("exercise-next-link");
   if (
     !page ||
     !promptSection ||
@@ -59,10 +56,7 @@ export function initExercisePage(): void {
     !copyConfirm ||
     !banner ||
     !bannerText ||
-    !redoButton ||
-    !next ||
-    !nextPending ||
-    !nextLink
+    !redoButton
   ) {
     return;
   }
@@ -89,8 +83,6 @@ export function initExercisePage(): void {
     setVisible(promptSection!, !complete || redoRequested);
     setVisible(redoButton!, !redoRequested);
     setVisible(banner!, complete);
-    setVisible(nextPending!, !complete);
-    setVisible(nextLink!, complete);
   }
 
   function onEnrolled(enrolled: CachedStudent): void {
@@ -98,7 +90,6 @@ export function initExercisePage(): void {
     if (enrollNudge) enrollNudge.hidden = true;
     promptText!.textContent = buildPrompt(enrolled, { courseTitle });
     copyConfirm!.hidden = true;
-    next!.hidden = false;
     subscribeToProgress(enrolled.id, renderProgress);
     // If progress can't load (e.g. a cached ID the server doesn't know),
     // fall back to showing the prompt rather than nothing.
