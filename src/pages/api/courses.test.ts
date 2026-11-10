@@ -39,6 +39,12 @@ vi.mock("astro:content", () => ({
           data: { name: "build-a-drawing-game", description: "Build a drawing game." },
         },
         {
+          id: "realtime-workflows",
+          filePath: "courses/projects/realtime-workflows/COURSE.md",
+          body: "# Build real-time notifications\n",
+          data: { name: "realtime-workflows", description: "Build real-time notifications." },
+        },
+        {
           id: "durable-objects",
           filePath: "courses/fundamentals/durable-objects/COURSE.md",
           body: "# Durable Objects\n",
@@ -63,10 +69,10 @@ describe("GET /api/courses", () => {
     const { GET } = await import("./courses");
     const body = await (await GET(context())).json();
 
-    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "publish-a-website", "run-a-blog-with-emdash", "build-a-guestbook", "build-a-drawing-game", "workers", "bindings", "durable-objects"]);
+    expect(body.map((course: { name: string }) => course.name)).toEqual(["agent-setup", "publish-a-website", "run-a-blog-with-emdash", "build-a-guestbook", "build-a-drawing-game", "realtime-workflows", "workers", "bindings", "durable-objects"]);
     for (const course of body) expect(courseSchema.parse(course)).toEqual(course);
 
-    const [agentSetup, , , , , workersCourse] = body;
+    const [agentSetup, , , , , realtimeWorkflows, workersCourse] = body;
     expect(agentSetup.url).toBe("https://school.example/courses/agent-setup");
     expect(agentSetup.markdownUrl).toBe("https://school.example/courses/agent-setup/COURSE.md");
     expect(agentSetup.exercises[1]).toEqual({
@@ -77,6 +83,8 @@ describe("GET /api/courses", () => {
       markdownUrl: "https://school.example/courses/agent-setup/exercises/01-models.md",
     });
     expect(agentSetup.track).toBeUndefined();
+    expect(realtimeWorkflows.track).toBe("projects");
+    expect(realtimeWorkflows.markdownUrl).toBe("https://school.example/courses/realtime-workflows/COURSE.md");
     expect(workersCourse.track).toBe("fundamentals");
     expect(workersCourse.metadata).toEqual({ author: "Cloudflare Dev School" });
     expect(workersCourse.exercises[0].markdownUrl).toBe("https://school.example/courses/workers/exercises/interview.md");
