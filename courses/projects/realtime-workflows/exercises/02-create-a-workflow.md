@@ -15,7 +15,7 @@ agent-instructions: |
 In this exercise, you're going to:
 
 - add the [Workflow](https://developers.cloudflare.com/workflows/) configuration to `cloudflare.config.ts`
-- create the `JobWorkflow` class and define its steps
+- update the `JobWorkflow` class to implement phase steps
 
 ## Setting up a Cloudflare workflow
 
@@ -91,7 +91,7 @@ See the [cf configuration reference](https://developers.cloudflare.com/cf/projec
 
 ## Update the workflow class
 
-Now, you'll update the class for the Workflow and update its `run()` method whic defines the work that will be executed when the Workflow gets triggered.
+Now, you'll update the class for the Workflow and update its `run()` method which defines the work that will be executed when the Workflow gets triggered.
 
 In `src/workflow.ts`, you'll see the`Workflow` class that extends `WorkflowEntrypoint` and implements `run()`.
 
