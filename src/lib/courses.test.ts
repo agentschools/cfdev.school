@@ -30,6 +30,12 @@ const collections = vi.hoisted(() => ({
       data: { name: "build-a-drawing-game", description: "Build a drawing game." },
     },
     {
+      id: "realtime-workflows",
+      filePath: "courses/projects/realtime-workflows/COURSE.md",
+      body: "\n# Build real-time notifications\n",
+      data: { name: "realtime-workflows", description: "Build real-time notifications." },
+    },
+    {
       id: "durable-objects",
       filePath: "courses/fundamentals/durable-objects/COURSE.md",
       body: "\n# Durable Objects\n",
@@ -65,6 +71,7 @@ describe("getBuiltInCourses", () => {
       ["run-a-blog-with-emdash", "Run a blog with EmDash"],
       ["build-a-guestbook", "Build a guestbook"],
       ["build-a-drawing-game", "Build a drawing game"],
+      ["realtime-workflows", "Build real-time notifications"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
       ["durable-objects", "Durable Objects"],
@@ -81,6 +88,7 @@ describe("getBuiltInCourses", () => {
       ["run-a-blog-with-emdash", "projects"],
       ["build-a-guestbook", "projects"],
       ["build-a-drawing-game", "projects"],
+      ["realtime-workflows", "projects"],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
       ["durable-objects", "fundamentals"],
@@ -119,7 +127,7 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, workers, , durableObjects, aiGateway] = courses;
+    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, realtimeWorkflows, workers, , durableObjects, aiGateway] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
@@ -136,8 +144,9 @@ describe("nextStep", () => {
       label: "Next course: Run a blog with EmDash →",
     });
     expect(nextStep(courses, buildAGuestbook, buildAGuestbook.exercises.length - 1).url).toBe("/courses/build-a-drawing-game");
+    expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses/realtime-workflows");
     // The last course in Projects doesn't continue into Fundamentals.
-    expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses");
+    expect(nextStep(courses, realtimeWorkflows, realtimeWorkflows.exercises.length - 1).url).toBe("/courses");
   });
 
   it("sends a student finishing Agent setup to the catalog to pick a track", async () => {
