@@ -18,8 +18,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Course media is committed to public/media/ (so `npm run dev` serves it),
+  # uploaded here to the cfdev-school-media R2 bucket at the same path, and
+  # removed from the branch so it never reaches main. src/pages/media/[...path].ts
+  # redirects /media/* to media.cfdev.school once the files are gone.
+  # Writes are create-only; existing keys must have identical bytes. New keys
+  # are still public before merge. Only same-repo branches get R2 secrets.
+  upload-media:
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+
+      - name: Create or verify public/media in R2, then remove it from the branch
+        if: hashFiles('public/media/**') != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_MEDIA_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_MEDIA_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          set -euo pipefail
+          node scripts/upload-media.mjs
+          # Never delete media after any failed or unverified upload.
+          git rm -r --quiet public/media
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet -m "chore: move public/media to media.cfdev.school"
+          git push --quiet
+
   deploy-preview:
-    if: github.event.action != 'closed'
+    needs: upload-media
+    # Run even when upload-media is skipped (forks), but not when it failed.
+    if: ${{ !cancelled() && github.event.action != 'closed' && needs.upload-media.result != 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -40,6 +82,11 @@ jobs:
           cache: npm
 
       - run: npm ci --prefer-offline --no-audit --no-fund
+
+      # upload-media has put these in R2 and removed them from the branch, but
+      # this checkout is the commit before that. Leave them out so the preview
+      # redirects /media/* to R2 like production does.
+      - run: rm -rf public/media
 
       - run: npm run preview:deploy
         env:
