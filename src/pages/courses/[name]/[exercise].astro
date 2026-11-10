@@ -77,11 +77,8 @@ const title = exercise?.title ?? "Exercise not found";
             <Content />
           </div>
 
-          <div id="exercise-next" class="exercise-next" hidden>
-            <p id="exercise-next-pending" class="exercise-next-pending">
-              Complete this exercise in your agent to continue.
-            </p>
-            <a id="exercise-next-link" class="exercise-next-link" href={next!.url} hidden>
+          <div id="exercise-next" class="exercise-next">
+            <a id="exercise-next-link" class="exercise-next-link" href={next!.url}>
               {next!.label}
             </a>
           </div>
@@ -217,13 +214,6 @@ const title = exercise?.title ?? "Exercise not found";
     border-top: 1px solid var(--border);
   }
 
-  .exercise-next-pending {
-    margin: 0;
-    text-align: center;
-    color: var(--muted-fg);
-    font-size: 0.9rem;
-  }
-
   .exercise-next-link {
     display: flex;
     justify-content: center;
@@ -240,7 +230,4 @@ const title = exercise?.title ?? "Exercise not found";
     filter: brightness(1.05);
   }
 
-  .exercise-next [hidden] {
-    display: none;
-  }
 </style>
