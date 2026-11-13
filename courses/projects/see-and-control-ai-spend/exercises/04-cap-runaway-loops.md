@@ -1,12 +1,12 @@
 ---
 description: "Give your background bot its own budget, so it's blocked or moved to a small model when it runs out, while your human users keep working."
 agent-instructions: |
-  - This builds on "match-models-to-the-job"; check progress first. Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on). For big picture, skip the JSON: "the bot gets its own budget in the gateway, and when it's spent, the bot is stopped (or moved to the small model) and nobody else notices".
+  - This builds on "match-models-to-the-job"; check progress first. Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on). For big picture, skip the JSON: "the bot gets its own budget in the gateway, and when it's spent, the bot is stopped or moved to the small model while human callers keep working".
   - If they finished the AI Gateway course, they've set a spend limit before: shorten "Option 1" to the rule and spend the time on the choice between the options and on "One budget per customer".
-  - Before "Choose what happens", explain why a company-wide cap is the wrong tool (it stops paying customers when one bot misbehaves), then ask the student which option fits their app: a hard cap (the bot is blocked) or a downgrade (the bot moves to the small model). Wait for their reply. Do only the option they pick: an agent-wide dollar rule also blocks the downgrade's fallback.
-  - `cf ai-gateway gateways update` replaces the whole gateway configuration. Run `cf ai-gateway gateways get <gateway-id>` first and carry over every setting the body's command doesn't include (for example `authentication`).
+  - Before "Choose what happens", explain why a company-wide cap is the wrong tool (it stops paying customers when one bot misbehaves), then ask the student which option fits their app: a hard cap (the bot is blocked) or a downgrade (the bot moves to the small model). Wait for their reply. Do only the option they pick. In this lab, a Gateway spend limit filtered to the bot blocks the request before a route fallback can run.
+  - `cf ai-gateway gateways update` replaces the whole gateway configuration. Run `cf ai-gateway gateways get support-copilot` first and carry over every setting the body's command doesn't include (for example `authentication`).
   - Before the check, ask the student to predict: once the bot has used up its budget, will the pro user still get an answer?
-  - "Check it works" (either option): send one bot request, wait about 60 seconds (spend limits and route versions take 45 to 60 seconds to take effect, and a request's cost is counted after it finishes), send more bot requests until one is blocked or downgraded, then a pro request, and confirm in the logs. Then leave the cap in place and invite the student to click the bot and then the pro user on the lab page.
+  - "Check it works" (either option): send one bot request, wait about 60 seconds (spend limits and route versions take 45 to 60 seconds to take effect, and a request's cost is counted after it finishes), send more bot requests until one is blocked or downgraded, then a pro request, and confirm in `cf ai-gateway logs list --gateway-id support-copilot --per-page 10 --order-by created_at --order-by-direction desc`. Then leave the cap in place and invite the student to click the bot and then the pro user on the lab page.
   - Downgrade option: in testing, a route's limit step with `"limitType": "cost"` never tripped for Workers AI models (requests served through a route were logged at a cost of `0`), so the body counts requests. Say this at hands-on and how-it-works depth; for big picture, "the lab counts the bot's requests, a real budget would count dollars" is enough.
   - Check, by depth: hands-on, why can a burst of simultaneous requests go a little over a dollar limit before it starts blocking, and why does scoping by metadata keep one noisy bot or tenant from taking down the rest of the app? Big picture or how it works: someone they work with, like an engineering lead, says "we can't put hard caps on AI spend, it'll break features mid-day." How would they walk them through watching spend first, scoping caps to one agent or tier (or per customer with "Split by value"), and downgrading instead of blocking?
   - "Clean up" comes after the check and is part of the exercise: ask which they want, and do it.
@@ -21,7 +21,7 @@ In this exercise you'll give the bot its own budget, so only the bot is affected
 
 ## What you'll build
 
-A budget for requests labeled `caller: "agent"`, and one of two things that happens when the bot spends it: the bot is blocked, or it's moved to the small model. Your human users keep working either way.
+A budget for requests labeled `caller: "bot"`, and one of two things that happens when the bot spends it: the bot is blocked, or it's moved to the small model. Your human users keep working either way.
 
 ## Prerequisites
 
@@ -29,27 +29,47 @@ A budget for requests labeled `caller: "agent"`, and one of two things that happ
 
 ## Show what happened on the receipt
 
-Whichever option you choose, the receipt should say when the bot was stopped or moved. In `src/index.ts`, update `run()` so `status` is `"downgraded"` when the bot is answered by a small model and `"blocked"` when a spend limit rejects the call:
+Whichever option you choose, the receipt should show a colored **Blocked** or **Downgraded** status. In `src/index.ts`, classify the outcome using the status and model from the Gateway log:
 
 ```ts title="src/index.ts"
-async function run(env: Env, caller: Caller) {
-	const model = caller === "bot" ? BIG_MODEL : ROUTE;
-	const metadata = METADATA[caller];
-	const seenAs = `${metadata.caller} · ${metadata.tier} · ${metadata.task}`;
-	try {
-		const result = await env.AI.run(
-			model as typeof BIG_MODEL,
-			{ messages: [{ role: "user", content: CALLERS[caller] }] },
-			{ gateway: { id: GATEWAY_ID, metadata, skipCache: true } },
-		);
-		const answeredBy = (result as { model?: string }).model ?? model;
-		const status = caller === "bot" && MODEL_SIZES[answeredBy] === "small" ? "downgraded" : "ok";
-		return { caller, seenAs, model: answeredBy, modelSize: MODEL_SIZES[answeredBy], status, logId: env.AI.aiGatewayLogId };
-	} catch (err) {
-		const status = /spend limit/i.test(String(err)) ? "blocked" : "error";
-		return { caller, seenAs, model, status, error: String(err), logId: env.AI.aiGatewayLogId };
-	}
+function classifyStatus(
+	statusCode: number | null | undefined,
+	failed: boolean,
+	errorMessage: string | undefined,
+	caller: Caller,
+	model: string,
+): "ok" | "error" | "blocked" | "downgraded" {
+	if (statusCode === 429 || /spend limit/i.test(errorMessage ?? "")) return "blocked";
+	if (failed || (statusCode != null && statusCode >= 400)) return "error";
+	if (caller === "bot" && modelSize(model) === "small") return "downgraded";
+	return "ok";
 }
+
+function responseStatus(
+	status: "ok" | "error" | "blocked" | "downgraded",
+	statusCode: number | null | undefined,
+): number {
+	if (status === "blocked") return 429;
+	if (status === "error") return statusCode && statusCode >= 400 ? statusCode : 502;
+	return 200;
+}
+
+// After calling the model and reading its Gateway log:
+const status = classifyStatus(trace.statusCode, failed, errorMessage, caller, trace.model);
+return Response.json(
+	{
+		caller,
+		callerLabel: CALLERS[caller].label,
+		seenAs: trace.available ? formatMetadata(trace.metadata) : "Gateway log unavailable",
+		model: trace.model,
+		modelSize: modelSize(trace.model),
+		status,
+		statusCode: trace.statusCode,
+		logId: trace.logId,
+		...(failed ? { error: errorMessage } : {}),
+	},
+	{ status: responseStatus(status, trace.statusCode) },
+);
 ```
 
 ## Choose what happens
@@ -62,16 +82,16 @@ async function run(env: Env, caller: Caller) {
 
 ## Option 1: hard cap
 
-A spend limit is a budget in dollars over a time window. This rule applies only to requests whose `caller` label is `agent`. The limit is tiny on purpose, a thousandth of a cent per 30 days, so one request uses it up:
+A spend limit is a budget in dollars over a time window. This rule applies only to requests whose `caller` label is `bot`. The limit is tiny on purpose, $0.00001 over 30 days, so one request uses it up:
 
 ```sh
-cf ai-gateway gateways update spend-control-gateway --body '{
+cf ai-gateway gateways update support-copilot --body '{
   "authentication": true, "collect_logs": true, "cache_ttl": 0, "cache_invalidate_on_update": true,
   "rate_limiting_interval": 0, "rate_limiting_limit": 0, "rate_limiting_technique": "sliding",
   "spend_limits": { "enabled": true, "rules": [{
     "id": "bot-budget", "enabled": true, "limitType": "cost", "limit": 0.00001,
     "window": 2592000, "technique": "fixed",
-    "metadata": { "caller": { "mode": "filter", "values": ["agent"] } }
+    "metadata": { "caller": { "mode": "filter", "values": ["bot"] } }
   }]}
 }'
 ```
@@ -93,7 +113,7 @@ The downgrade goes in your route, next to the rules from the last exercise. Add 
 {
   "id": "is_bot",
   "type": "conditional",
-  "properties": { "conditions": { "metadata.caller": { "$eq": "agent" } } },
+  "properties": { "conditions": { "metadata.caller": { "$eq": "bot" } } },
   "outputs": { "true": { "elementId": "bot_budget" }, "false": { "elementId": "task_check" } }
 },
 {
@@ -107,8 +127,8 @@ The downgrade goes in your route, next to the rules from the last exercise. Add 
 The limit counts the bot's requests: three an hour on the big model, then the small one. A route's limit step can also count dollars (`"limitType": "cost"`), but in testing it never tripped for Workers AI models, so this lab counts requests. Publish the version as you did in the last exercise:
 
 ```sh
-cf ai-gateway dynamic-routing versions create <route-id> --gateway-id spend-control-gateway --elements @route-v3.json
-cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id spend-control-gateway --version-id <version-id>
+cf ai-gateway dynamic-routing versions create <route-id> --gateway-id support-copilot --elements @route-v3.json
+cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id support-copilot --version-id <version-id>
 ```
 
 Then send the bot through the route too. In `run()`, every caller now calls the route:
@@ -154,9 +174,9 @@ The tiny budget will keep the bot capped. You can:
 - or delete everything this course created:
 
 ```sh
-cf workers delete ai-spend-lab --force
-cf ai-gateway dynamic-routing delete <route-id> --gateway-id spend-control-gateway --force
-cf ai-gateway gateways delete spend-control-gateway --force
+cf workers delete ai-spend-control-course --force
+cf ai-gateway dynamic-routing delete <route-id> --gateway-id support-copilot --force
+cf ai-gateway gateways delete support-copilot --force
 ```
 
 ## What you built

@@ -4,23 +4,23 @@ agent-instructions: |
   - This builds on "attribute-every-caller"; check progress first. Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on). For big picture, the models are "big" and "small", and the route is "a rule in the gateway that picks the model".
   - Call the feature a "dynamic route" the first time, then "route". That's the docs' and the `cf` CLI's name for it.
   - If they finished the AI Gateway course, they've built a route before: shorten "Write the route" to the differences (it branches on the task, and the bot stays out of it) and spend the time on "Other ways to pick a model".
-  - Before "Write the route", ask which of their tasks are routine enough for the small model (the body's default: `summary` is routine, `analysis` isn't). Use their answer in the route's `$in` list. Wait for their reply.
-  - Models: `@cf/google/gemma-4-26b-a4b-it` (small), `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (big), `@cf/openai/gpt-oss-120b` (fallback), and `@cf/ibm-granite/granite-4.0-h-micro` (the v2 swap). If the student wants different ones, check the model's page on developers.cloudflare.com shows no planned deprecation, and that it doesn't need the Workers Paid plan if they're on Free. Don't set a small `max_tokens` on Gemma 4: it's a reasoning model, and in testing a 20-token cap returned an empty answer, which the route treated as a failed call.
+  - Before "Write the route", ask which of their tasks are routine enough for the small model (the starter's default: `quick-summary` is routine; `deep-analysis` is not). Use `quick-summary` in the route's `$in` list so the next exercise's requests still match.
+  - Use `@cf/openai/gpt-oss-20b` as the small model and `@cf/openai/gpt-oss-120b` as the big model and fallback. For the no-redeploy swap, use `@cf/ibm-granite/granite-4.0-h-micro`. Check the current Workers AI model catalog before changing these model IDs.
   - Before "Swap a model with no redeploy", ask the student to predict: will the Worker need a redeploy for the free user to get the new model?
-  - "Check it works" and the swap's check: confirm which model answered in `cf ai-gateway logs list --gateway-id <gateway-id> --per-page 5 --order-by created_at --order-by-direction desc`, not only on the lab page. Route deployments take about 30 to 60 seconds to go live; retry before assuming something's wrong. In testing, requests served through a route showed a cost of `0` in the logs for Workers AI models; if the student sees that, say so rather than treating it as free.
+  - "Check it works" and the swap's check: confirm which model answered in `cf ai-gateway logs list --gateway-id support-copilot --per-page 5 --order-by created_at --order-by-direction desc`, not only on the lab page. Route deployments take about 30 to 60 seconds to go live; retry before assuming something's wrong. In testing, requests served through a route showed a cost of `0` in the logs for Workers AI models; if the student sees that, say so rather than treating it as free.
   - Check, by depth: hands-on, why is it safer to try a new model across several services by publishing a route version than by editing each service? Big picture or how it works: someone they work with asks "isn't putting a gateway in front of our models just another form of lock-in?" How would they answer, using the providers they named in the interview?
   - Out of scope: percentage splits and A/B tests, and capping the bot. That's the next exercise.
 ---
 
 # Match models to the job
 
-Once you can see who's spending on what, the most common leak is obvious: every request goes to the same big model, because that's the model name in the code. A one-line summary doesn't need the same model as a deep analysis. On Workers AI, a small model like Gemma 4 26B costs about a seventh as much per output token as Llama 3.3 70B (see [Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)).
+Once you can see who's spending on what, the most common leak is obvious: every request goes to the same big model, because that's the model name in the code. A one-line summary can use a different model from a deep analysis. The [Workers AI model catalog](https://developers.cloudflare.com/workers-ai/models/) describes [GPT-OSS 20B](https://developers.cloudflare.com/workers-ai/models/gpt-oss-20b/) as a lower-latency model and [GPT-OSS 120B](https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/) as a high-reasoning model.
 
 Changing the model name in your code works once. But then every change means editing and redeploying every app that calls the model. AI Gateway's [routing](https://developers.cloudflare.com/ai-gateway/features/routing/) moves that choice into the gateway.
 
 ## What you'll build
 
-A [dynamic route](https://developers.cloudflare.com/ai-gateway/features/routing/dynamic-routing/) named `dynamic/spend-tier` that reads each request's `task` label: routine tasks go to a small model, everything else to the big model, with a backup model if the big one fails. Your human callers call the route instead of a model. Then you'll publish a second version of the route that swaps the small model, without touching your Worker.
+A [dynamic route](https://developers.cloudflare.com/ai-gateway/features/routing/dynamic-routing/) named `dynamic/support` that reads each request's `task` label: `quick-summary` goes to a small model, everything else to the big model, with a backup model if the big one fails. Your human callers call the route instead of a model. Then you'll publish a second version of the route that swaps the small model, without touching your Worker.
 
 The bot stays on the big model for now. It's the other leak, and the next exercise deals with it.
 
@@ -38,25 +38,25 @@ A route is a small flow of steps: check a condition, call a model, fall back to 
   {
     "id": "task_check",
     "type": "conditional",
-    "properties": { "conditions": { "metadata.task": { "$in": ["summary"] } } },
+    "properties": { "conditions": { "metadata.task": { "$in": ["quick-summary"] } } },
     "outputs": { "true": { "elementId": "small" }, "false": { "elementId": "big" } }
   },
   {
     "id": "small",
     "type": "model",
-    "properties": { "provider": "workers-ai", "model": "@cf/google/gemma-4-26b-a4b-it", "timeout": 30000, "retries": 0 },
+    "properties": { "provider": "workers-ai", "model": "@cf/openai/gpt-oss-20b", "timeout": 30000, "retries": 0 },
     "outputs": { "success": { "elementId": "end" }, "fallback": { "elementId": "end" } }
   },
   {
     "id": "big",
     "type": "model",
-    "properties": { "provider": "workers-ai", "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "timeout": 60000, "retries": 0 },
+    "properties": { "provider": "workers-ai", "model": "@cf/openai/gpt-oss-120b", "timeout": 60000, "retries": 0 },
     "outputs": { "success": { "elementId": "end" }, "fallback": { "elementId": "backup" } }
   },
   {
     "id": "backup",
     "type": "model",
-    "properties": { "provider": "workers-ai", "model": "@cf/openai/gpt-oss-120b", "timeout": 60000, "retries": 0 },
+    "properties": { "provider": "workers-ai", "model": "@cf/openai/gpt-oss-20b", "timeout": 60000, "retries": 0 },
     "outputs": { "success": { "elementId": "end" }, "fallback": { "elementId": "end" } }
   },
   { "id": "end", "type": "end", "outputs": {} }
@@ -68,38 +68,55 @@ The `conditional` step reads the same `task` label your Worker already attaches.
 Create the route, which also deploys its first version:
 
 ```sh
-cf ai-gateway dynamic-routing create spend-control-gateway --name spend-tier --elements @route-v1.json
+cf ai-gateway dynamic-routing create support-copilot --name support --elements @route-v1.json
 ```
 
 Note the route's `id` in the output. You'll need it to publish the next version.
 
 ## Call the route
 
-In `src/index.ts`, human callers now call the route by name, `dynamic/spend-tier`, in place of a model. The bot keeps its model:
+In `src/index.ts`, human callers now call `dynamic/support` in place of a model. The bot keeps using the big model until the next exercise:
 
 ```ts title="src/index.ts"
-const ROUTE = "dynamic/spend-tier";
+const ROUTE = "dynamic/support";
 
-async function run(env: Env, caller: Caller) {
-	const model = caller === "bot" ? BIG_MODEL : ROUTE;
-	const metadata = METADATA[caller];
-	const seenAs = `${metadata.caller} · ${metadata.tier} · ${metadata.task}`;
-	try {
-		const result = await env.AI.run(
-			model as typeof BIG_MODEL,
-			{ messages: [{ role: "user", content: CALLERS[caller] }] },
-			{ gateway: { id: GATEWAY_ID, metadata, skipCache: true } },
-		);
-		// The route answers with the model it picked.
-		const answeredBy = (result as { model?: string }).model ?? model;
-		return { caller, seenAs, model: answeredBy, modelSize: MODEL_SIZES[answeredBy], status: "ok", logId: env.AI.aiGatewayLogId };
-	} catch (err) {
-		return { caller, seenAs, model, status: "error", error: String(err), logId: env.AI.aiGatewayLogId };
-	}
+// Inside run(), after validating caller and building metadata:
+const model = caller === "bot" ? MODEL : ROUTE;
+
+await env.AI.run(
+	model as typeof MODEL,
+	{
+		messages: [{ role: "user", content: CALLERS[caller].prompt }],
+		max_tokens: 256,
+	},
+	{
+		gateway: {
+			id: env.GATEWAY_ID,
+			collectLog: true,
+			metadata,
+			skipCache: true,
+		},
+	},
+);
+
+// Keep the existing try/catch around the model call, setting failed and
+// errorMessage on failure. Read the log after either outcome.
+const trace = await getGatewayTrace();
+const answeredBy = trace.model;
+const answeredSize = modelSize(answeredBy);
+```
+
+The cast on `model` is only for TypeScript, whose model list doesn't include your route's name. Use `trace.model` for the receipt's model, `answeredSize` for its size, and the Gateway log's metadata for `seenAs`. Add this helper so the receipt distinguishes the selected models:
+
+```ts title="src/index.ts"
+function modelSize(model: string): "big" | "small" | "unknown" {
+	if (/gpt-oss-20b|gemma|granite/i.test(model)) return "small";
+	if (/gpt-oss-120b|llama/i.test(model)) return "big";
+	return "unknown";
 }
 ```
 
-The cast on `model` is only for TypeScript, whose model list doesn't include your route's name. Deploy:
+Deploy:
 
 ```sh
 cf deploy
@@ -107,18 +124,18 @@ cf deploy
 
 ## Check it works
 
-On the lab page, click the free user and the pro user. The free user's summary is answered by the small model and the pro user's analysis by the big one. The gateway's logs show which model answered each request.
+On the lab page, click the free user and the pro user. The free user's `quick-summary` is answered by GPT-OSS 20B, and the pro user's `deep-analysis` by GPT-OSS 120B. Gateway Logs show which model answered each request.
 
 ## Swap a model with no redeploy
 
-Each change to a route is a new version, and you choose which version is live. Copy `route-v1.json` to `route-v2.json` and change the `small` step's model to `@cf/ibm-granite/granite-4.0-h-micro`, an even smaller model. Then create the version and deploy it:
+Each change to a route is a new version, and you choose which version is live. Copy `route-v1.json` to `route-v2.json` and change the `small` step's model to `@cf/ibm-granite/granite-4.0-h-micro`. Then create the version and deploy it:
 
 ```sh
-cf ai-gateway dynamic-routing versions create <route-id> --gateway-id spend-control-gateway --elements @route-v2.json
-cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id spend-control-gateway --version-id <version-id>
+cf ai-gateway dynamic-routing versions create <route-id> --gateway-id support-copilot --elements @route-v2.json
+cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id support-copilot --version-id <version-id>
 ```
 
-The first command prints the new version's `version_id`. A deployment takes about 30 to 60 seconds to go live. Then click the free user again: Granite answers, and you haven't touched or redeployed your Worker. To undo it, deploy version 1 again the same way.
+The first command prints the new version's `version_id`. A deployment takes about 30 to 60 seconds to go live. Then click the free user again. The Gateway log shows Granite 4.0 micro, and you haven't changed your Worker. To undo it, deploy version 1 again the same way.
 
 ## Other ways to pick a model
 
