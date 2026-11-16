@@ -1,5 +1,5 @@
 ---
-description: "Create a Workflow by defining the appropriate configuration and class."
+description: "Build a Workflow that runs a background job in steps"
 agent-instructions: |
   Goal: setup blog generation Workflow including the configuration in cloudflare.config.ts and the Workflow implementation class.
 
