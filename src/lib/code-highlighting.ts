@@ -142,6 +142,7 @@ export const codeTitleTransformer: ShikiTransformer = {
         muted: "var(--muted-fg)",
         accent: "var(--accent-text)",
         font: "system-ui",
+        padding: 16,
         transparent: true,
       }).replace(/@import url\([^)]+\);\s*/g, "");
       node.tagName = "figure";

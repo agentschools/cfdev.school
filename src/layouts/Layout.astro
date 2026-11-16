@@ -52,6 +52,27 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
       import { initColorSelectors } from "../lib/theme-client";
       initColorSelectors();
       initEnrollment();
+
+      let lightbox: HTMLDialogElement | null = null;
+      document.addEventListener("click", (event) => {
+        const figure = (event.target as Element | null)?.closest<HTMLElement>(".prose .mermaid-diagram");
+        if (!figure) return;
+        const svg = figure.querySelector("svg");
+        if (!svg) return;
+        if (!lightbox) {
+          lightbox = document.createElement("dialog");
+          lightbox.className = "mermaid-lightbox";
+          lightbox.setAttribute("aria-label", "Enlarged diagram");
+          lightbox.addEventListener("click", (e) => {
+            if (e.target === lightbox || (e.target as Element | null)?.closest("[data-lightbox-close]")) {
+              lightbox?.close();
+            }
+          });
+          document.body.appendChild(lightbox);
+        }
+        lightbox.innerHTML = `<div class="mermaid-lightbox-card"><button type="button" class="mermaid-lightbox-close" data-lightbox-close aria-label="Close diagram">✕</button>${svg.outerHTML}</div>`;
+        lightbox.showModal();
+      });
     </script>
   </body>
 </html>
@@ -207,11 +228,18 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
   }
 
   .prose .mermaid-diagram {
+    position: relative;
     padding: 1.25rem;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     background: var(--card-bg);
     overflow-x: auto;
+    cursor: zoom-in;
+    transition: border-color 0.15s ease;
+  }
+
+  .prose .mermaid-diagram:hover {
+    border-color: color-mix(in oklch, var(--fg) 30%, transparent);
   }
 
   .prose .mermaid-diagram svg {
@@ -219,6 +247,61 @@ const { title, description, showSidebarBrand = true, minimalHeader = false } = A
     max-width: 100%;
     height: auto;
     margin: 0 auto;
+  }
+
+  .mermaid-lightbox {
+    max-width: min(94vw, 1360px);
+    width: 94vw;
+    max-height: 90vh;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--fg);
+  }
+
+  .mermaid-lightbox::backdrop {
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(2px);
+  }
+
+  .mermaid-lightbox-card {
+    position: relative;
+    padding: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    background: var(--bg);
+    overflow: auto;
+    max-height: 90vh;
+  }
+
+  .mermaid-lightbox-card svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: calc(90vh - 4rem);
+    margin: 0 auto;
+  }
+
+  .mermaid-lightbox-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 0.45rem;
+    background: var(--card-bg);
+    color: var(--muted-fg);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .mermaid-lightbox-close:hover {
+    color: var(--fg);
   }
 
   .prose video {
