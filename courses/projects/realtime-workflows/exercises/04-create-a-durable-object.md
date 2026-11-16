@@ -1,5 +1,5 @@
 ---
-description: "Create and configure a Durable Object for each job."
+description: "Give each job a place to track and share its progress."
 agent-instructions: |
   Goal: Create and configure a Durable Object for each job.
   Teaching points - explain how Durable Objects are a good fit for this solution
