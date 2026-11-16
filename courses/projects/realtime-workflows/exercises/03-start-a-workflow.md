@@ -1,5 +1,5 @@
 ---
-description: "Start a real multi-step Workflow from a Worker and return a job ID before it finishes."
+description: "Add API endpoints to start background jobs and check their progress"
 agent-instructions: |
   Goal: setup blog generation Workflow and implement API functionality for POST to /api/jobs for creating a job and GET to /api/jobs/:id to get the status of a job by id.
 
