@@ -99,6 +99,7 @@ describe("GET /api/progress/{studentId}", () => {
       ["build-a-guestbook", ["interview"]],
       ["build-a-drawing-game", ["interview"]],
       ["see-and-control-ai-spend", ["interview"]],
+      ["realtime-workflows", ["interview"]],
       ["workers", ["interview", "deploy-a-worker"]],
       ["bindings", ["interview", "live-objects"]],
       ["durable-objects", ["interview"]],

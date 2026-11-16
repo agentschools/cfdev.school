@@ -11,14 +11,17 @@ const PROPER_NOUNS = [
   "Code Mode",
   "Codex",
   "Dev School",
+  "Durable Object",
   "Durable Objects",
   "EmDash",
   "Guardrails",
   "OpenCode",
   "Pi",
+  "WebSocket",
   "Unified Billing",
   "Worker",
   "Workers",
+  "Workflow",
   "Wrangler",
 ];
 

@@ -36,6 +36,12 @@ const collections = vi.hoisted(() => ({
       data: { name: "see-and-control-ai-spend", description: "See and control AI spend." },
     },
     {
+      id: "realtime-workflows",
+      filePath: "courses/projects/realtime-workflows/COURSE.md",
+      body: "\n# Build real-time notifications\n",
+      data: { name: "realtime-workflows", description: "Build real-time notifications." },
+    },
+    {
       id: "durable-objects",
       filePath: "courses/fundamentals/durable-objects/COURSE.md",
       body: "\n# Durable Objects\n",
@@ -72,6 +78,7 @@ describe("getBuiltInCourses", () => {
       ["build-a-guestbook", "Build a guestbook"],
       ["build-a-drawing-game", "Build a drawing game"],
       ["see-and-control-ai-spend", "See and control AI spend"],
+      ["realtime-workflows", "Build real-time notifications"],
       ["workers", "Workers"],
       ["bindings", "Bindings"],
       ["durable-objects", "Durable Objects"],
@@ -89,6 +96,7 @@ describe("getBuiltInCourses", () => {
       ["build-a-guestbook", "projects"],
       ["build-a-drawing-game", "projects"],
       ["see-and-control-ai-spend", "projects"],
+      ["realtime-workflows", "projects"],
       ["workers", "fundamentals"],
       ["bindings", "fundamentals"],
       ["durable-objects", "fundamentals"],
@@ -127,7 +135,7 @@ describe("nextStep", () => {
   it("points to the next exercise, then the next course in the same track, then the catalog", async () => {
     const { getBuiltInCourses, nextStep } = await import("./courses");
     const courses = await getBuiltInCourses();
-    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, controlAiSpend, workers, , durableObjects, aiGateway] = courses;
+    const [agentSetup, publishAWebsite, , buildAGuestbook, buildADrawingGame, controlAiSpend, realtimeWorkflows, workers, , durableObjects, aiGateway] = courses;
 
     expect(nextStep(courses, agentSetup, 0).url).toBe("/courses/agent-setup/models");
     expect(nextStep(courses, workers, workers.exercises.length - 1)).toMatchObject({
@@ -145,8 +153,9 @@ describe("nextStep", () => {
     });
     expect(nextStep(courses, buildAGuestbook, buildAGuestbook.exercises.length - 1).url).toBe("/courses/build-a-drawing-game");
     expect(nextStep(courses, buildADrawingGame, buildADrawingGame.exercises.length - 1).url).toBe("/courses/see-and-control-ai-spend");
+    expect(nextStep(courses, controlAiSpend, controlAiSpend.exercises.length - 1).url).toBe("/courses/realtime-workflows");
     // The last course in Projects doesn't continue into Fundamentals.
-    expect(nextStep(courses, controlAiSpend, controlAiSpend.exercises.length - 1).url).toBe("/courses");
+    expect(nextStep(courses, realtimeWorkflows, realtimeWorkflows.exercises.length - 1).url).toBe("/courses");
   });
 
   it("sends a student finishing Agent setup to the catalog to pick a track", async () => {
