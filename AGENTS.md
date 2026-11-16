@@ -5,7 +5,7 @@ This repo is Cloudflare Dev School, a web app that teaches people how to build o
 - Plans and decisions live in GitHub issues (see "Planning approach"). The original plan files were removed in #69; git history has them.
 - No accounts and no personal data: students enroll anonymously and get a random student ID (see "Enrollment"). Signing in with Cloudflare OAuth is deferred until something needs it.
 - Quizzes are written by the student's agent in conversation from each exercise, never scored or stored. Students opt in during Agent setup's interview.
-- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then four in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), Durable Objects (see "Durable Objects course"), and AI Gateway (see "AI Gateway course"), plus four in the projects track: Publish a website, Run a blog with EmDash, Build a guestbook, and Build a drawing game (each has its own section below). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
+- The school is organized into courses made of exercises (#73, the plan of record for courses and courses hosted elsewhere). v1 assumes a working agent and ships three built-in courses: Agent setup (an interview, then models, instructions, CLI, skills, tools), then four in the fundamentals track: Workers ("Deploy a Worker," then "Add a binding," which extends that same Worker; it was `workers-basics` until #98), Bindings (see "Bindings course"), Durable Objects (see "Durable Objects course"), and AI Gateway (see "AI Gateway course"), plus five in the projects track: Publish a website, Run a blog with EmDash, Build a guestbook, Build a drawing game, and See and control AI spend (each has its own section below). See "Courses and exercises" and #98, which tracks the rest of the tracks work.
 
 ## Titles
 
@@ -132,6 +132,24 @@ Built-in courses live in `courses/<name>/` at the repo root, or `courses/<track>
 
 Verify the Workers course with `npm run verify:exercise` and `npm run verify:exercise-kv` (sibling scripts, not one parameterized script, to keep each diff small), against `npm run dev:worker` or a PR preview (`BASE_URL=...`). Same caveats as `verify:interview`: real enrollment and completion rows in whatever D1 `BASE_URL` points at, delete them afterward. Neither deploys a Worker or provisions a KV namespace, they only check the HTTP contract.
 
+## Writing a built-in course
+
+Lessons from #197, recorded in #199. The authors guide (`src/content/authors.md`, served as `/authors.md`) holds the advice for anyone writing a Dev School course: personalize every exercise, make it feel like one school, write exercises as tutorials, get the facts right, and test it for real. Follow it for built-in courses too, plus this checklist:
+
+- Personalization is a priority. If the depth students want varies, the course's interview asks how deep to go (big picture, how it works, hands-on), not for a job title; every answer is used somewhere; and every exercise repeats a one-line cue per level. See "See and control AI spend course" for a worked example.
+- Before writing, list the courses this one overlaps with and the apps students might bring from them. Each exercise says what to shorten for students who took those courses, and features added to an existing app go alongside it, never over its homepage.
+- Write exercises as tutorials (#182): the body is the complete default build, `agent-instructions` only cues. `COURSE.md` doesn't repeat the exercise list.
+- Check every Cloudflare fact against the docs and the CLI (see "Cloudflare docs are canon"), models against the Workers AI deprecation changelog and the Free plan, and drop internal numbers without a public source.
+- Test the behavior the course depends on live, on throwaway `cfds-lab-` resources you delete afterward, and typecheck the code as it stands after each exercise (scaffold a project with `cf init` in a temp directory and apply each stage's code blocks).
+- Add a section for the course to this file with its design decisions, what was tested (with the `cf` version and account type), and what wasn't.
+- Get a second review, from another model or a person, before opening the PR, and say in the PR whether the course has been taken end to end as a student.
+
+Testing from this machine:
+
+- The corporate WARP gateway blocks newly deployed workers.dev hostnames and `cf dev`'s remote bindings with error 1050. Send test requests through the REST API instead, e.g. AI Gateway's `POST /accounts/{id}/ai/v1/chat/completions` with `cf-aig-gateway-id` and `cf-aig-metadata` headers, authenticated with the `oauth_token` from `cf`'s config file.
+- The first `cf deploy` of a new Worker can fail with "[10007] This Worker does not exist on your account"; run it again.
+- Reasoning models like Gemma 4 spend tokens on reasoning first, so a small `max_tokens` can return an empty answer.
+
 ## Course media
 
 Videos, posters, captions, and other media for built-in courses live in the `cfdev-school-media` R2 bucket on the personal account, served at `https://media.cfdev.school` (a custom domain on the bucket, with a CORS rule allowing GET and HEAD from any origin so `<track>` captions load cross-origin). Never in `main`.
@@ -251,6 +269,31 @@ Tested with `cf` v1.0.0-beta.12, `@cloudflare/vite-plugin` 2.0.0-beta.v.4, React
 - Live guessing and real touch input weren't tested; mouse drawing was, with agent-browser.
 
 The course hasn't been taken end to end as a student.
+
+## See and control AI spend course
+
+`courses/projects/see-and-control-ai-spend/` (PR #197, aligned with starter/solution branches in #204) puts AI Gateway in front of a three-caller starter app (`https://github.com/jamesqquick/ai-spend-control-course`, `starter` and `solution` branches) with two kinds of human users (`free`, `pro`) and a background bot (`bot`), and builds up four stages: one checkpoint for every call ("see-the-blind-spot"), server-attached `caller`/`tier`/`task` metadata ("attribute-every-caller"), a dynamic route (`dynamic/support`) that branches on `metadata.task` with a fallback and a no-redeploy model swap ("match-models-to-the-job"), and a budget for the bot (`caller: "bot"`) only, as either a gateway spend limit (hard cap) or a route limit step (downgrade), whichever the student picks ("cap-runaway-loops"). The exercises are tutorials (#182): the body is the default build against the starter repo, `agent-instructions` hold the cues. It overlaps the AI Gateway fundamentals course on purpose, since projects never require fundamentals, and every exercise says what to shorten for students who took it.
+
+Design decisions to keep:
+
+- The interview's first question is how deep the student wants to go (big picture, how it works, hands-on), with example roles in the choices as hints only, since job titles like "account executive" are Cloudflare's terms, not the world's. It sets the depth of every exercise: everyone builds the same app, but big picture gets plain words, the lab page and dashboard, and "explain it to someone you work with" checks instead of code. Its instructions define the three levels and let the student switch anytime ("less code", "go deeper"); each exercise repeats a short depth cue so it works in a fresh session. The fourth question (model providers) only shapes comparisons: the lab always runs on Workers AI, so no one needs provider keys.
+- Every student starts from the `starter` branch of `jamesqquick/ai-spend-control-course`. Questions 2 and 3 shape the demo's heading, button labels, and sample prompts, while keeping caller IDs (`free`, `pro`, `bot`), `tier`/`task` values in `src/demo-data.ts`, the Gateway ID (`support-copilot`), Worker name (`ai-spend-control-course`), and route name (`support`) fixed so the code, commands, and starter/solution branches match.
+- After each request, `getGatewayTrace()` reads the Gateway log via `env.AI.gateway(env.GATEWAY_ID).getLog(logId)` so the receipt reflects the model, status code, and metadata actually recorded by AI Gateway. The receipt shows model size ("big"/"small"), not computed prices, so agents never invent costs; for real numbers, students use the gateway's own cost column.
+- Exercise 3 routes only the human callers; the bot keeps calling the big model directly until exercise 4. That's the narrative (two leaks, one fixed per exercise), and it's also what makes exercise 4's hard cap work (see below).
+- The downgrade lives in the route, not in a Worker `try`/`catch`, to keep exercise 3's point that model choice belongs in the gateway. The Worker only labels the row `blocked` or `downgraded`.
+- "Dynamic route" is the docs' and the CLI's name (`cf ai-gateway dynamic-routing`), under AI Gateway's Routing, which also has Auto Router and model aliases (exercise 3 compares them). The AI Gateway fundamentals course still says "Routes"; it should be aligned in its own PR.
+- Models: GPT-OSS 120B (`@cf/openai/gpt-oss-120b`, big), GPT-OSS 20B (`@cf/openai/gpt-oss-20b`, small and backup), Granite 4.0 micro (`@cf/ibm-granite/granite-4.0-h-micro`, v2 swap). None is in the November 20, 2026 deprecation list (cloudflare/cloudflare-docs#34960, the 2026-11-05 Workers AI changelog).
+- Cloudflare's internal numbers from the first draft (token counts, dollar savings) were softened because they had no public source.
+
+Tested in November 2026 with `cf` v1.0.0-beta.26 on the Thomas Development account (enterprise, so it may differ from a Free account), on a throwaway gateway, route, and Worker, all deleted afterward, and verified against both the `starter` and `solution` branches of `jamesqquick/ai-spend-control-course`:
+
+- Workers AI calls straight to a model are logged with a `cost`. A gateway spend limit filtered to the bot's `caller` metadata let the first bot call through, returned `429` (error code 2045, "Spend limit exceeded: rule '<id>'") on the next one about 45 seconds later, and still served human calls.
+- Requests served through a dynamic route were logged with `cost: 0` for Workers AI models. So they never counted toward a gateway spend limit, and a route limit step with `"limitType": "cost"` never tripped. A limit step with `"limitType": "count"` did: after the limit was reached, the next went to its `fallback` model. That's why exercise 4's downgrade counts requests. Once a gateway spend limit filtered to the bot was already over budget, a route request from the bot was blocked too (`429`, "Model execution failed"), fallback included, so the two options shouldn't be combined.
+- A spend limit's `model` filter rejected `@cf/...` IDs ("Malformed glob ... use only * and ? wildcards over an author/model name"), so the course doesn't filter by model. Split by value is `"mode": "partition"` in the API (from the API schema, not tested).
+- A route conditional on `metadata.task` with `$in` sent each task to its branch.
+- The first `cf deploy` of a new Worker can fail with "[10007] This Worker does not exist on your account"; running it again worked.
+
+Taken end to end as a student on the PR #197 preview in November 2026 across all three depth choices (big picture with Option 1 hard cap, how it works with Option 2 route downgrade, and hands-on developer), including the v2 zero-redeploy model swap and the cleanup commands for the Worker, route, and gateway.
 
 ## Courses hosted elsewhere
 
