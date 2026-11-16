@@ -1,5 +1,5 @@
 ---
-description: "Handle WebSocket connections, save Workflow progress, and replay it to new subscribers."
+description: "Send job progress to connected browsers over WebSockets"
 agent-instructions: |
   Goal: Broadcast live Workflow progress, save the latest snapshot, and
   replay it when a browser connects.
