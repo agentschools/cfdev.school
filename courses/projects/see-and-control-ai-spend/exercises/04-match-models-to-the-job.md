@@ -34,63 +34,30 @@ A route is a small flow of steps: check a condition, call a model, fall back to 
 
 ```json title="route-v1.json"
 [
-  {
-    "id": "start",
-    "type": "start",
-    "outputs": { "next": { "elementId": "task_check" } }
-  },
+  { "id": "start", "type": "start", "outputs": { "next": { "elementId": "task_check" } } },
   {
     "id": "task_check",
     "type": "conditional",
-    "properties": {
-      "conditions": { "metadata.task": { "$in": ["quick-summary"] } }
-    },
-    "outputs": {
-      "true": { "elementId": "small" },
-      "false": { "elementId": "big" }
-    }
+    "properties": { "conditions": { "metadata.task": { "$in": ["quick-summary"] } } },
+    "outputs": { "true": { "elementId": "small" }, "false": { "elementId": "big" } }
   },
   {
     "id": "small",
     "type": "model",
-    "properties": {
-      "provider": "workers-ai",
-      "model": "@cf/openai/gpt-oss-20b",
-      "timeout": 30000,
-      "retries": 0
-    },
-    "outputs": {
-      "success": { "elementId": "end" },
-      "fallback": { "elementId": "end" }
-    }
+    "properties": { "provider": "workers-ai", "model": "@cf/openai/gpt-oss-20b", "timeout": 30000, "retries": 0 },
+    "outputs": { "success": { "elementId": "end" }, "fallback": { "elementId": "end" } }
   },
   {
     "id": "big",
     "type": "model",
-    "properties": {
-      "provider": "workers-ai",
-      "model": "@cf/openai/gpt-oss-120b",
-      "timeout": 60000,
-      "retries": 0
-    },
-    "outputs": {
-      "success": { "elementId": "end" },
-      "fallback": { "elementId": "backup" }
-    }
+    "properties": { "provider": "workers-ai", "model": "@cf/openai/gpt-oss-120b", "timeout": 60000, "retries": 0 },
+    "outputs": { "success": { "elementId": "end" }, "fallback": { "elementId": "backup" } }
   },
   {
     "id": "backup",
     "type": "model",
-    "properties": {
-      "provider": "workers-ai",
-      "model": "@cf/openai/gpt-oss-20b",
-      "timeout": 60000,
-      "retries": 0
-    },
-    "outputs": {
-      "success": { "elementId": "end" },
-      "fallback": { "elementId": "end" }
-    }
+    "properties": { "provider": "workers-ai", "model": "@cf/openai/gpt-oss-20b", "timeout": 60000, "retries": 0 },
+    "outputs": { "success": { "elementId": "end" }, "fallback": { "elementId": "end" } }
   },
   { "id": "end", "type": "end", "outputs": {} }
 ]
@@ -101,8 +68,7 @@ The `conditional` step reads the same `task` label your Worker already attaches.
 Create the route, which also deploys its first version:
 
 ```sh
-cf ai-gateway dynamic-routing create support-copilot \
-  --name support --elements @route-v1.json
+cf ai-gateway dynamic-routing create support-copilot --name support --elements @route-v1.json
 ```
 
 Note the route's `id` in the output. You'll need it to publish the next version.
@@ -118,19 +84,19 @@ const ROUTE = "dynamic/support";
 const model = caller === "bot" ? MODEL : ROUTE;
 
 await env.AI.run(
-  model as typeof MODEL,
-  {
-    messages: [{ role: "user", content: CALLERS[caller].prompt }],
-    max_tokens: 256,
-  },
-  {
-    gateway: {
-      id: env.GATEWAY_ID,
-      collectLog: true,
-      metadata,
-      skipCache: true,
-    },
-  },
+	model as typeof MODEL,
+	{
+		messages: [{ role: "user", content: CALLERS[caller].prompt }],
+		max_tokens: 256,
+	},
+	{
+		gateway: {
+			id: env.GATEWAY_ID,
+			collectLog: true,
+			metadata,
+			skipCache: true,
+		},
+	},
 );
 
 // Keep the existing try/catch around the model call, setting failed and
@@ -144,9 +110,9 @@ The cast on `model` is only for TypeScript, whose model list doesn't include you
 
 ```ts title="src/index.ts"
 function modelSize(model: string): "big" | "small" | "unknown" {
-  if (/gpt-oss-20b|gemma|granite/i.test(model)) return "small";
-  if (/gpt-oss-120b|llama/i.test(model)) return "big";
-  return "unknown";
+	if (/gpt-oss-20b|gemma|granite/i.test(model)) return "small";
+	if (/gpt-oss-120b|llama/i.test(model)) return "big";
+	return "unknown";
 }
 ```
 
@@ -165,10 +131,8 @@ On the lab page, click the free user and the pro user. The free user's `quick-su
 Each change to a route is a new version, and you choose which version is live. Copy `route-v1.json` to `route-v2.json` and change the `small` step's model to `@cf/ibm-granite/granite-4.0-h-micro`. Then create the version and deploy it:
 
 ```sh
-cf ai-gateway dynamic-routing versions create <route-id> \
-  --gateway-id support-copilot --elements @route-v2.json
-cf ai-gateway dynamic-routing deployments create <route-id> \
-  --gateway-id support-copilot --version-id <version-id>
+cf ai-gateway dynamic-routing versions create <route-id> --gateway-id support-copilot --elements @route-v2.json
+cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id support-copilot --version-id <version-id>
 ```
 
 The first command prints the new version's `version_id`. A deployment takes about 30 to 60 seconds to go live. Then click the free user again. The Gateway log shows Granite 4.0 micro, and you haven't changed your Worker. To undo it, deploy version 1 again the same way.

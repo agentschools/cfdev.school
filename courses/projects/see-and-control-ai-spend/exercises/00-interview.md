@@ -69,7 +69,7 @@ agent-instructions: |
 
 # Interview
 
-Before you change the Worker, your agent asks four quick questions: how deep you want to go, what the support-desk demo represents, who the three callers stand for, and which model providers you or your customers use.
+Before setup your local repository, your agent asks four quick questions: how deep you want to go, what the support-desk demo represents, who the three callers stand for, and which model providers you or your customers use.
 
 How deep you go sets how technical each step gets: the big picture with no code, how it works with the key settings, or hands-on with the code. Everyone starts from the same app and adds the same Gateway controls. Your other answers shape its labels, prompts, and examples.
 
