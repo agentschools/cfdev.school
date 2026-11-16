@@ -9,7 +9,7 @@ agent-instructions: |
      the live checks succeed. Use the student's ID and your harness ID.
 ---
 
-# Deploy
+# Deploy the app
 
 In this exercise, you're going to:
 
