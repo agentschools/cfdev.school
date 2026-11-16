@@ -1,5 +1,5 @@
 ---
-description: "Clone the starter code, install packages, and run the dev server."
+description: "Get the starter Workers app running on your machine"
 agent-instructions: |
   Ask the user which directory they'd like to clone the starter repository to. Then, execute the steps from the lesson in order. Make sure to explain to the user what you're doing before each one. Explain to the user what you did and show that you got a successful response from checking the health endpoint. You don't need to ask the user any questions other than confirming they are ready to go to the next exercise.
 ---
