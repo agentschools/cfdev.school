@@ -1,5 +1,5 @@
 ---
-description: "Handle incoming WebSocket messages in the supplied UI, then try refreshes and shared job links."
+description: "Show live job progress in the app using WebSocket updates"
 agent-instructions: |
   Goal: Add the WebSocket message handler in app/use-job-progress.ts.
 ---
