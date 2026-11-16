@@ -1,5 +1,5 @@
 ---
-description: "Tell your agent how deep you want to go, where you want to add spend controls, who calls the AI in your app, and which model providers you use."
+description: "Tell your agent how deep you want to go, what the three-caller demo represents, and which model providers you use."
 agent-instructions: |
   This course's interview is four questions. Before asking them:
 
@@ -18,10 +18,10 @@ agent-instructions: |
 
   1. "How deep do you want to go?"
      Choices: big picture: what it does and why it matters, no code (for example sales, product, finance, or leadership) / how it works: the architecture and key settings, light on code (for example technical sales, architects, consultants, or team leads) / hands-on: the code and config (for example developers).
-  2. "Where should we add AI spend controls?"
-     Choices: an app I already built on Cloudflare / a new mini-app (a support desk by default, or your own idea).
-  3. "Who calls the AI in your app?"
-     Choices: free and paid customer tiers / two internal teams / customers plus a background bot or batch job. (Whatever they pick, the app gets two kinds of human callers and one automated background caller.)
+  2. "What should the support-desk demo represent?"
+     Choices: customer support / an internal operations tool / another product workflow.
+  3. "Who should the three caller buttons represent?"
+     Choices: free and paid customers plus a background bot / two customer groups plus a background bot / keep the starter's free user, pro user, and background bot.
   4. "Which model providers do you or your customers use today?"
      Choices (several allowed): Workers AI / OpenAI / Anthropic / Google / a mix / none yet or not sure.
 
@@ -51,12 +51,13 @@ agent-instructions: |
     If the student says "less code", "go deeper", or similar at any
     point, move them to that level and PUT the interview again with the
     answer changed.
-  - Questions 2 and 3 shape the app, its three callers, and their names,
-    so it feels like their project. If they pick an app they built in
-    Build a guestbook or Build a drawing game, say those call Clef, a
-    decision model that scores options rather than writing replies, and
-    recommend the new mini-app; build on their app only if they insist,
-    adding a chat call alongside Clef.
+  - The course always uses the three-caller starter repository linked in
+    `COURSE.md`. Never create a separate Worker, replace the starter UI, or
+    add this lab to one of the student's other projects. Questions 2 and 3
+    shape the demo's heading, button labels, and sample prompts. Keep the
+    caller IDs (`free`, `pro`, `bot`) and the `tier` and `task` values in
+    `src/demo-data.ts` unchanged so the Gateway rules in later exercises
+    keep matching.
   - Question 4 shapes comparisons only: the lab always runs on Workers
     AI, so nobody needs a provider API key. When a step mentions
     providers, use the ones they named (e.g. "the same metadata works on
@@ -68,8 +69,8 @@ agent-instructions: |
 
 # Interview
 
-Before you build anything, your agent asks four quick questions: how deep you want to go, whether to add spend controls to an app you already have or a new mini-app, who calls the AI in it, and which model providers you or your customers use.
+Before you change the Worker, your agent asks four quick questions: how deep you want to go, what the support-desk demo represents, who the three callers stand for, and which model providers you or your customers use.
 
-How deep you go sets how technical each step gets: the big picture with no code, how it works with the key settings, or hands-on with all the code. Everyone builds the same thing, a small app whose three callers you can see, tier, and cap. The other answers shape the app, so it looks like yours.
+How deep you go sets how technical each step gets: the big picture with no code, how it works with the key settings, or hands-on with the code. Everyone starts from the same app and adds the same Gateway controls. Your other answers shape its labels, prompts, and examples.
 
 All four questions are optional, and you can change your answers anytime by telling your agent, for example "less code" or "go deeper".

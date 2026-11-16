@@ -10,7 +10,7 @@ metadata:
 
 Shipping an AI feature is fast. Explaining the bill a month later is hard. When every user tier, internal team, and background job calls models with the same key, the invoice shows one big number and never says *who* spent it. Worse, the biggest spender often isn't even a person — a background job stuck in a retry loop, or free users triggering an expensive model for one-line summaries, can burn through a month's budget over a weekend.
 
-In this project course, you'll put [AI Gateway](https://developers.cloudflare.com/ai-gateway/) between your app and the AI models it calls, so you can see who's spending what, route each task to a model that fits, and cap background jobs before they run away:
+Start from the [three-caller lab](https://github.com/jamesqquick/ai-spend-control-course/tree/starter), which sends requests directly to Workers AI. You'll run its free-user, pro-user, and background-bot buttons first, then update the Worker to send those same requests through [AI Gateway](https://developers.cloudflare.com/ai-gateway/). Each exercise adds one control, and the existing receipt shows the metadata, model, and outcome:
 
 ```mermaid
 flowchart TD
@@ -18,4 +18,3 @@ flowchart TD
   Gateway -->|"Simple tasks"| Cheap["Fast, low-cost model"]
   Gateway -->|"Complex tasks"| Capable["Frontier model"]
 ```
-
