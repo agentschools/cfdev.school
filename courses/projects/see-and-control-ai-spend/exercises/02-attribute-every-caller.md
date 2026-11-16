@@ -34,9 +34,9 @@ The starter already defines each caller's `tier` and `task` in `src/demo-data.ts
 // Who's behind each caller. In a real app the Worker reads this from the
 // signed-in session or the job's own config, never from the browser.
 const metadata = {
-	caller,
-	tier: CALLERS[caller].tier,
-	task: CALLERS[caller].task,
+  caller,
+  tier: CALLERS[caller].tier,
+  task: CALLERS[caller].task,
 };
 ```
 
@@ -44,25 +44,25 @@ Pass the metadata to Gateway. Keep using `getGatewayTrace()` from the previous e
 
 ```ts title="src/index.ts"
 const metadata = {
-	caller,
-	tier: CALLERS[caller].tier,
-	task: CALLERS[caller].task,
+  caller,
+  tier: CALLERS[caller].tier,
+  task: CALLERS[caller].task,
 };
 
 await env.AI.run(
-	MODEL,
-	{
-		messages: [{ role: "user", content: CALLERS[caller].prompt }],
-		max_tokens: 256,
-	},
-	{
-		gateway: {
-			id: env.GATEWAY_ID,
-			collectLog: true,
-			metadata,
-			skipCache: true,
-		},
-	},
+  MODEL,
+  {
+    messages: [{ role: "user", content: CALLERS[caller].prompt }],
+    max_tokens: 256,
+  },
+  {
+    gateway: {
+      id: env.GATEWAY_ID,
+      collectLog: true,
+      metadata,
+      skipCache: true,
+    },
+  },
 );
 ```
 
@@ -70,13 +70,22 @@ Keep the existing error handling. After the request, read the Gateway log with `
 
 ```ts title="src/index.ts"
 const trace = await getGatewayTrace();
-const seenAs = trace.available ? formatMetadata(trace.metadata) : "Gateway log unavailable";
+const seenAs = trace.available
+  ? formatMetadata(trace.metadata)
+  : "Gateway log unavailable";
 ```
 
 ```ts title="src/index.ts"
-function formatMetadata(metadata: Record<string, string | number | boolean | null | bigint> | null | undefined): string {
-	if (!metadata || Object.keys(metadata).length === 0) return "anonymous";
-	return Object.entries(metadata).map(([key, value]) => `${key}=${value}`).join(", ");
+function formatMetadata(
+  metadata:
+    | Record<string, string | number | boolean | null | bigint>
+    | null
+    | undefined,
+): string {
+  if (!metadata || Object.keys(metadata).length === 0) return "anonymous";
+  return Object.entries(metadata)
+    .map(([key, value]) => `${key}=${value}`)
+    .join(", ");
 }
 ```
 

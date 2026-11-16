@@ -33,42 +33,54 @@ Whichever option you choose, the receipt should show a colored **Blocked** or **
 
 ```ts title="src/index.ts"
 function classifyStatus(
-	statusCode: number | null | undefined,
-	failed: boolean,
-	errorMessage: string | undefined,
-	caller: Caller,
-	model: string,
+  statusCode: number | null | undefined,
+  failed: boolean,
+  errorMessage: string | undefined,
+  caller: Caller,
+  model: string,
 ): "ok" | "error" | "blocked" | "downgraded" {
-	if (statusCode === 429 || /spend limit/i.test(errorMessage ?? "")) return "blocked";
-	if (failed || (statusCode != null && statusCode >= 400)) return "error";
-	if (caller === "bot" && modelSize(model) === "small") return "downgraded";
-	return "ok";
+  if (statusCode === 429 || /spend limit/i.test(errorMessage ?? "")) {
+    return "blocked";
+  }
+  if (failed || (statusCode != null && statusCode >= 400)) return "error";
+  if (caller === "bot" && modelSize(model) === "small") return "downgraded";
+  return "ok";
 }
 
 function responseStatus(
-	status: "ok" | "error" | "blocked" | "downgraded",
-	statusCode: number | null | undefined,
+  status: "ok" | "error" | "blocked" | "downgraded",
+  statusCode: number | null | undefined,
 ): number {
-	if (status === "blocked") return 429;
-	if (status === "error") return statusCode && statusCode >= 400 ? statusCode : 502;
-	return 200;
+  if (status === "blocked") return 429;
+  if (status === "error") {
+    return statusCode && statusCode >= 400 ? statusCode : 502;
+  }
+  return 200;
 }
 
 // After calling the model and reading its Gateway log:
-const status = classifyStatus(trace.statusCode, failed, errorMessage, caller, trace.model);
+const status = classifyStatus(
+  trace.statusCode,
+  failed,
+  errorMessage,
+  caller,
+  trace.model,
+);
 return Response.json(
-	{
-		caller,
-		callerLabel: CALLERS[caller].label,
-		seenAs: trace.available ? formatMetadata(trace.metadata) : "Gateway log unavailable",
-		model: trace.model,
-		modelSize: modelSize(trace.model),
-		status,
-		statusCode: trace.statusCode,
-		logId: trace.logId,
-		...(failed ? { error: errorMessage } : {}),
-	},
-	{ status: responseStatus(status, trace.statusCode) },
+  {
+    caller,
+    callerLabel: CALLERS[caller].label,
+    seenAs: trace.available
+      ? formatMetadata(trace.metadata)
+      : "Gateway log unavailable",
+    model: trace.model,
+    modelSize: modelSize(trace.model),
+    status,
+    statusCode: trace.statusCode,
+    logId: trace.logId,
+    ...(failed ? { error: errorMessage } : {}),
+  },
+  { status: responseStatus(status, trace.statusCode) },
 );
 ```
 
@@ -86,13 +98,25 @@ A spend limit is a budget in dollars over a time window. This rule applies only 
 
 ```sh
 cf ai-gateway gateways update support-copilot --body '{
-  "authentication": true, "collect_logs": true, "cache_ttl": 0, "cache_invalidate_on_update": true,
-  "rate_limiting_interval": 0, "rate_limiting_limit": 0, "rate_limiting_technique": "sliding",
-  "spend_limits": { "enabled": true, "rules": [{
-    "id": "bot-budget", "enabled": true, "limitType": "cost", "limit": 0.00001,
-    "window": 2592000, "technique": "fixed",
-    "metadata": { "caller": { "mode": "filter", "values": ["bot"] } }
-  }]}
+  "authentication": true,
+  "collect_logs": true,
+  "cache_ttl": 0,
+  "cache_invalidate_on_update": true,
+  "rate_limiting_interval": 0,
+  "rate_limiting_limit": 0,
+  "rate_limiting_technique": "sliding",
+  "spend_limits": {
+    "enabled": true,
+    "rules": [{
+      "id": "bot-budget",
+      "enabled": true,
+      "limitType": "cost",
+      "limit": 0.00001,
+      "window": 2592000,
+      "technique": "fixed",
+      "metadata": { "caller": { "mode": "filter", "values": ["bot"] } }
+    }]
+  }
 }'
 ```
 
@@ -109,26 +133,43 @@ cf deploy
 The downgrade goes in your route, next to the rules from the last exercise. Add two steps to a copy of your live route version, saved as `route-v3.json`: a check for the bot, and a limit that lets the bot's requests through to the big model until the limit is reached, then sends them to the small model. Point `start` at the new check:
 
 ```json title="route-v3.json (new and changed steps)"
-{ "id": "start", "type": "start", "outputs": { "next": { "elementId": "is_bot" } } },
+{
+  "id": "start",
+  "type": "start",
+  "outputs": { "next": { "elementId": "is_bot" } }
+},
 {
   "id": "is_bot",
   "type": "conditional",
   "properties": { "conditions": { "metadata.caller": { "$eq": "bot" } } },
-  "outputs": { "true": { "elementId": "bot_budget" }, "false": { "elementId": "task_check" } }
+  "outputs": {
+    "true": { "elementId": "bot_budget" },
+    "false": { "elementId": "task_check" }
+  }
 },
 {
   "id": "bot_budget",
   "type": "rate",
-  "properties": { "limitType": "count", "key": "metadata.caller", "limit": 3, "window": 3600 },
-  "outputs": { "success": { "elementId": "big" }, "fallback": { "elementId": "small" } }
+  "properties": {
+    "limitType": "count",
+    "key": "metadata.caller",
+    "limit": 3,
+    "window": 3600
+  },
+  "outputs": {
+    "success": { "elementId": "big" },
+    "fallback": { "elementId": "small" }
+  }
 },
 ```
 
 The limit counts the bot's requests: three an hour on the big model, then the small one. A route's limit step can also count dollars (`"limitType": "cost"`), but in testing it never tripped for Workers AI models, so this lab counts requests. Publish the version as you did in the last exercise:
 
 ```sh
-cf ai-gateway dynamic-routing versions create <route-id> --gateway-id support-copilot --elements @route-v3.json
-cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id support-copilot --version-id <version-id>
+cf ai-gateway dynamic-routing versions create <route-id> \
+  --gateway-id support-copilot --elements @route-v3.json
+cf ai-gateway dynamic-routing deployments create <route-id> \
+  --gateway-id support-copilot --version-id <version-id>
 ```
 
 Then send the bot through the route too. In `run()`, every caller now calls the route:
@@ -175,7 +216,8 @@ The tiny budget will keep the bot capped. You can:
 
 ```sh
 cf workers delete ai-spend-control-course --force
-cf ai-gateway dynamic-routing delete <route-id> --gateway-id support-copilot --force
+cf ai-gateway dynamic-routing delete <route-id> \
+  --gateway-id support-copilot --force
 cf ai-gateway gateways delete support-copilot --force
 ```
 

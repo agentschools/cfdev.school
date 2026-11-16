@@ -22,7 +22,8 @@ You'll start with the course's three-caller app, then connect its existing Worke
 Clone the starter branch and install its dependencies:
 
 ```sh
-git clone --branch starter https://github.com/jamesqquick/ai-spend-control-course.git
+git clone --branch starter \
+  https://github.com/jamesqquick/ai-spend-control-course.git
 cd ai-spend-control-course
 npm install
 ```
@@ -44,7 +45,8 @@ Create the Gateway that the Worker will use. Logging is on and caching is off, s
 ```sh
 cf ai-gateway gateways create --id support-copilot --authentication true \
   --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true \
-  --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding
+  --rate-limiting-interval 0 --rate-limiting-limit 0 \
+  --rate-limiting-technique sliding
 ```
 
 Open **AI** > **AI Gateway** > `support-copilot` > **Logs** in the Cloudflare dashboard. The starter requests are not in the log because they called Workers AI directly.
@@ -65,23 +67,24 @@ In the existing `run()` function, keep its request validation and caller lookup.
 let failed = false;
 let errorMessage: string | undefined;
 try {
-	await env.AI.run(
-		MODEL,
-		{
-			messages: [{ role: "user", content: CALLERS[caller].prompt }],
-			max_tokens: 256,
-		},
-		{
-			gateway: {
-				id: env.GATEWAY_ID,
-				collectLog: true,
-				skipCache: true,
-			},
-		},
-	);
+  await env.AI.run(
+    MODEL,
+    {
+      messages: [{ role: "user", content: CALLERS[caller].prompt }],
+      max_tokens: 256,
+    },
+    {
+      gateway: {
+        id: env.GATEWAY_ID,
+        collectLog: true,
+        skipCache: true,
+      },
+    },
+  );
 } catch (error) {
-	failed = true;
-	errorMessage = error instanceof Error ? error.message : "The model request failed.";
+  failed = true;
+  errorMessage =
+    error instanceof Error ? error.message : "The model request failed.";
 }
 ```
 
@@ -119,18 +122,18 @@ Use that trace in the response from `run()`. No metadata is attached yet, so a s
 ```ts title="src/index.ts"
 const trace = await getGatewayTrace();
 return Response.json(
-	{
-		caller,
-		callerLabel: CALLERS[caller].label,
-		seenAs: trace.available ? "anonymous" : "Gateway log unavailable",
-		model: trace.model,
-		modelSize: "big",
-		status: failed ? "error" : "ok",
-		statusCode: trace.statusCode,
-		logId: trace.logId,
-		...(failed ? { error: errorMessage } : {}),
-	},
-	{ status: failed ? 502 : 200 },
+  {
+    caller,
+    callerLabel: CALLERS[caller].label,
+    seenAs: trace.available ? "anonymous" : "Gateway log unavailable",
+    model: trace.model,
+    modelSize: "big",
+    status: failed ? "error" : "ok",
+    statusCode: trace.statusCode,
+    logId: trace.logId,
+    ...(failed ? { error: errorMessage } : {}),
+  },
+  { status: failed ? 502 : 200 },
 );
 ```
 
