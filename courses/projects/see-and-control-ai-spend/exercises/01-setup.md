@@ -31,7 +31,7 @@ export CLOUDFLARE_ACCOUNT_ID=<YOUR-ACCOUNT-ID>
 npm run dev
 ```
 
-Open the local URL (default to `localhost:43211). There are three types of requests to send for testing:
+Open the local URL (default to `localhost:4321`). There are three types of requests to send for testing:
 
 - **Free user**
 - **Pro user**

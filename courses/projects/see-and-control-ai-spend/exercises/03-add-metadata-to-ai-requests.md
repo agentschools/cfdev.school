@@ -12,13 +12,15 @@ agent-instructions: |
   - Out of scope: routes and spend limits. Those are the next two exercises.
 ---
 
-# Attribute every caller
+# Add metadata to AI requests
 
-The gateway now sees every request, the way a shared company card shows every charge, but not who made each one. To tell healthy growth from free users eating your margin or a bot stuck in a loop, every request has to say who's behind it.
+The gateway now sees every request, but it can't see the details of who made the request. There are user specific details that would be useful here: who made the requet, which tier their on, etc.
 
-## What you'll build
+AI Gateway can accept custom metadata in each request. In this exercise, you'll update the code to attach custom metadata for:
 
-Labels on every request, attached by your Worker: who's calling (`caller`), which tier they're on (`tier`), and what they're asking for (`task`). Then you'll run a mix of traffic and use the lab page and your gateway's logs to find two leaks.
+- who the user is (`caller`)
+- which tier their on (`tier`)
+- what task their performing (`task`)
 
 ## Prerequisites
 
@@ -34,9 +36,9 @@ The starter already defines each caller's `tier` and `task` in `src/demo-data.ts
 // Who's behind each caller. In a real app the Worker reads this from the
 // signed-in session or the job's own config, never from the browser.
 const metadata = {
-	caller,
-	tier: CALLERS[caller].tier,
-	task: CALLERS[caller].task,
+  caller,
+  tier: CALLERS[caller].tier,
+  task: CALLERS[caller].task,
 };
 ```
 
@@ -44,25 +46,25 @@ Pass the metadata to Gateway. Keep using `getGatewayTrace()` from the previous e
 
 ```ts title="src/index.ts"
 const metadata = {
-	caller,
-	tier: CALLERS[caller].tier,
-	task: CALLERS[caller].task,
+  caller,
+  tier: CALLERS[caller].tier,
+  task: CALLERS[caller].task,
 };
 
 await env.AI.run(
-	MODEL,
-	{
-		messages: [{ role: "user", content: CALLERS[caller].prompt }],
-		max_tokens: 256,
-	},
-	{
-		gateway: {
-			id: env.GATEWAY_ID,
-			collectLog: true,
-			metadata,
-			skipCache: true,
-		},
-	},
+  MODEL,
+  {
+    messages: [{ role: "user", content: CALLERS[caller].prompt }],
+    max_tokens: 256,
+  },
+  {
+    gateway: {
+      id: env.GATEWAY_ID,
+      collectLog: true,
+      metadata,
+      skipCache: true,
+    },
+  },
 );
 ```
 
@@ -70,13 +72,22 @@ Keep the existing error handling. After the request, read the Gateway log with `
 
 ```ts title="src/index.ts"
 const trace = await getGatewayTrace();
-const seenAs = trace.available ? formatMetadata(trace.metadata) : "Gateway log unavailable";
+const seenAs = trace.available
+  ? formatMetadata(trace.metadata)
+  : "Gateway log unavailable";
 ```
 
 ```ts title="src/index.ts"
-function formatMetadata(metadata: Record<string, string | number | boolean | null | bigint> | null | undefined): string {
-	if (!metadata || Object.keys(metadata).length === 0) return "anonymous";
-	return Object.entries(metadata).map(([key, value]) => `${key}=${value}`).join(", ");
+function formatMetadata(
+  metadata:
+    | Record<string, string | number | boolean | null | bigint>
+    | null
+    | undefined,
+): string {
+  if (!metadata || Object.keys(metadata).length === 0) return "anonymous";
+  return Object.entries(metadata)
+    .map(([key, value]) => `${key}=${value}`)
+    .join(", ");
 }
 ```
 
@@ -107,9 +118,9 @@ Every new log entry carries its caller's `caller`, `tier`, and `task`. The recei
 
 The same few labels answer different questions depending on who calls the AI:
 
-| Who calls the AI | What you label | What the breakdown tells you |
-| :--- | :--- | :--- |
-| Your own people and agents | `{ caller: "bot", tier: "background", task: "ticket-review" }` | Which bot drives the monthly bill. |
-| Your customers | `{ customer: "acme", tier: "free", feature: "summary" }` | What each customer and tier costs to serve, so Product can see whether free users are profitable. |
+| Who calls the AI           | What you label                                                 | What the breakdown tells you                                                                      |
+| :------------------------- | :------------------------------------------------------------- | :------------------------------------------------------------------------------------------------ |
+| Your own people and agents | `{ caller: "bot", tier: "background", task: "ticket-review" }` | Which bot drives the monthly bill.                                                                |
+| Your customers             | `{ customer: "acme", tier: "free", feature: "summary" }`       | What each customer and tier costs to serve, so Product can see whether free users are profitable. |
 
 The leaks are clear now: the bot makes the most requests, and free users get the big model for one-line summaries. In the next exercise, [Match models to the job](/courses/see-and-control-ai-spend/match-models-to-the-job), you'll fix the second one without changing which model your code names.

@@ -8,9 +8,19 @@ metadata:
 
 # See and control AI spend
 
-Shipping an AI feature is fast. Explaining the bill a month later is hard. When every user tier, internal team, and background job calls models with the same key, the invoice shows one big number and never says *who* spent it. Worse, the biggest spender often isn't even a person — a background job stuck in a retry loop, or free users triggering an expensive model for one-line summaries, can burn through a month's budget over a weekend.
+The cost of implementing AI features in your app can add up fast. When every request (whether by human or agent) calls models with the same API key, you're missing valuable information. To optimize the associated costs, you need to know:
 
-Start from the [three-caller lab](https://github.com/jamesqquick/ai-spend-control-course/tree/starter), which sends requests directly to Workers AI. You'll run its free-user, pro-user, and background-bot buttons first, then update the Worker to send those same requests through [AI Gateway](https://developers.cloudflare.com/ai-gateway/). Each exercise adds one control, and the existing receipt shows the metadata, model, and outcome:
+- who spent what
+- what models were used
+- how many tokens were sent
+
+In this course, you'll start from the [three-caller lab](https://github.com/jamesqquick/ai-spend-control-course/tree/main), which sends requests directly to Workers AI. It has presets to make AI calls from:
+
+- free-user
+- pro-user
+- background-bot
+
+You'll then update the Worker to send those same requests through [AI Gateway](https://developers.cloudflare.com/ai-gateway/) to get insights, logging, and visibility into the details of each call.
 
 ```mermaid
 flowchart TD
