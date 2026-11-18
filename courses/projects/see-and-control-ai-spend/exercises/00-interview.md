@@ -8,7 +8,7 @@ agent-instructions: |
     they've changed. Read Agent setup's interview too, for their agent
     experience, where they've deployed before, and what they want to build.
   - GET /api/progress/{studentId}. Note whether they've completed the AI
-    Gateway course (go lighter on gateways, metadata, routes, and spend
+    Gateway course (go lighter on AI Gateway, metadata, dynamic routes, and spend
     limits; every exercise says what to shorten) and which apps they've
     built in other courses (Publish a website, Build a guestbook, Build a
     drawing game, Workers, Bindings).
@@ -21,7 +21,7 @@ agent-instructions: |
   2. "What should the support-desk demo represent?"
      Choices: customer support / an internal operations tool / another product workflow.
   3. "Who should the three caller buttons represent?"
-     Choices: free and paid customers plus a background bot / two customer groups plus a background bot / keep the starter's free user, pro user, and background bot.
+     Choices: free and paid customers plus a background bot / two customer groups plus a background bot / keep the starter's Free user, Pro user, and Background bot.
   4. "Which model providers do you or your customers use today?"
      Choices (several allowed): Workers AI / OpenAI / Anthropic / Google / a mix / none yet or not sure.
 
@@ -43,7 +43,7 @@ agent-instructions: |
       to someone they work with (a customer, their manager, or their
       finance team), or offer a quick role-play.
     - How it works: model names and why they cost what they cost, and
-      the key config (metadata, the route's JSON, the spend limit rule)
+      the key config (metadata, the dynamic route's JSON, the spend limit rule)
       rather than every line of code. Checks mix trade-offs with
       explaining it to someone they work with.
     - Hands-on (and the default if they skip the question): the code and
@@ -56,21 +56,21 @@ agent-instructions: |
     add this lab to one of the student's other projects. Questions 2 and 3
     shape the demo's heading, button labels, and sample prompts. Keep the
     caller IDs (`free`, `pro`, `bot`) and the `tier` and `task` values in
-    `src/demo-data.ts` unchanged so the Gateway rules in later exercises
+    `src/demo-data.ts` unchanged so the AI Gateway rules in later exercises
     keep matching.
   - Question 4 shapes comparisons only: the lab always runs on Workers
     AI, so nobody needs a provider API key. When a step mentions
     providers, use the ones they named (e.g. "the same metadata works on
-    your OpenAI calls through the gateway").
+    your OpenAI calls through AI Gateway").
 
   Then mark this exercise complete with PUT /api/progress/{studentId} and
-  move on to "see-the-blind-spot". There's no quiz for this exercise.
+  move on to "Setup" (`setup`). There's no quiz for this exercise.
 ---
 
 # Interview
 
 Before setup your local repository, your agent asks four quick questions: how deep you want to go, what the support-desk demo represents, who the three callers stand for, and which model providers you or your customers use.
 
-How deep you go sets how technical each step gets: the big picture with no code, how it works with the key settings, or hands-on with the code. Everyone starts from the same app and adds the same Gateway controls. Your other answers shape its labels, prompts, and examples.
+How deep you go sets how technical each step gets: the big picture with no code, how it works with the key settings, or hands-on with the code. Everyone starts from the same app and adds the same AI Gateway controls. Your other answers shape its labels, prompts, and examples.
 
 All four questions are optional, and you can change your answers anytime by telling your agent, for example "less code" or "go deeper".

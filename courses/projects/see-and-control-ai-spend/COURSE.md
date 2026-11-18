@@ -1,6 +1,6 @@
 ---
 name: see-and-control-ai-spend
-description: "See who's driving your AI bill, route routine prompts to cheaper models, and cap runaway background jobs before they blow your budget."
+description: "See who's driving your AI usage, route routine tasks to cheaper models, and limit background jobs' use of expensive models."
 compatibility: "Requires a Cloudflare account (the Workers Free plan works) and the cf CLI, both set up in the Agent setup course. Uses Workers AI, so no provider API keys are needed."
 metadata:
   author: Thomas Desmond
@@ -16,9 +16,9 @@ The cost of implementing AI features in your app can add up fast. When every req
 
 In this course, you'll start from the [three-caller lab](https://github.com/jamesqquick/ai-spend-control-course/tree/main), which sends requests directly to Workers AI. It has presets to make AI calls from:
 
-- free-user
-- pro-user
-- background-bot
+- Free user
+- Pro user
+- Background bot
 
 You'll then update the Worker to send those same requests through [AI Gateway](https://developers.cloudflare.com/ai-gateway/) to get insights, logging, and visibility into the details of each call.
 
