@@ -1,5 +1,5 @@
 ---
-description: "Run the three-caller starter without AI Gateway, then put AI Gateway in front of it and see the requests it records."
+description: "Create an AI Gateway, then configure the application to route all AI requests through it and see the results in the application logs."
 agent-instructions: |
   - Pitch everything to the depth the student chose in this course's interview (big picture, how it works, or hands-on); the interview's instructions say what each level gets. For big picture, tokens are "usage" and each code change gets a one-sentence summary.
   - Start from the repository linked in `COURSE.md`, on its `main` branch. Do not scaffold a Worker or rebuild the lab page. Keep the starter's caller IDs (`free`, `pro`, `bot`), the `/api/run` endpoint, and its UI.
@@ -13,15 +13,15 @@ agent-instructions: |
 
 # Add AI Gateway
 
-The starter sends requests directly to Workers AI. Your application selects the model, and Workers AI provides usage reporting, but these requests don't appear in AI Gateway logs.
+The starter sends requests directly to Workers AI with a hard coded model string. Workers AI provides usage reporting, but these requests don't appear in AI Gateway logs.
 
 In this exercise, you'll create AI Gateway and connect the application to it. You'll inspect individual requests in AI Gateway logs, including the model, token usage, duration, and estimated cost.
 
 ## Create an AI Gateway
 
-First, you'll need to create AI Gateway using the `cf` cli. You'll want logging to be turned on but caching turned off. This ensures every click creates a new log entry that becomes visible in the app.
+First, you'll need to create an gateway using the `cf` cli. You'll want logging to be turned on but caching turned off. This ensures every click creates a new log entry that becomes visible in the app.
 
-Create an AI Gateway named `support-copilot` with the following command:
+Create a gateway named `support-copilot` with the following command:
 
 ```sh
 cf ai-gateway gateways create --id support-copilot --authentication true \
@@ -60,8 +60,8 @@ Update the existing `env.AI.run()` call to add the `gateway` config property:
 await env.AI.run(
   MODEL,
   {
-    messages: [{ role: "user", content: CALLERS[caller].prompt }],
-    max_tokens: 256,
+    messages: [{ role: "user", content: USER_TYPES[userType].prompt }],
+    max_tokens: 8,
   },
   {
     gateway: {
@@ -75,13 +75,13 @@ await env.AI.run(
 
 ## View the results
 
-Open the running app, and click **Free user**, **Pro user**, and **Background bot** to send requests. AI Gateway logs now show a row for each request, which you can see in the dashboard.
+Open the running app, and click **Free user**, **Pro user**, and **Background bot** to send requests. You should now see that each request shows as `anonymous`.
 
-Each log entry shows:
+If you inspect the AI Gateway logs in the Cloudflare dashboard, you should see a log for each request that includes:
 
 - the model used
 - the request duration
 - token usage
 - the estimated cost
 
-AI Gateway now records the requests, but you haven't attached labels identifying their callers. The application therefore displays `anonymous` for each successful request. In the next exercise, [Add metadata to AI requests](/courses/see-and-control-ai-spend/add-metadata-to-ai-requests), you'll label requests so you can distinguish Free user, Pro user, and Background bot.
+AI Gateway now records the requests, but you still haven't attached specific labels identifying the callers. The application therefore displays `anonymous` for each successful request. In the next exercise, [Add metadata to AI requests](/courses/see-and-control-ai-spend/add-metadata-to-ai-requests), you'll label requests so you can distinguish between `Free user`, `Pro user`, and `Background bot`.

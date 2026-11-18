@@ -36,8 +36,8 @@ agent-instructions: |
   - Question 1 sets the depth. Everyone builds the same app; only the
     explanation changes. The examples in its choices are hints, not
     roles to hold the student to:
-    - Big picture: everyday words ("big model", "small model", "the
-      bill"), no parameter counts or token math. Show the lab page and
+    - Big picture: everyday words ("higher-cost model", "lower-cost model",
+      "the bill"), no parameter counts or token math. Show the lab page and
       the dashboard, not code: sum up each code or config change in one
       plain sentence before it ships. Checks ask them to explain the idea
       to someone they work with (a customer, their manager, or their
