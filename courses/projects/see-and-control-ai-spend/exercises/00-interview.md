@@ -1,7 +1,7 @@
 ---
 description: "Tell your agent how deep you want to go, what the three-caller demo represents, and which model providers you use."
 agent-instructions: |
-  This course's interview is four questions. Before asking them:
+  Before asking interview questions:
 
   - GET /api/students/{id}/interviews. If this course's interview is
     already on file, show the student their answers and ask whether
@@ -13,19 +13,13 @@ agent-instructions: |
     built in other courses (Publish a website, Build a guestbook, Build a
     drawing game, Workers, Bindings).
 
-  Ask all four at once, with your structured question tool if you have
+  Ask all questions at once, with your structured question tool if you have
   one, otherwise in one numbered plain-text message:
 
   1. "How deep do you want to go?"
      Choices: big picture: what it does and why it matters, no code (for example sales, product, finance, or leadership) / how it works: the architecture and key settings, light on code (for example technical sales, architects, consultants, or team leads) / hands-on: the code and config (for example developers).
-  2. "What should the support-desk demo represent?"
-     Choices: customer support / an internal operations tool / another product workflow.
-  3. "Who should the three caller buttons represent?"
-     Choices: free and paid customers plus a background bot / two customer groups plus a background bot / keep the starter's Free user, Pro user, and Background bot.
-  4. "Which model providers do you or your customers use today?"
-     Choices (several allowed): Workers AI / OpenAI / Anthropic / Google / a mix / none yet or not sure.
 
-  All four are optional; if they skip one, move on. Store the answers with
+  All questions are optional; if they skip one, move on. Store the answers with
   PUT /api/students/{id}/interviews, with
   `"course": "see-and-control-ai-spend"`, the questions' text exactly as
   written above, their answers, and a one-sentence `summary` addressed to
@@ -58,10 +52,6 @@ agent-instructions: |
     caller IDs (`free`, `pro`, `bot`) and the `tier` and `task` values in
     `src/demo-data.ts` unchanged so the AI Gateway rules in later exercises
     keep matching.
-  - Question 4 shapes comparisons only: the lab always runs on Workers
-    AI, so nobody needs a provider API key. When a step mentions
-    providers, use the ones they named (e.g. "the same metadata works on
-    your OpenAI calls through AI Gateway").
 
   Then mark this exercise complete with PUT /api/progress/{studentId} and
   move on to "Setup" (`setup`). There's no quiz for this exercise.
