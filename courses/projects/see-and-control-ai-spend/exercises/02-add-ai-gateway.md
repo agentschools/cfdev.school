@@ -17,6 +17,21 @@ The starter sends requests directly to Workers AI with a hard coded model string
 
 In this exercise, you'll create AI Gateway and connect the application to it. You'll inspect individual requests in AI Gateway logs, including the model, token usage, duration, and estimated cost.
 
+```mermaid
+flowchart TB
+    subgraph before["Before"]
+        direction LR
+        W1["Your Worker"] --> AI1["Workers AI"]
+    end
+
+    subgraph after["After"]
+        direction LR
+        W2["Your Worker"] --> G["AI Gateway"] --> AI2["Workers AI"]
+    end
+```
+
+AI Gateway now sits between your Worker and Workers AI, recording each request so you can inspect its model, usage, and estimated cost.
+
 ## Create an AI Gateway
 
 Create a gateway using the `cf` CLI with logging enabled and caching disabled.

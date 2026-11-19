@@ -36,6 +36,22 @@ The JSON configuration you'll use here will route requests to different models b
 - lower-cost model - `@cf/openai/gpt-oss-20b`
 - higher-cost model - `@cf/openai/gpt-oss-120b`
 
+```mermaid
+flowchart TD
+    W["Your Worker"]
+
+    subgraph gateway["AI Gateway: dynamic/support"]
+        R{"metadata.user_type"}
+    end
+
+    W --> R
+    R -->|free| L["Lower-cost: GPT-OSS 20B"]
+    R -->|pro or bot| H["Higher-cost: GPT-OSS 120B"]
+    H -.->|Error or timeout| L
+```
+
+Your Worker sends the user type as metadata. AI Gateway chooses the model and falls back to GPT-OSS 20B if the higher-cost model fails or times out.
+
 Create `route.json` in your project with the following code:
 
 ```json title="route.json"
