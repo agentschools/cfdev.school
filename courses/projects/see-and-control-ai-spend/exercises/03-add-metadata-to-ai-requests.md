@@ -24,7 +24,7 @@ AI Gateway allows for up to five key-value pairs in metadata per request. In the
 
 The browser sends the selected `user_type`, and the Worker checks that it matches a key in `USER_TYPES` from `src/demo-data.ts` before attaching it as metadata. In a real application, metadata should be derived form trusted user information and not based on request data sent from the browser.
 
-In `run()`, just above the `env.AI.run()` call, build metadata from the validated user type:
+In `src/index.ts`, immediately after `const { userType } = input;`, build metadata from the validated user type:
 
 ```ts title="src/index.ts"
 const metadata = {

@@ -6,7 +6,7 @@ agent-instructions: |
   - If they finished the AI Gateway course, they've built a dynamic route before: shorten "Create the dynamic route" to the difference (it branches on `user_type`) and spend the time on "Other ways to pick a model".
   - Before "Create the dynamic route", explain the demo's routing policy: `free` uses the lower-cost model; `pro` and `bot` use the higher-cost model. Keep these values unchanged so the next exercise's requests still match.
   - Use `@cf/openai/gpt-oss-20b` as the lower-cost model and backup, and `@cf/openai/gpt-oss-120b` as the higher-cost model. For the no-redeploy swap, use `@cf/ibm-granite/granite-4.0-h-micro`. Check the current Workers AI model catalog before changing these model IDs.
-  - In "Call the dynamic route", change only the first argument of the existing `env.AI.run()` call. Every caller uses the dynamic route; model selection belongs in its configuration. The starter already reads AI Gateway logs and renders the receipt.
+  - In "Call the dynamic route", change only the `MODEL` constant in `src/index.ts` to `"dynamic/support"`. Every caller uses the dynamic route; model selection belongs in its configuration. The starter already reads AI Gateway logs and renders the receipt.
   - Before "Swap a model with no redeploy", ask the student to predict: will the Worker need a redeploy for Free user to get the new model?
   - In "View the results" and "Swap a model with no redeploy", confirm which model answered in `cf ai-gateway logs list --gateway-id support-copilot --per-page 5 --order-by created_at --order-by-direction desc`, not only on the lab page. Dynamic route deployments take about 30 to 60 seconds to go live; retry before assuming something's wrong. In testing, requests served through a dynamic route showed a cost of `0` in AI Gateway logs for Workers AI models; if the student sees that, say so rather than treating it as free.
   - Check, by depth: hands-on, why is it safer to try a new model across several services by publishing a dynamic route version than by editing each service? Big picture or how it works: someone they work with asks "isn't putting AI Gateway in front of our models just another form of lock-in?" How would they answer, using the providers they named in the interview?
@@ -112,18 +112,13 @@ Note the dynamic route's `id` in the output. Make note of this. You'll need it t
 
 ## Call the dynamic route
 
-Now, you'll need to update the `env.AI.run()` call to use `"dynamic/support"` instead of a hard-coded `MODEL` variable. Note that `support` in `dynamic/support` matches the `name` property that was passed in the CLI command above to create the dynamic route.
+In `src/index.ts`, change the `MODEL` constant near the top of the file to `"dynamic/support"`. The `support` part matches the route name passed to the CLI command above.
 
 ```ts title="src/index.ts"
-await env.AI.run(
-  "dynamic/support",
-  {
-    messages: [{ role: "user", content: USER_TYPES[userType].prompt }],
-    max_tokens: 8,
-  },
-  //...
-}
+const MODEL = "dynamic/support";
 ```
+
+The AI request and lab configuration both use `MODEL`.
 
 Every user type now uses the dynamic route. The Worker supplies the metadata, and the dynamic route chooses the model: `free` goes to the lower-cost model, while `pro` and `bot` go to the higher-cost model.
 

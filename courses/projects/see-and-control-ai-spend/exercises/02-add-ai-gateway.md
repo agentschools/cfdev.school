@@ -54,7 +54,7 @@ env: {
 
 With the binding in place, the application makes calls with `env.AI.run()`. To ensure that each of these calls runs through the new AI Gateway that you just created, you'll need to pass the AI Gateway configuration as a prop.
 
-Update the existing `env.AI.run()` call to add the `gateway` config property:
+In `src/index.ts`, inside the `fetch` handler, update the existing `env.AI.run()` call to add the `gateway` config property:
 
 ```ts title="src/index.ts"
 await env.AI.run(
