@@ -1,15 +1,9 @@
 ---
-description: "Label every request to AI Gateway with custom metadata fields that includes the user type that generated the request."
+description: "Attach user-type metadata so AI Gateway can distinguish Free users, Pro users, and the Background bot."
 agent-instructions: |
-  - Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on).
-  - If they finished the AI Gateway course, they've attached metadata before: shorten "Label every request" to the diff and spend the time on the investigation.
-  - Before "Label every request", show the starter's metadata values (`user_type`: `free` / `pro` / `bot`). Ask whether they want to change button labels or prompts. Keep these IDs and metadata values unchanged so the dynamic route in the next exercise matches.
-  - In "Label every request", distinguish validating a demo user type from authenticating a user. For a real app, explain how to derive the user type from trusted account or job information.
-  - In "View the results", let the student investigate the two leaks. Ask them to click the buttons themselves (a couple of Free user requests, one Pro user request, and Background bot), then guess the two leaks from the lab page before you show them anything. Wait for their guess. Only then pull the last few entries with `cf ai-gateway logs list --gateway-id support-copilot --per-page 10 --order-by created_at --order-by-direction desc` and compare. If they can't open a browser, send the traffic yourself and still ask for the guess first.
-  - Don't compute prices yourself. If they want numbers, point them at the cost column in AI Gateway logs, which is AI Gateway's own estimate. For big picture, the two leaks are the story ("one bot nobody watches" and "free users on the higher-cost model"), not the cents.
-  - In "View the results", confirm in AI Gateway logs that each request has the expected `user_type` value shown in the receipt.
-  - Check, by depth: hands-on, why must the labels be attached in the Worker rather than taken from the browser? Big picture or how it works: when a company ships AI to its own customers, every request is part of the cost of serving them. How would they use labels by customer, tier, and feature to explain "one big AI bill" to someone they work with, like a finance team, a product manager, or a customer?
-  - Out of scope: dynamic routes and spend limits. Those are the next two exercises.
+  - Depth: big picture, use the chart to identify who generates requests; how it works, explain trusted labels; hands-on, distinguish input validation from authentication.
+  - In "View the results", before interpreting the chart, ask: "Which user type generated the most requests in Requests by metadata?" If the student can't use the browser, send the traffic and show the results yourself.
+  - Offer a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using setup's account ID. Include the body's menu path if you can't confirm it in the browser. Dashboard inspection is optional.
 ---
 
 # Add metadata to AI requests
@@ -20,9 +14,9 @@ In this exercise, you'll attach [custom metadata](https://developers.cloudflare.
 
 ## Label every request
 
-AI Gateway allows for up to five key-value pairs in metadata per request. In the dashboard, you can use this metadata to filter logs and break down spend. Later in this course, you'll use the metadata to have different persons use different models.
+AI Gateway allows for up to five key-value pairs in metadata per request. In the dashboard, you can use this metadata to filter logs and break down spend. Later in this course, you'll use the metadata to have different user types use different models.
 
-The browser sends the selected `user_type`, and the Worker checks that it matches a key in `USER_TYPES` from `src/demo-data.ts` before attaching it as metadata. In a real application, metadata should be derived form trusted user information and not based on request data sent from the browser.
+The browser sends the selected `user_type`, and the Worker checks that it matches a key in `USER_TYPES` from `src/demo-data.ts` before attaching it as metadata. This validates a demo choice; it doesn't authenticate a user. In a real application, derive metadata from trusted account or job information rather than accepting a user type claimed by the browser.
 
 In `src/index.ts`, replace the existing `const metadata = {};` immediately after `const { userType } = input;` with:
 
@@ -55,8 +49,10 @@ const result = await env.AI.run(
 
 ## View the results
 
-Reload the application and send a mix of requests. The **Request metadata** column should show `user_type=free`, `user_type=pro`, and `user_type=bot`.
+Reload the application to start a fresh chart. Click **Free user** twice, **Pro user** once, and **Background bot** once. The bot button sends 4 requests. In **Usage receipt**, **User type** identifies the button and **Request metadata** now shows `user_type=free`, `user_type=pro`, or `user_type=bot` instead of `anonymous`.
 
-This column shows the metadata the application sends. Inspect the matching requests in AI Gateway logs to verify that Gateway recorded the expected values.
+Compare the counts in **Requests by metadata** and the models in the **Model** column. The chart covers only requests made during this page session, not all traffic through the gateway.
+
+The receipt's **Request metadata** column shows what the application sends. Use the logs command from [Add AI Gateway](/courses/see-and-control-ai-spend/add-ai-gateway#view-the-results) to confirm the matching requests have the same `user_type` values. For an optional dashboard view, open **AI** > **AI Gateway** > `support-copilot` > **Logs** in the same account. Use its cost column for AI Gateway's estimate rather than calculating prices from the chart.
 
 Right now, the same model is used for every user type. In the next exercise, [Choose models dynamically](/courses/see-and-control-ai-spend/choose-models-dynamically), you'll route requests to different models based on `user_type`.

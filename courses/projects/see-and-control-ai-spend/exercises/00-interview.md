@@ -1,59 +1,22 @@
 ---
-description: "Tell your agent how deep you want to go, what the three-caller demo represents, and which model providers you use."
+description: "Choose how much code and configuration you want your agent to explain while you work through the demo."
 agent-instructions: |
-  Before asking interview questions:
-
-  - GET /api/students/{id}/interviews. If this course's interview is
-    already on file, show the student their answers and ask whether
-    they've changed. Read Agent setup's interview too, for their agent
-    experience, where they've deployed before, and what they want to build.
-  - GET /api/progress/{studentId}. Note whether they've completed the AI
-    Gateway course (go lighter on AI Gateway, metadata, dynamic routes, and spend
-    limits; every exercise says what to shorten) and which apps they've
-    built in other courses (Publish a website, Build a guestbook, Build a
-    drawing game, Workers, Bindings).
-
-    Explain to the user that they will be working on a demo that shows how to use different AI models for requests coming from three different user personas: free user, pro user, and a background bot.
-
-  Ask all four at once, with your structured question tool if you have
-  one, otherwise in one numbered plain-text message:
-
-  1. "How deep do you want to go?"
-     Choices: big picture: what it does and why it matters, no code (for example sales, product, finance, or leadership) / how it works: the architecture and key settings, light on code (for example technical sales, architects, consultants, or team leads) / hands-on: the code and config (for example developers).
-
-
-  All questions are optional; if they skip one, move on. Store the answers with
-  PUT /api/students/{id}/interviews, with
-  `"course": "see-and-control-ai-spend"`, the questions' text exactly as
-  written above, their answers, and a one-sentence `summary` addressed to
-  the student, as /llms.txt describes.
-
-  How the answers shape every exercise (never skip one because of them):
-
-  - Question 1 sets the depth. Everyone builds the same app; only the
-    explanation changes. The examples in its choices are hints, not
-    roles to hold the student to:
-    - Big picture: everyday words ("higher-cost model", "lower-cost model",
-      "the bill"), no parameter counts or token math. Show the lab page and
-      the dashboard, not code: sum up each code or config change in one
-      plain sentence before it ships. Checks ask them to explain the idea
-      to someone they work with (a customer, their manager, or their
-      finance team), or offer a quick role-play.
-    - How it works: model names and why they cost what they cost, and
-      the key config (metadata, the dynamic route's JSON, the spend limit rule)
-      rather than every line of code. Checks mix trade-offs with
-      explaining it to someone they work with.
-    - Hands-on (and the default if they skip the question): the code and
-      config, failure modes, and trade-offs in their own app.
-    If the student says "less code", "go deeper", or similar at any
-    point, move them to that level and PUT the interview again with the
-    answer changed.
-
-
-  Then mark this exercise complete with PUT /api/progress/{studentId} and
-  move on to "Setup" (`setup`). There's no quiz for this exercise.
+  Introduce the demo from the body before asking its single question.
+  Use hands-on depth if the student skips the question.
 ---
 
 # Interview
 
-Before you setup your local repository, your agent will ask you a few questions.
+You'll work on a demo with 3 buttons: **Free user**, **Pro user**, and **Background bot**. Each button sends real AI requests. The lab shows which model handled each request and whether it succeeded, rather than displaying the generated answer.
+
+You'll connect the demo to AI Gateway, label requests by user type, and choose different models for Free and Pro users. Then you'll limit how often the bot can use the higher-cost model, without changing how human users' requests are handled.
+
+Your agent will ask one question before setting up the demo:
+
+**How deep do you want to go?**
+
+- **Big picture:** what each change does and why it matters, using the lab and plain-language explanations instead of code.
+- **How it works:** the request flow and key settings, with a little code where it helps.
+- **Hands-on:** the code and configuration, including failure modes and trade-offs.
+
+Everyone builds the same demo. Your answer changes how your agent explains it. You can say "less code" or "go deeper" at any point to change the level.
