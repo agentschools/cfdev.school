@@ -19,7 +19,7 @@ In this exercise, you'll create AI Gateway and connect the application to it. Yo
 
 ## Create an AI Gateway
 
-First, you'll need to create an gateway using the `cf` cli. You'll want logging to be turned on but caching turned off. This ensures every click creates a new log entry that becomes visible in the app.
+Create a gateway using the `cf` CLI with logging enabled and caching disabled.
 
 Create a gateway named `support-copilot` with the following command:
 
@@ -54,16 +54,17 @@ env: {
 
 With the binding in place, the application makes calls with `env.AI.run()`. To ensure that each of these calls runs through the new AI Gateway that you just created, you'll need to pass the AI Gateway configuration as a prop.
 
-In `src/index.ts`, inside the `fetch` handler, update the existing `env.AI.run()` call to add the `gateway` config property:
+In `src/index.ts`, add `gateway` to the existing options object in `env.AI.run()`.
 
 ```ts title="src/index.ts"
-await env.AI.run(
+const result = await env.AI.run(
   MODEL,
   {
     messages: [{ role: "user", content: USER_TYPES[userType].prompt }],
     max_tokens: 8,
   },
   {
+    returnRawResponse: true,
     gateway: {
       id: env.GATEWAY_ID,
       collectLog: true,

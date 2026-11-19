@@ -62,4 +62,4 @@ export const USER_TYPES = {
 
 The application sends real requests to Workers AI but does not display the generated answers. Instead, it shows request details such as the selected model and status.
 
-The chart shows how many requests belong to each user persona during your current page session. At this point, each requests shows "not routed through Gateway" as it's missing the necessary metadata to classify requests. You'll implement that functionality through the rest of this course.
+The chart groups requests by their request metadata during your current page session. At this point, every request appears under "not routed through Gateway" because the application calls Workers AI directly. You'll connect AI Gateway and attach user-type metadata in the next exercises.

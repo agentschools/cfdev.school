@@ -6,9 +6,9 @@ agent-instructions: |
   - If they finished the AI Gateway course, they've built a dynamic route before: shorten "Create the dynamic route" to the difference (it branches on `user_type`) and spend the time on "Other ways to pick a model".
   - Before "Create the dynamic route", explain the demo's routing policy: `free` uses the lower-cost model; `pro` and `bot` use the higher-cost model. Keep these values unchanged so the next exercise's requests still match.
   - Use `@cf/openai/gpt-oss-20b` as the lower-cost model and backup, and `@cf/openai/gpt-oss-120b` as the higher-cost model. For the no-redeploy swap, use `@cf/ibm-granite/granite-4.0-h-micro`. Check the current Workers AI model catalog before changing these model IDs.
-  - In "Call the dynamic route", change only the `MODEL` constant in `src/index.ts` to `"dynamic/support"`. Every caller uses the dynamic route; model selection belongs in its configuration. The starter already reads AI Gateway logs and renders the receipt.
+  - In "Call the dynamic route", change only the `MODEL` constant in `src/index.ts` to `"dynamic/support"`. Every caller uses the dynamic route; model selection belongs in its configuration. The starter already builds receipts from the inference response.
   - Before "Swap a model with no redeploy", ask the student to predict: will the Worker need a redeploy for Free user to get the new model?
-  - In "View the results" and "Swap a model with no redeploy", confirm which model answered in `cf ai-gateway logs list --gateway-id support-copilot --per-page 5 --order-by created_at --order-by-direction desc`, not only on the lab page. Dynamic route deployments take about 30 to 60 seconds to go live; retry before assuming something's wrong. In testing, requests served through a dynamic route showed a cost of `0` in AI Gateway logs for Workers AI models; if the student sees that, say so rather than treating it as free.
+  - In "View the results" and "Swap a model with no redeploy", confirm which model answered on the lab page. Dynamic route deployments take about 30 to 60 seconds to go live; retry before assuming something's wrong.
   - Check, by depth: hands-on, why is it safer to try a new model across several services by publishing a dynamic route version than by editing each service? Big picture or how it works: someone they work with asks "isn't putting AI Gateway in front of our models just another form of lock-in?" How would they answer, using the providers they named in the interview?
   - Out of scope: percentage splits and A/B tests, and capping the bot. That's the next exercise.
 ---
@@ -124,7 +124,7 @@ Every user type now uses the dynamic route. The Worker supplies the metadata, an
 
 ## View the results
 
-With `npm run dev` running, reload the lab page and try all three buttons. Free user requests should use `GPT-OSS 20B`. Pro user and Background bot requests should use `GPT-OSS 120B`. If the higher-cost model fails, its backup answers instead. Compare the model in the receipt with the matching entry in AI Gateway logs.
+With `npm run dev` running, reload the lab page and try all three buttons. Free user requests should use `GPT-OSS 20B`. Pro user and Background bot requests should use `GPT-OSS 120B`. If the higher-cost model fails, its backup answers instead.
 
 ## Swap a model without deploying the worker
 
@@ -142,7 +142,7 @@ Then, deploy the version by passing the `version-id`.
 cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id support-copilot --version-id <version-id>
 ```
 
-When these commands have finished, open the application again. Then, click **Free user** again. The AI Gateway log should now show the updated model, `@cf/ibm-granite/granite-4.0-h-micro`.
+Allow about 30 to 60 seconds for the route version to take effect, then click **Free user** again. The application should show the updated model, `@cf/ibm-granite/granite-4.0-h-micro`. If the previous model still answers, confirm that you deployed the intended version and try again after propagation.
 
 ## Other ways to pick a model
 

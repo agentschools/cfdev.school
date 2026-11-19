@@ -24,7 +24,7 @@ AI Gateway allows for up to five key-value pairs in metadata per request. In the
 
 The browser sends the selected `user_type`, and the Worker checks that it matches a key in `USER_TYPES` from `src/demo-data.ts` before attaching it as metadata. In a real application, metadata should be derived form trusted user information and not based on request data sent from the browser.
 
-In `src/index.ts`, immediately after `const { userType } = input;`, build metadata from the validated user type:
+In `src/index.ts`, replace the existing `const metadata = {};` immediately after `const { userType } = input;` with:
 
 ```ts title="src/index.ts"
 const metadata = {
@@ -35,13 +35,14 @@ const metadata = {
 Then, add `metadata` to the existing `gateway` options, using the object you just created:
 
 ```ts title="src/index.ts"
-await env.AI.run(
+const result = await env.AI.run(
   MODEL,
   {
     messages: [{ role: "user", content: USER_TYPES[userType].prompt }],
     max_tokens: 8,
   },
   {
+    returnRawResponse: true,
     gateway: {
       id: env.GATEWAY_ID,
       collectLog: true,
@@ -54,6 +55,8 @@ await env.AI.run(
 
 ## View the results
 
-Open the running application and reload the page. Send a mix of requests. The logs should now show `user_type=free`, `user_type=pro`, and `user_type=bot`.
+Reload the application and send a mix of requests. The **Request metadata** column should show `user_type=free`, `user_type=pro`, and `user_type=bot`.
+
+This column shows the metadata the application sends. Inspect the matching requests in AI Gateway logs to verify that Gateway recorded the expected values.
 
 Right now, the same model is used for every user type. In the next exercise, [Choose models dynamically](/courses/see-and-control-ai-spend/choose-models-dynamically), you'll route requests to different models based on `user_type`.
