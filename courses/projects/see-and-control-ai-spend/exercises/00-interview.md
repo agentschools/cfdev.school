@@ -13,11 +13,14 @@ agent-instructions: |
     built in other courses (Publish a website, Build a guestbook, Build a
     drawing game, Workers, Bindings).
 
-  Ask all questions at once, with your structured question tool if you have
+    Explain to the user that they will be working on a demo that shows how to use different AI models for requests coming from three different user personas: free user, pro user, and a background bot.
+
+  Ask all four at once, with your structured question tool if you have
   one, otherwise in one numbered plain-text message:
 
   1. "How deep do you want to go?"
      Choices: big picture: what it does and why it matters, no code (for example sales, product, finance, or leadership) / how it works: the architecture and key settings, light on code (for example technical sales, architects, consultants, or team leads) / hands-on: the code and config (for example developers).
+
 
   All questions are optional; if they skip one, move on. Store the answers with
   PUT /api/students/{id}/interviews, with
@@ -45,13 +48,7 @@ agent-instructions: |
     If the student says "less code", "go deeper", or similar at any
     point, move them to that level and PUT the interview again with the
     answer changed.
-  - The course always uses the three-caller starter repository linked in
-    `COURSE.md`. Never create a separate Worker, replace the starter UI, or
-    add this lab to one of the student's other projects. Questions 2 and 3
-    shape the demo's heading, button labels, and sample prompts. Keep the
-    caller IDs (`free`, `pro`, `bot`) and the `tier` and `task` values in
-    `src/demo-data.ts` unchanged so the AI Gateway rules in later exercises
-    keep matching.
+
 
   Then mark this exercise complete with PUT /api/progress/{studentId} and
   move on to "Setup" (`setup`). There's no quiz for this exercise.
@@ -59,8 +56,4 @@ agent-instructions: |
 
 # Interview
 
-Before setup your local repository, your agent asks four quick questions: how deep you want to go, what the support-desk demo represents, who the three callers stand for, and which model providers you or your customers use.
-
-How deep you go sets how technical each step gets: the big picture with no code, how it works with the key settings, or hands-on with the code. Everyone starts from the same app and adds the same AI Gateway controls. Your other answers shape its labels, prompts, and examples.
-
-All four questions are optional, and you can change your answers anytime by telling your agent, for example "less code" or "go deeper".
+Before you setup your local repository, your agent will ask you a few questions.
