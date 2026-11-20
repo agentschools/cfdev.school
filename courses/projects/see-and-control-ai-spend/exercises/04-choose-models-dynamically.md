@@ -3,7 +3,10 @@ description: "Choose models by user type in AI Gateway, then change a model with
 agent-instructions: |
   - Depth: big picture, follow the model-selection diagram; how it works, trace the condition and fallback; hands-on, inspect the route JSON and version deployments.
   - Before publishing the model swap, ask: "Which user type should show a different model in Usage receipt after we publish this route version?"
-  - Offer a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using setup's account ID. Include the body's menu path if you can't confirm it in the browser. Dashboard inspection is optional.
+  - Offer the user these options for optionally verifying AI Gateway logs. 
+    - Share a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using the account ID from setup. 
+    - Visit the dashboard directly with: AI > AI Gateway > support-copilot > Logs.  
+    - Use the Cf ClI command `cf ai-gateway logs list`.
 ---
 
 # Choose models dynamically

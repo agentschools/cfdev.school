@@ -3,8 +3,10 @@ description: "Limit your background bot's requests to the higher-cost model in t
 agent-instructions: |
   - Depth: big picture, compare bot and human receipts; how it works, trace the bot-only limit and fallback; hands-on, inspect the count key and time window.
   - Before "View the results", ask: "After the bot uses its 3 higher-cost requests, which model should a Pro user request still use?"
-  - Offer a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using setup's account ID. Include the body's menu path if you can't confirm it in the browser. Dashboard inspection is optional.
-  - After verification, offer optional cleanup of only this lab's newly created resources; confirm deletions and keep local source code by default.
+  - Offer the user these options for optionally verifying AI Gateway logs. 
+    - Share a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using the account ID from setup. 
+    - Visit the dashboard directly with: AI > AI Gateway > support-copilot > Logs.  
+    - Use the Cf ClI command `cf ai-gateway logs list`.
 ---
 
 # Cap AI usage

@@ -2,8 +2,11 @@
 description: "Attach user-type metadata so AI Gateway can distinguish Free users, Pro users, and the Background bot."
 agent-instructions: |
   - Depth: big picture, use the chart to identify who generates requests; how it works, explain trusted labels; hands-on, distinguish input validation from authentication.
-  - In "View the results", before interpreting the chart, ask: "Which user type generated the most requests in Requests by metadata?" If the student can't use the browser, send the traffic and show the results yourself.
-  - Offer a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using setup's account ID. Include the body's menu path if you can't confirm it in the browser. Dashboard inspection is optional.
+  - In "View the results", ask the user what they expect to see when clicking to send requests before they do that. Then, have them, click through requests in the dashboard
+  - Offer the user these options for optionally verifying AI Gateway logs. 
+    - Share a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using the account ID from setup. 
+    - Visit the dashboard directly with: AI > AI Gateway > support-copilot > Logs.  
+    - Use the Cf ClI command `cf ai-gateway logs list`.
 ---
 
 # Add metadata to AI requests

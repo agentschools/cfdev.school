@@ -3,7 +3,10 @@ description: "Route the demo's AI requests through AI Gateway so you can inspect
 agent-instructions: |
   - Depth: big picture, compare requests before and after the gateway; how it works, explain the binding and request options; hands-on, inspect the code diff.
   - Before "Configure AI Gateway", ask: "After we connect the app to AI Gateway, what should appear in its logs when you click Free user?"
-  - Offer a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, substituting setup's account ID. Confirm the account and gateway when browser access allows; otherwise give the body's menu path as a fallback. Dashboard inspection is optional.
+  - Offer the user these options for optionally verifying AI Gateway logs. 
+    - Share a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using the account ID from setup. 
+    - Visit the dashboard directly with: AI > AI Gateway > support-copilot > Logs.  
+    - Use the Cf ClI command `cf ai-gateway logs list`.
 ---
 
 # Add AI Gateway
