@@ -154,3 +154,31 @@ describe("PUT /api/students/{id}/interviews", () => {
     expect(courses.find((course) => course.name === "workers")?.interviewSummary).toBeUndefined();
   });
 });
+
+
+describe("conditional browser interview saves", () => {
+  it("rejects stale/create-again saves without overwriting the latest agent answers", async () => {
+    const { PUT } = await import("./interviews");
+    const save = async (version: string, body = agentSetup) => {
+      const ctx = context(STUDENT, body);
+      ctx.request = { json: async () => body, headers: new Headers({ "X-Interview-Version": version }) } as Request;
+      return PUT(ctx);
+    };
+    const first = await save("none"); expect(first.status).toBe(200);
+    expect(first.headers.get("Cache-Control")).toBe("no-store");
+    const initial = (await first.json() as Interviews).interviews[0];
+    expect((await save("none")).status).toBe(409);
+    const updated = { ...agentSetup, summary: "Your preferences changed with your agent." };
+    await put(STUDENT, updated);
+    expect((await save(initial.updatedAt)).status).toBe(409);
+    expect((await get(STUDENT)).body.interviews[0].summary).toBe(updated.summary);
+  });
+  it("advances the version even when two saves happen in the same millisecond", async () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date("2026-11-06T10:00:00.000Z"));
+    try {
+      await put(STUDENT, agentSetup); const first = (await get(STUDENT)).body.interviews[0];
+      await put(STUDENT, agentSetup); const second = (await get(STUDENT)).body.interviews[0];
+      expect(second.updatedAt > first.updatedAt).toBe(true);
+    } finally { vi.useRealTimers(); }
+  });
+});

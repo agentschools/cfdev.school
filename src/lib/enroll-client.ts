@@ -130,10 +130,24 @@ function writeCachedStudent(student: CachedStudent): void {
   }
 }
 
-async function enroll(): Promise<CachedStudent> {
-  const response = await fetch("/api/students", { method: "POST" });
-  if (!response.ok) throw new Error(`Enrollment failed: ${response.status}`);
-  return response.json();
+let enrollmentInFlight: Promise<CachedStudent> | undefined;
+
+/** Shared by the header and interview forms so simultaneous clicks mint one ID. */
+export function enrollStudent(): Promise<CachedStudent> {
+  const existing = readCachedStudent();
+  if (existing) return Promise.resolve(existing);
+  if (enrollmentInFlight) return enrollmentInFlight;
+  enrollmentInFlight = (async () => {
+    const response = await fetch("/api/students", { method: "POST" });
+    if (!response.ok) throw new Error(`Enrollment failed: ${response.status}`);
+    const student: CachedStudent = await response.json();
+    // Another tab may have enrolled while this request was pending.
+    const current = readCachedStudent();
+    if (current) return current;
+    writeCachedStudent(student);
+    return student;
+  })().finally(() => { enrollmentInFlight = undefined; });
+  return enrollmentInFlight;
 }
 
 export function initEnrollment(): void {
@@ -170,6 +184,8 @@ export function initEnrollment(): void {
       container.hidden = true;
     });
   }
+
+  document.addEventListener(ENROLLED_EVENT, markEnrolled);
 
   // While a fresh ID is minted, <html data-minting> fades the homepage's CTA
   // out and dims the rest of the hero, so the card is the only thing moving.
@@ -239,7 +255,7 @@ export function initEnrollment(): void {
     if (isSubmitting) return;
     isSubmitting = true;
     try {
-      const student = await enroll();
+      const student = await enrollStudent();
       writeCachedStudent(student);
       showFreshlyEnrolled(student);
     } catch (error) {

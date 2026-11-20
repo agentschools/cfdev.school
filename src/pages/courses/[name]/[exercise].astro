@@ -1,5 +1,7 @@
 ---
 import { render } from "astro:content";
+import CourseInterview from "../../../components/CourseInterview.astro";
+import { courseInterview } from "../../../lib/course-interview";
 import AgentPrompt from "../../../components/AgentPrompt.astro";
 import EnrollBanner from "../../../components/EnrollBanner.astro";
 import Layout from "../../../layouts/Layout.astro";
@@ -30,6 +32,7 @@ const harnessNames = Object.fromEntries(
 );
 
 const title = exercise?.title ?? "Exercise not found";
+const interview = slug === "interview" ? courseInterview(name ?? "") : undefined;
 ---
 
 <Layout title={`${title} — Cloudflare Dev School`} description={exercise?.description ?? "Exercise not found."}>
@@ -56,6 +59,7 @@ const title = exercise?.title ?? "Exercise not found";
             {exercise.description && <p class="description">{exercise.description}</p>}
           </header>
 
+          {interview ? <CourseInterview definition={interview} /> : <>
           <div
             id="exercise-completed-banner"
             class="completed-banner"
@@ -85,6 +89,7 @@ const title = exercise?.title ?? "Exercise not found";
               {next!.label}
             </a>
           </div>
+          </>}
         </main>
       )
     }

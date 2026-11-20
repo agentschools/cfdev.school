@@ -37,3 +37,9 @@ describe("completionLabels", () => {
     ).toEqual(["Claude Code, Oct 1, 2026", "OpenAI Codex, Oct 3, 2026"]);
   });
 });
+
+
+it("labels website interview completion in the profile", () => {
+  expect(completionLabels([{ harness: "website", completedAt: "2026-11-06T10:00:00.000Z" }], {}))
+    .toEqual(["Completed on the website, Nov 6, 2026"]);
+});

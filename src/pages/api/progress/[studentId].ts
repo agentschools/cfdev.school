@@ -7,7 +7,7 @@ import { markExerciseCompleteSchema } from "../../../schemas/progress";
 
 export const prerender = false;
 
-const jsonHeaders = { "Content-Type": "application/json" };
+const jsonHeaders = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 
 function badRequest(error: string): Response {
   return new Response(JSON.stringify({ error }), { status: 400, headers: jsonHeaders });
@@ -71,15 +71,19 @@ export const PUT: APIRoute = async ({ params, request, url }) => {
   const exerciseUrl = new URL(exercise.url, url).toString();
   const slugs = course.exercises.map((item) => item.slug);
 
-  await env.DB.batch([
+  const results = await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO course_exercise_completions (student_id, course_id, exercise_slug, harness, exercise_url, model, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
+       SELECT ?, ?, ?, ?, ?, ?, ?
+       WHERE ? IS NULL OR EXISTS (
+         SELECT 1 FROM interviews WHERE student_id = ? AND course_id = ? AND updated_at = ?
+       )
        ON CONFLICT(student_id, course_id, exercise_slug, harness) DO UPDATE SET
          exercise_url = excluded.exercise_url,
          model = COALESCE(excluded.model, course_exercise_completions.model),
          completed_at = excluded.completed_at`,
-    ).bind(studentId, course.id, body.exercise, body.harness, exerciseUrl, body.model ?? null, completedAt),
+    ).bind(studentId, course.id, body.exercise, body.harness, exerciseUrl, body.model ?? null, completedAt,
+      body.interviewVersion ?? null, studentId, course.id, body.interviewVersion ?? null),
     // Records the course as complete the first time every one of its current
     // exercises has a completion. INSERT OR IGNORE keeps the first date.
     env.DB.prepare(
@@ -88,9 +92,16 @@ export const PUT: APIRoute = async ({ params, request, url }) => {
        WHERE (
          SELECT COUNT(DISTINCT exercise_slug) FROM course_exercise_completions
          WHERE student_id = ? AND course_id = ? AND exercise_slug IN (${slugs.map(() => "?").join(", ")})
-       ) = ?`,
-    ).bind(studentId, course.id, completedAt, studentId, course.id, ...slugs, slugs.length),
+       ) = ? AND (? IS NULL OR EXISTS (
+         SELECT 1 FROM interviews WHERE student_id = ? AND course_id = ? AND updated_at = ?
+       ))`,
+    ).bind(studentId, course.id, completedAt, studentId, course.id, ...slugs, slugs.length,
+      body.interviewVersion ?? null, studentId, course.id, body.interviewVersion ?? null),
   ]);
+
+  if (body.harness === "website" && results[0].meta.changes === 0) {
+    return new Response(JSON.stringify({ error: "Saved interview changed; reload before completing." }), { status: 409, headers: jsonHeaders });
+  }
 
   const progress = await loadProgress(studentId, student.created_at, courses);
   await broadcastProgress(progress);

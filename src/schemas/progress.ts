@@ -35,7 +35,8 @@ const modelSchema = z.string().min(1).meta({
 });
 
 export const exerciseCompletionSchema = z.object({
-  harness: harnessSchema,
+  harness: z.union([harnessSchema, z.literal("website")]).meta({ description: "Agent harness ID, or website for an interview completed on the website; website is not an agent." }),
+  source: z.literal("website").optional(),
   completedAt: z.iso.datetime().meta({
     description: "When this harness last marked the exercise complete, as an ISO 8601 timestamp.",
   }),
@@ -91,8 +92,18 @@ export const markExerciseCompleteSchema = z.object({
   exercise: exerciseSlugSchema.meta({
     description: "The exercise's slug, as GET /api/courses lists it, or as reported for a course hosted elsewhere.",
   }),
-  harness: harnessSchema,
+  harness: z.union([harnessSchema, z.literal("website")]).meta({ description: "Agent harness ID, or website for an interview completed on the website; website is not an agent." }),
+  source: z.literal("website").optional(),
   model: modelSchema.optional(),
+  interviewVersion: z.iso.datetime().optional(),
+}).superRefine((body, context) => {
+  if (body.harness === "website") {
+    if (body.source !== "website" || !body.interviewVersion || body.model || body.exercise !== "interview" || !["agent-setup", "build-a-drawing-game"].includes(body.course)) {
+      context.addIssue({ code: "custom", message: "Website completion requires a saved interview version, source website, no model, and one of the two web interview courses." });
+    }
+  } else if (body.source || body.interviewVersion) {
+    context.addIssue({ code: "custom", message: "Website source and interviewVersion are only valid for website completions." });
+  }
 });
 
 export type ExerciseCompletion = z.infer<typeof exerciseCompletionSchema>;

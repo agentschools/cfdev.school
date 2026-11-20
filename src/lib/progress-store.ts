@@ -33,6 +33,7 @@ interface InterviewSummaryRow {
 function rowToCompletion(row: ExerciseCompletionRow): ExerciseCompletion {
   return {
     harness: row.harness as ExerciseCompletion["harness"],
+    ...(row.harness === "website" ? { source: "website" as const } : {}),
     completedAt: row.completed_at,
     exerciseUrl: row.exercise_url,
     ...(row.model ? { model: row.model } : {}),

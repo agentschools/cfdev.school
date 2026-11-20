@@ -1,0 +1,51 @@
+{
+  "course": "build-a-drawing-game",
+  "questions": [
+    {
+      "id": "audience",
+      "question": "Who will play your game?",
+      "type": "multi",
+      "options": [
+        "Just me",
+        "My kids",
+        "Friends or family",
+        "Coworkers",
+        "A classroom",
+        "A party crowd"
+      ],
+      "other": true
+    },
+    {
+      "id": "drawings",
+      "question": "What should players draw?",
+      "type": "long",
+      "hint": "A theme or a list: farm animals, things in a kitchen, Cloudflare products, inside jokes… It works best with 8 to 15 things that look different when drawn."
+    },
+    {
+      "id": "look",
+      "question": "What should it look and feel like?",
+      "type": "multi",
+      "options": [
+        "Silly and cartoony",
+        "Clean and minimal",
+        "Retro arcade",
+        "Hand-drawn and cozy",
+        "Bright and colorful",
+        "Dark and moody"
+      ],
+      "other": true
+    },
+    {
+      "id": "device",
+      "question": "Where will people mostly play it?",
+      "type": "single",
+      "options": [
+        "On a phone",
+        "On a laptop or desktop",
+        "Both"
+      ]
+    }
+  ],
+  "title": "Build a drawing game",
+  "next": "build-a-canvas"
+}

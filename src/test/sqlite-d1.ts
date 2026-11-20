@@ -19,8 +19,8 @@ export function createSqliteD1(): D1Database {
       first: async () => sqlite.prepare(sql).get(...params) ?? null,
       all: async () => ({ results: sqlite.prepare(sql).all(...params) }),
       run: async () => {
-        sqlite.prepare(sql).run(...params);
-        return { success: true };
+        const result = sqlite.prepare(sql).run(...params);
+        return { success: true, meta: { changes: Number(result.changes) } };
       },
     };
   }

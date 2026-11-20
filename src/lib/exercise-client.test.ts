@@ -36,3 +36,9 @@ describe("formatCompletedBanner", () => {
     );
   });
 });
+
+
+it("labels a website completion without claiming agent use", () => {
+  expect(formatCompletedBanner([{ harness: "website", completedAt: "2026-11-06T10:00:00.000Z" }], names))
+    .toBe("You completed this exercise on November 6, 2026 on the website.");
+});

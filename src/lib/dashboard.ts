@@ -140,6 +140,7 @@ function agents(progress: Progress): Dashboard["agents"] {
   for (const course of [...progress.courses, ...progress.externalCourses]) {
     for (const exercise of course.exercises) {
       for (const completion of exercise.completions) {
+        if (completion.harness === "website") continue;
         counts.set(completion.harness, (counts.get(completion.harness) ?? 0) + 1);
       }
     }

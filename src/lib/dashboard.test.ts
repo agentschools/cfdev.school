@@ -150,3 +150,10 @@ describe("buildDashboard", () => {
     expect(dashboard.trackStarts.fundamentals).toEqual({ title: "Bindings", url: "/courses/bindings" });
   });
 });
+
+
+it("counts website interviews toward progress without inventing an agent", () => {
+  const dashboard = buildDashboard(progress({ "agent-setup": { interview: done("2026-11-06T10:00:00.000Z", "website") } }), catalog);
+  expect(dashboard.agents).toEqual([]);
+  expect(dashboard.upNext).toMatchObject({ kind: "exercise", exerciseTitle: "Models" });
+});
