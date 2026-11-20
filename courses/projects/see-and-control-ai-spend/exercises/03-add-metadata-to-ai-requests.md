@@ -52,10 +52,8 @@ const result = await env.AI.run(
 
 ## View the results
 
-Reload the application to start a fresh chart. Click **Free user** twice, **Pro user** once, and **Background bot** once. The bot button sends 4 requests. In **Usage receipt**, **User type** identifies the button and **Request metadata** now shows `user_type=free`, `user_type=pro`, or `user_type=bot` instead of `anonymous`.
+Reload the application and send a mix of requests. The **Request metadata** column should show the appropriate user types: `user_type=free`, `user_type=pro`, and `user_type=bot`.
 
-Compare the counts in **Requests by metadata** and the models in the **Model** column. The chart covers only requests made during this page session, not all traffic through the gateway.
-
-The receipt's **Request metadata** column shows what the application sends. Use the logs command from [Add AI Gateway](/courses/see-and-control-ai-spend/add-ai-gateway#view-the-results) to confirm the matching requests have the same `user_type` values. For an optional dashboard view, open **AI** > **AI Gateway** > `support-copilot` > **Logs** in the same account. Use its cost column for AI Gateway's estimate rather than calculating prices from the chart.
+This column shows the metadata the application sends. Inspect the matching requests in AI Gateway logs to verify that Gateway recorded the expected values.
 
 Right now, the same model is used for every user type. In the next exercise, [Choose models dynamically](/courses/see-and-control-ai-spend/choose-models-dynamically), you'll route requests to different models based on `user_type`.
