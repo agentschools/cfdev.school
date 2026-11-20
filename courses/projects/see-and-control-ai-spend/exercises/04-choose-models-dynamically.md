@@ -1,16 +1,12 @@
 ---
 description: "Create a dynamic route in AI Gateway to dynamically route specific traffic to different models based on the incoming metadata."
 agent-instructions: |
-  - Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on). For big picture, the models are "higher-cost" and "lower-cost", and the dynamic route is "a rule in AI Gateway that picks the model".
-  - Call the feature a "dynamic route" throughout the exercise. That's the docs' and the `cf` CLI's name for it.
-  - If they finished the AI Gateway course, they've built a dynamic route before: shorten "Create the dynamic route" to the difference (it branches on `user_type`) and spend the time on "Other ways to pick a model".
-  - Before "Create the dynamic route", explain the demo's routing policy: `free` uses the lower-cost model; `pro` and `bot` use the higher-cost model. Keep these values unchanged so the next exercise's requests still match.
-  - Use `@cf/openai/gpt-oss-20b` as the lower-cost model and backup, and `@cf/openai/gpt-oss-120b` as the higher-cost model. For the no-redeploy swap, use `@cf/ibm-granite/granite-4.0-h-micro`. Check the current Workers AI model catalog before changing these model IDs.
-  - In "Call the dynamic route", change only the `MODEL` constant in `src/index.ts` to `"dynamic/support"`. Every caller uses the dynamic route; model selection belongs in its configuration. The starter already builds receipts from the inference response.
-  - Before "Swap a model with no redeploy", ask the student to predict: will the Worker need a redeploy for Free user to get the new model?
-  - In "View the results" and "Swap a model with no redeploy", confirm which model answered on the lab page. Dynamic route deployments take about 30 to 60 seconds to go live; retry before assuming something's wrong.
-  - Check, by depth: hands-on, why is it safer to try a new model across several services by publishing a dynamic route version than by editing each service? Big picture or how it works: someone they work with asks "isn't putting AI Gateway in front of our models just another form of lock-in?" How would they answer, using the providers they named in the interview?
-  - Out of scope: percentage splits and A/B tests, and capping the bot. That's the next exercise.
+  - Depth: big picture, follow the model-selection diagram; how it works, trace the condition and fallback; hands-on, inspect the route JSON and version deployments.
+  - Before publishing the model swap, ask: "Which user type should show a different model in Usage receipt after we publish this route version?"
+  - Offer the user these options for optionally verifying AI Gateway logs. 
+    - Share a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using the account ID from setup. 
+    - Visit the dashboard directly with: AI > AI Gateway > support-copilot > Logs.  
+    - Use the Cf ClI command `cf ai-gateway logs list`.
 ---
 
 # Choose models dynamically
@@ -19,7 +15,7 @@ Right now, every request uses the same model regardless of the user type. In thi
 
 Instead of adding hard-coded logic in the application code itself, AI Gateway's [routing](https://developers.cloudflare.com/ai-gateway/features/routing/) allows you to define that logic in AI Gateway. This allows you to update which model gets used for which user persona without having to deploy code.
 
-In this exercise, you'll create a [dynamic route](https://developers.cloudflare.com/ai-gateway/features/routing/dynamic-routing/) named `dynamic/support` that reads `user_type` property from the metadata. Based on the `user_type` ,free users will use a lower-cost model, while Pro users and the Background bot will use a higher-cost model. In case the higher-cost model fails, you'll also define a backup model to be used.
+In this exercise, you'll create a [dynamic route](https://developers.cloudflare.com/ai-gateway/features/routing/dynamic-routing/) named `support`, called as `dynamic/support`, that reads the `user_type` property from the metadata. Free users will use a lower-cost model, while Pro users and the Background bot will use a higher-cost model. You'll also define a backup model for requests where the higher-cost model fails.
 
 ## Create the dynamic route
 
@@ -142,11 +138,11 @@ Every user type now uses the dynamic route. The Worker supplies the metadata, an
 
 With `npm run dev` running, reload the lab page and try all three buttons. Free user requests should use `GPT-OSS 20B`. Pro user and Background bot requests should use `GPT-OSS 120B`. If the higher-cost model fails, its backup answers instead.
 
-## Swap a model without deploying the worker
+## Swap a model without deploying the Worker
 
 Each change to a dynamic route is a new version, and you have to decide when to deploy it. Here, you'll update the lower cost model and redeploy your dynamic route.
 
-Change the `lower_cost` step's model to `@cf/ibm-granite/granite-4.0-h-micro`. Then, get the create the new version of the Dynamic Route and take note of the `version-id` that is returned.
+Change the `lower_cost` step's model to `@cf/ibm-granite/granite-4.0-h-micro`. Then, create a new version of the dynamic route and note the returned version ID.
 
 ```sh
 cf ai-gateway dynamic-routing versions create <route-id> --gateway-id support-copilot --elements @route.json
@@ -158,7 +154,7 @@ Then, deploy the version by passing the `version-id`.
 cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id support-copilot --version-id <version-id>
 ```
 
-Allow about 30 to 60 seconds for the route version to take effect, then click **Free user** again. The application should show the updated model, `@cf/ibm-granite/granite-4.0-h-micro`. If the previous model still answers, confirm that you deployed the intended version and try again after propagation.
+Allow about 30 to 60 seconds for the route version to take effect, then click **Free user** again. The **Model** column should show `@cf/ibm-granite/granite-4.0-h-micro`.
 
 ## Other ways to pick a model
 

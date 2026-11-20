@@ -1,16 +1,12 @@
 ---
 description: "Limit your background bot's requests to the higher-cost model in the dynamic route, then switch it to a lower-cost model while human users keep working."
 agent-instructions: |
-  - Pitch it to the depth the student chose in this course's interview (big picture, how it works, or hands-on). For big picture, skip the JSON: "AI Gateway limits the bot's requests to the higher-cost model, then switches it to the lower-cost model while human callers keep working".
-  - If they finished the AI Gateway course, they've set limits before: shorten "Cap usage based on number of requests" to the bot-specific condition and fallback, and spend the time on "Understand dollar-based spend limits".
-  - Before "Cap usage based on number of requests", explain why a company-wide cap is the wrong tool (it stops paying customers when one bot misbehaves). The bot should switch to the lower-cost model after three requests per hour on the higher-cost model; ask whether that trade-off fits their use case.
-  - Every caller already uses the dynamic route, and the starter already labels blocked requests and bot requests served by a lower-cost model. This exercise changes only the dynamic route configuration.
-  - Before "View the results", ask the student to predict: once the bot has used up its budget, will Pro user still get an answer?
-  - In "View the results", wait about 30 to 60 seconds for the dynamic route version to go live, then run Background bot's four-request batch and a Pro user request. Confirm the selected models and metadata in `cf ai-gateway logs list --gateway-id support-copilot --per-page 10 --order-by created_at --order-by-direction desc`, not only on the lab page. Keep the limit active while the student tries it.
-  - Earlier testing logged routed Workers AI requests at a cost of `0`, so dollar-based limits never tripped. This lab uses the previously tested request-count limit; do not present it as a dollar cap or claim the accounting issue is resolved without live verification.
-  - Check, by depth: hands-on, why can a burst of simultaneous requests go a little over a dollar limit before it starts blocking, and why does scoping by metadata keep one noisy bot or tenant from taking down the rest of the app? Big picture or how it works: someone they work with, like an engineering lead, says "we can't put hard caps on AI spend, it'll break features mid-day." How would they walk them through watching spend first, scoping caps to one agent or tier (or per customer with "Split by value"), and switching to a lower-cost model instead of blocking?
-  - After "View the results", offer the optional choices in "Clean up". Cleanup is not required to complete the exercise. Confirm before deleting resources, delete only resources created during this course, and preserve the local source code unless the student asks to remove it.
-  - Out of scope: exporting logs with Logpush, and governing an agent's tool calls with MCP server portals.
+  - Depth: big picture, compare bot and human receipts; how it works, trace the bot-only limit and fallback; hands-on, inspect the count key and time window.
+  - Before "View the results", ask: "After the bot uses its 3 higher-cost requests, which model should a Pro user request still use?"
+  - Offer the user these options for optionally verifying AI Gateway logs. 
+    - Share a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using the account ID from setup. 
+    - Visit the dashboard directly with: AI > AI Gateway > support-copilot > Logs.  
+    - Use the Cf ClI command `cf ai-gateway logs list`.
 ---
 
 # Cap AI usage

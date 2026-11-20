@@ -1,14 +1,12 @@
 ---
-description: "Create an AI Gateway, then configure the application to route all AI requests through it and see the results in the application logs."
+description: "Route the demo's AI requests through AI Gateway so you can inspect individual requests in its logs."
 agent-instructions: |
-  - Pitch everything to the depth the student chose in this course's interview (big picture, how it works, or hands-on); the interview's instructions say what each level gets. For big picture, tokens are "usage" and each code change gets a one-sentence summary.
-  - Start from the repository linked in `COURSE.md`, on its `main` branch. Do not scaffold a Worker or rebuild the lab page. Keep the starter's caller IDs (`free`, `pro`, `bot`), the `/api/run` endpoint, and its UI.
-  - If they finished the AI Gateway course, shorten AI Gateway setup and the binding change to a quick review. Still run the starter baseline and compare its requests with AI Gateway logs.
-  - Keep the AI Gateway ID `support-copilot` and Worker name `ai-spend-control-course`. The dynamic route created later is named `support`; keep these values fixed so code, commands, and repository match.
-  - Before the baseline run, ask the student to predict whether AI Gateway will have a log for each button. Before connecting the Worker to AI Gateway, ask what will change in the logs and what will still be missing.
-  - Check the baseline and the updated Worker locally with `npm run dev`. The AI binding uses remote Workers AI, so the account must have Workers AI enabled. No deploy is needed for this exercise.
-  - Check, by depth: hands-on, why can't a provider invoice or shared API key distinguish new paying users from a background retry loop? Big picture or how it works: someone they work with asks, "we already see the total on the provider invoice, why put AI Gateway in front?" Help them answer using the providers they named.
-  - Out of scope: metadata, dynamic routes, and spend limits. Those are the next three exercises.
+  - Depth: big picture, compare requests before and after the gateway; how it works, explain the binding and request options; hands-on, inspect the code diff.
+  - Before "Configure AI Gateway", ask: "After we connect the app to AI Gateway, what should appear in its logs when you click Free user?"
+  - Offer the user these options for optionally verifying AI Gateway logs. 
+    - Share a clickable Logs link at `https://dash.cloudflare.com/<account-id>/ai/ai-gateway/gateways/support-copilot/logs`, using the account ID from setup. 
+    - Visit the dashboard directly with: AI > AI Gateway > support-copilot > Logs.  
+    - Use the Cf ClI command `cf ai-gateway logs list`.
 ---
 
 # Add AI Gateway
@@ -43,8 +41,6 @@ cf ai-gateway gateways create --id support-copilot --authentication true \
   --collect-logs true --cache-ttl 0 --cache-invalidate-on-update true \
   --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding
 ```
-
-In the Cloudflare dashboard, you can view AI Gateway logs by opening **AI** > **AI Gateway** > `support-copilot` > **Logs**. The logs will be empty to start since the starter isn't configured to use AI Gateway yet.
 
 ## Configure AI Gateway
 
@@ -91,13 +87,23 @@ const result = await env.AI.run(
 
 ## View the results
 
-Open the running app, and click **Free user**, **Pro user**, and **Background bot** to send requests. You should now see that each request shows as `anonymous`.
+Reload the running app, and click **Free user**, **Pro user**, and **Background bot** to send requests. In **Usage receipt**, **User type** still identifies the button you clicked, but **Request metadata** now shows `anonymous`. The button label comes from the app; it doesn't mean AI Gateway knows the user type.
 
-If you inspect the AI Gateway logs in the Cloudflare dashboard, you should see a log for each request that includes:
+Confirm that the successful requests appear with the expected model and status. The **Background bot** button sends 4 requests, so one click creates several entries. If you open the optional dashboard Logs page, you can also inspect:
 
 - the model used
 - the request duration
 - token usage
 - the estimated cost
 
-AI Gateway now records the requests, but you still haven't attached specific labels identifying the callers. The application therefore displays `anonymous` for each successful request. In the next exercise, [Add metadata to AI requests](/courses/see-and-control-ai-spend/add-metadata-to-ai-requests), you'll label requests so you can distinguish between `Free user`, `Pro user`, and `Background bot`.
+### Viewing AI Gateway logs directly
+
+You can check the AI Gateway logs directly by using the CF ClI:
+
+```sh
+cf ai-gateway logs list --gateway-id support-copilot --per-page 10 --order-by created_at --order-by-direction desc
+```
+
+You can additionally view the [AI Gateway logs](https://developers.cloudflare.com/ai-gateway/observability/logging/) in the Cloudflare dashboard by opening **AI** > **AI Gateway** > `support-copilot` > **Logs**.
+
+AI Gateway now records the requests, but you still haven't attached labels identifying the callers. In the next exercise, [Add metadata to AI requests](/courses/see-and-control-ai-spend/add-metadata-to-ai-requests), you'll label requests so you can distinguish between `Free user`, `Pro user`, and `Background bot` in the logs.
