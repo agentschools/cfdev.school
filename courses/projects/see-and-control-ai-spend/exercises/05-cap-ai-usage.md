@@ -75,13 +75,9 @@ If earlier bot requests already used the allowance, it can switch to the lower-c
 
 Then, click **Pro user** and **Free user**. Requests from **Pro user** still go to the higher-cost model, and requests from **Free user** still go to the lower-cost model. Compare their receipts with AI Gateway logs to confirm the limit applies only to `user_type: "bot"`.
 
-Use the logs command from [Add AI Gateway](/courses/see-and-control-ai-spend/add-ai-gateway#view-the-results), or optionally open **AI** > **AI Gateway** > `support-copilot` > **Logs** in the dashboard. Compare the user type, model, and status for the bot and human requests. Keep the limit active while you try it.
-
 ## Dollar-based spend limits
 
 A request limit controls how often the bot uses the higher-cost model. A [spend limit](https://developers.cloudflare.com/ai-gateway/features/spend-limits/) controls the amount of usage in dollars it's allowed to use. You set a budget and time window on AI Gateway, scoped to a conditional based on the metadata, and requests are blocked with `429` when that budget is exceeded.
-
-Earlier live testing of this lab recorded a cost of `0` for Workers AI requests through a dynamic route, so dollar-based limits didn't trigger. That's why this lab uses a request-count limit. It isn't a dollar cap, and it doesn't cap the bot's lower-cost requests.
 
 A spend limit can filter on one metadata value, such as `user_type` equals `bot`, or split by a label so every distinct value gets its own budget. The following example is for explanation only; you don't need to apply it to complete the exercise.
 

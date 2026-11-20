@@ -1,5 +1,5 @@
 ---
-description: "Choose models by user type in AI Gateway, then change a model without redeploying the Worker."
+description: "Create a dynamic route in AI Gateway to dynamically route specific traffic to different models based on the incoming metadata."
 agent-instructions: |
   - Depth: big picture, follow the model-selection diagram; how it works, trace the condition and fallback; hands-on, inspect the route JSON and version deployments.
   - Before publishing the model swap, ask: "Which user type should show a different model in Usage receipt after we publish this route version?"
@@ -138,13 +138,11 @@ Every user type now uses the dynamic route. The Worker supplies the metadata, an
 
 With `npm run dev` running, reload the lab page and try all three buttons. Free user requests should use `GPT-OSS 20B`. Pro user and Background bot requests should use `GPT-OSS 120B`. If the higher-cost model fails, its backup answers instead.
 
-Compare **User type**, **Request metadata**, **Model**, and **Status** in **Usage receipt** with the corresponding AI Gateway logs. Use the logs command from [Add AI Gateway](/courses/see-and-control-ai-spend/add-ai-gateway#view-the-results), or optionally open **AI** > **AI Gateway** > `support-copilot` > **Logs** in the dashboard.
-
 ## Swap a model without deploying the Worker
 
 Each change to a dynamic route is a new version, and you have to decide when to deploy it. Here, you'll update the lower cost model and redeploy your dynamic route.
 
-Change the `lower_cost` step's model to `@cf/ibm-granite/granite-4.0-h-micro`. Create a new version of the dynamic route and note the returned version ID.
+Change the `lower_cost` step's model to `@cf/ibm-granite/granite-4.0-h-micro`. Then, create a new version of the dynamic route and note the returned version ID.
 
 ```sh
 cf ai-gateway dynamic-routing versions create <route-id> --gateway-id support-copilot --elements @route.json
@@ -156,7 +154,7 @@ Then, deploy the version by passing the `version-id`.
 cf ai-gateway dynamic-routing deployments create <route-id> --gateway-id support-copilot --version-id <version-id>
 ```
 
-Allow about 30 to 60 seconds for the route version to take effect, then click **Free user** again. The **Model** column should show `@cf/ibm-granite/granite-4.0-h-micro`. Confirm the change in AI Gateway logs too, and check that a successful **Pro user** request still uses `GPT-OSS 120B`. If the previous model still answers, confirm that you deployed the intended version and try again after propagation.
+Allow about 30 to 60 seconds for the route version to take effect, then click **Free user** again. The **Model** column should show `@cf/ibm-granite/granite-4.0-h-micro`.
 
 ## Other ways to pick a model
 
