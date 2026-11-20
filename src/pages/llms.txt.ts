@@ -53,7 +53,11 @@ Tracks are groupings only: students complete courses, not tracks, and projects n
 
 Once a student gives you their student ID (from the handoff prompt), check GET /api/progress/{studentId} to see what's already done, then work through the course's incomplete exercises in order. The prompt names the course to work on; start at its first incomplete exercise, unless the prompt asks to redo a specific exercise.
 
-For each exercise: fetch its \`markdownUrl\`. It's Markdown with YAML frontmatter: follow its \`agent-instructions\` frontmatter (if it has one) and its body to teach the exercise conversationally. Then, once you're confident the student understood it (via the quiz if they opted in, or just conversationally if not), mark it complete before moving on. A course's own \`markdownUrl\` is its COURSE.md, which introduces the course.
+For each exercise, fetch its \`markdownUrl\`. The Markdown includes YAML frontmatter. Follow the \`agent-instructions\` frontmatter if present, along with the exercise body. Work through the steps in order. Before each step, explain what you'll do and why. Explain the Cloudflare products involved, the code you're changing, and how the pieces fit together. Help the student learn how to build on Cloudflare, not just finish the exercise.
+
+When an exercise includes a result the student can verify in a browser, give them the URL, the actions to take, and what they should expect to see. Verify the result yourself too, following the exercise's instructions.
+
+Once you're confident the student understands the exercise, through the quiz if they opted in or conversation otherwise, mark it complete before moving on. A course's own \`markdownUrl\` is its COURSE.md, which introduces the course.
 
 ## Teaching an exercise
 
