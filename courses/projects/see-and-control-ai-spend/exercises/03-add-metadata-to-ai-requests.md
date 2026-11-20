@@ -19,7 +19,7 @@ In this exercise, you'll attach [custom metadata](https://developers.cloudflare.
 
 AI Gateway allows for up to five key-value pairs in metadata per request. In the dashboard, you can use this metadata to filter logs and break down spend. Later in this course, you'll use the metadata to have different user types use different models.
 
-The browser sends the selected `user_type`, and the Worker checks that it matches a key in `USER_TYPES` from `src/demo-data.ts` before attaching it as metadata. This validates a demo choice; it doesn't authenticate a user. In a real application, derive metadata from trusted account or job information rather than accepting a user type claimed by the browser.
+The browser sends the selected `user_type`, and the Worker checks that it matches a key in `USER_TYPES` from `src/demo-data.ts` before attaching it as metadata. In a real application, metadata should be derived form trusted user information and not based on request data sent from the browser.
 
 In `src/index.ts`, replace the existing `const metadata = {};` immediately after `const { userType } = input;` with:
 

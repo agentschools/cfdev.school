@@ -42,8 +42,6 @@ cf ai-gateway gateways create --id support-copilot --authentication true \
   --rate-limiting-interval 0 --rate-limiting-limit 0 --rate-limiting-technique sliding
 ```
 
-You can optionally view [AI Gateway logs](https://developers.cloudflare.com/ai-gateway/observability/logging/) in the Cloudflare dashboard by opening **AI** > **AI Gateway** > `support-copilot` > **Logs**, in the account selected during setup. Before connecting the app, click **Free user** again. It should still succeed locally without creating a log in this gateway.
-
 ## Configure AI Gateway
 
 When adding the configuration for AI Gateway in code, you'll need to reference it by the name you just created, `support-copilot`. Instead of hard-coding that string in the application, it's better to set it as public text variable. Do this with a text binding by adding the following line in `cloudflare.config.ts`.
@@ -91,17 +89,21 @@ const result = await env.AI.run(
 
 Reload the running app, and click **Free user**, **Pro user**, and **Background bot** to send requests. In **Usage receipt**, **User type** still identifies the button you clicked, but **Request metadata** now shows `anonymous`. The button label comes from the app; it doesn't mean AI Gateway knows the user type.
 
-Check the latest AI Gateway logs:
-
-```sh
-cf ai-gateway logs list --gateway-id support-copilot --per-page 10 --order-by created_at --order-by-direction desc
-```
-
 Confirm that the successful requests appear with the expected model and status. The **Background bot** button sends 4 requests, so one click creates several entries. If you open the optional dashboard Logs page, you can also inspect:
 
 - the model used
 - the request duration
 - token usage
 - the estimated cost
+
+### Viewing AI Gateway logs directly
+
+You can check the AI Gateway logs directly by using the CF ClI:
+
+```sh
+cf ai-gateway logs list --gateway-id support-copilot --per-page 10 --order-by created_at --order-by-direction desc
+```
+
+You can additionally view the [AI Gateway logs](https://developers.cloudflare.com/ai-gateway/observability/logging/) in the Cloudflare dashboard by opening **AI** > **AI Gateway** > `support-copilot` > **Logs**.
 
 AI Gateway now records the requests, but you still haven't attached labels identifying the callers. In the next exercise, [Add metadata to AI requests](/courses/see-and-control-ai-spend/add-metadata-to-ai-requests), you'll label requests so you can distinguish between `Free user`, `Pro user`, and `Background bot` in the logs.
