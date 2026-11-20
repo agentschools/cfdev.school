@@ -17,5 +17,3 @@ Your agent will ask one question before setting up the demo:
 - **Big picture:** what each change does and why it matters, using the lab and plain-language explanations instead of code.
 - **How it works:** the request flow and key settings, with a little code where it helps.
 - **Hands-on:** the code and configuration, including failure modes and trade-offs.
-
-Everyone builds the same demo. Your answer changes how your agent explains it. You can say "less code" or "go deeper" at any point to change the level.
